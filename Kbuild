@@ -1630,6 +1630,8 @@ ifeq ($(CONFIG_WLAN_DEBUGFS), y)
 CDEFINES += -DWLAN_DEBUGFS
 endif
 
+CDEFINES += -DMOTO_UTAGS_MAC
+
 KBUILD_CPPFLAGS += $(CDEFINES)
 
 # Currently, for versions of gcc which support it, the kernel Makefile

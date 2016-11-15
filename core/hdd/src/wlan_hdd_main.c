@@ -8013,7 +8013,13 @@ static void hdd_initialize_mac_address(hdd_context_t *hdd_ctx)
 	if (QDF_IS_STATUS_SUCCESS(status))
 		return;
 
-	hdd_warn("can't update mac config via wlan_mac.bin, using MAC from ini file or auto-gen");
+	hdd_warn("can't update mac config via wlan_mac.bin, using MAC from serial number");
+
+    status = hdd_update_mac_serial(hdd_ctx);
+    if (QDF_IS_STATUS_SUCCESS(status))
+		return;
+
+	hdd_warn("can't update mac config from serial number, using MAC from ini file or auto-gen");
 
 	if (hdd_ctx->update_mac_addr_to_fw) {
 		ret = hdd_update_mac_addr_to_fw(hdd_ctx);
