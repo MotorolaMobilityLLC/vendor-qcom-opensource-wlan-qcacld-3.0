@@ -1926,6 +1926,8 @@ ifeq ($(CONFIG_DYNAMIC_DEBUG),y)
 CDEFINES += -DFEATURE_MULTICAST_HOST_FW_MSGS
 endif
 
+CDEFINES += -DMOTO_UTAGS_MAC
+
 KBUILD_CPPFLAGS += $(CDEFINES)
 
 # Currently, for versions of gcc which support it, the kernel Makefile
