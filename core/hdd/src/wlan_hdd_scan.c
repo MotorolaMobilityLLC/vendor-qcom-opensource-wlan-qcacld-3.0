@@ -3021,7 +3021,13 @@ static int __wlan_hdd_cfg80211_sched_scan_start(struct wiphy *wiphy,
 	 */
 	hdd_config_sched_scan_plan(pPnoRequest, request, pHddCtx);
 
-	hdd_info("Base scan interval: %d sec PNOScanTimerRepeatValue: %d",
+    //BEGIN MOT a19110 IKSWM-31041 Modify PNO timers
+    pPnoRequest->fast_scan_period = 45000;
+    pPnoRequest->fast_scan_max_cycles = 7;
+    pPnoRequest->slow_scan_period = 480000;
+    //END IKSWM-31041
+
+    hdd_info("Base scan interval: %d sec PNOScanTimerRepeatValue: %d",
 			(pPnoRequest->fast_scan_period / 1000),
 			config->configPNOScanTimerRepeatValue);
 
