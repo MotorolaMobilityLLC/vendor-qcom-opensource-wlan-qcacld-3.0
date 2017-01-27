@@ -8827,6 +8827,108 @@ static void hdd_set_thermal_level_cb(hdd_handle_t hdd_handle, u_int8_t level)
 #endif
 
 /**
+ * Motorola, IKLOCSEN-2877
+ * hdd_is_mcc_mode_enabled() - Checks if MCC mode is enabled
+ *
+ * This is to check if MCC mode is enabled in ini file
+ *
+ * Return: 1 if it is enabled otherwise 0
+ */
+uint8_t hdd_is_mcc_mode_enabled(void)
+{
+	struct hdd_context *hdd_ctx = NULL;
+	void *cds_context = NULL;
+
+	/* Get the global VOSS context.*/
+	cds_context = cds_get_global_context();
+	if (!cds_context) {
+		hdd_err("Global CDS context is Null");
+		return (uint8_t)0;
+	}
+	/* Get the HDD context.*/
+	hdd_ctx = (struct hdd_context *)cds_get_context(QDF_MODULE_ID_HDD);
+
+	if (0 != wlan_hdd_validate_context(hdd_ctx)) {
+		hdd_err("invalid HDD context");
+		return (uint8_t)0;
+	} else {
+		hdd_debug("gEnableMCCMode is enabled");
+		return (uint8_t)hdd_ctx->config->enableMCC;
+	}
+}
+
+/**
+ * hdd_get_safe_channel_from_pcl_and_acs_range() - Get safe channel for SAP
+ * restart
+ * @adapter: AP adapter, which should be checked for NULL
+ *
+ * Get a safe channel to restart SAP. PCL already takes into account the
+ * unsafe channels. So, the PCL is validated with the ACS range to provide
+ * a safe channel for the SAP to restart.
+ *
+ * Return: Channel number to restart SAP in case of success. In case of any
+ * failure, the channel number returned is zero.
+ */
+static uint8_t
+hdd_get_safe_channel_from_pcl_and_acs_range(struct hdd_adapter *adapter)
+{
+	struct sir_pcl_list pcl;
+	QDF_STATUS status;
+	uint32_t i;
+	mac_handle_t mac_handle;
+	struct hdd_context *hdd_ctx;
+
+	hdd_ctx = WLAN_HDD_GET_CTX(adapter);
+	if (!hdd_ctx) {
+		hdd_err("invalid HDD context");
+		return INVALID_CHANNEL_ID;
+	}
+
+	mac_handle = hdd_ctx->mac_handle;
+	if (!mac_handle) {
+		hdd_err("invalid MAC handle");
+		return INVALID_CHANNEL_ID;
+	}
+
+	status = policy_mgr_get_pcl_for_existing_conn(hdd_ctx->psoc,
+			PM_SAP_MODE, pcl.pcl_list, &pcl.pcl_len,
+			pcl.weight_list, QDF_ARRAY_SIZE(pcl.weight_list),
+			false);
+	if (QDF_IS_STATUS_ERROR(status)) {
+		hdd_err("Get PCL failed");
+		return INVALID_CHANNEL_ID;
+	}
+
+	/*
+	 * In some scenarios, like hw dbs disabled, sap+sap case, if operating
+	 * channel is unsafe channel, the pcl may be empty, instead of return,
+	 * try to choose a safe channel from acs range.
+	 */
+	if (!pcl.pcl_len)
+		hdd_debug("pcl length is zero!");
+
+	hdd_debug("start:%d end:%d",
+		adapter->session.ap.sap_config.acs_cfg.start_ch,
+		adapter->session.ap.sap_config.acs_cfg.end_ch);
+
+	/* PCL already takes unsafe channel into account */
+	for (i = 0; i < pcl.pcl_len; i++) {
+		hdd_debug("chan[%d]:%d", i, pcl.pcl_list[i]);
+		if ((pcl.pcl_list[i] >=
+		   adapter->session.ap.sap_config.acs_cfg.start_ch) &&
+		   (pcl.pcl_list[i] <=
+		   adapter->session.ap.sap_config.acs_cfg.end_ch)) {
+			hdd_debug("found PCL safe chan:%d", pcl.pcl_list[i]);
+			return pcl.pcl_list[i];
+		}
+	}
+
+	hdd_debug("no safe channel from PCL found in ACS range");
+
+	return hdd_get_safe_channel(hdd_ctx, adapter);
+}
+
+/**
  * hdd_switch_sap_channel() - Move SAP to the given channel
  * @adapter: AP adapter
  * @channel: Channel
