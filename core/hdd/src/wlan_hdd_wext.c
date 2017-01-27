@@ -1084,6 +1084,7 @@ static const hdd_freq_chan_map_t freq_chan_map[] = {
  * </ioctl>
  */
 #define WE_GET_CONCURRENCY_MODE 9
+#define WE_GET_MCC_MODE 10 /* MOTOROLA IKLOCSEN-2877 */
 /*
  * <ioctl>
  * get_nss - Get the number of spatial STBC streams (NSS)
@@ -8957,6 +8958,14 @@ static int __iw_setnone_getint(struct net_device *dev,
 		break;
 	}
 
+    // BEGIN MOTOROLA IKLOCSEN-2877, Get configured value of MCC mode
+    case WE_GET_MCC_MODE:
+    {
+        *value = (int)hdd_is_mcc_mode_enabled();
+		hdd_notice("MCC mode=%d", *value);
+        break;
+    } // END IKLOCSEN-2877
+
 	case WE_GET_NSS:
 	{
 		sme_get_config_param(hHal, &smeConfig);
@@ -13008,6 +13017,12 @@ static const struct iw_priv_args we_private_args[] = {
 	 0,
 	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
 	 "getconcurrency"},
+
+    /* MOTOROLA IKLOCSEN-2877 */
+    {WE_GET_MCC_MODE,
+     0,
+	 IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
+	 "getMccMode"},
 
 	{WE_GET_NSS,
 	 0,
