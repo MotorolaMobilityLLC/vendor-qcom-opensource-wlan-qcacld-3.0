@@ -476,7 +476,7 @@ static void __lim_process_operating_mode_action_frame(struct mac_context *mac_ct
 		goto end;
 	}
 
-	if (CHAN_ENUM_14 >= session->currentOperChannel)
+	if (CHAN_ENUM_13 >= session->currentOperChannel)
 		cb_mode = mac_ctx->roam.configParam.channelBondingMode24GHz;
 	else
 		cb_mode = mac_ctx->roam.configParam.channelBondingMode5GHz;
