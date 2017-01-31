@@ -635,7 +635,7 @@ QDF_STATUS lim_send_ht40_obss_scanind(struct mac_context *mac_ctx,
 	for (count = 0; count < channelnum &&
 		(channel24gnum < SIR_ROAM_MAX_CHANNELS); count++) {
 		if ((chan_list[count] > CHAN_ENUM_1) &&
-			(chan_list[count] < CHAN_ENUM_14)) {
+			(chan_list[count] < CHAN_ENUM_13)) {
 			ht40_obss_scanind->channels[channel24gnum] =
 				chan_list[count];
 			channel24gnum++;
