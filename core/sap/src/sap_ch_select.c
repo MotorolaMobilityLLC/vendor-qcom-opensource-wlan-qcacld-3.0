@@ -131,7 +131,6 @@ sapSafeChannelType safe_channels[NUM_CHANNELS] = {
 	{11, true},
 	{12, true},
 	{13, true},
-	{14, true},
 	{36, true},
 	{40, true},
 	{44, true},
@@ -1985,7 +1984,7 @@ static void sap_sort_chl_weight_ht80(tSapChSelSpectInfo *pSpectInfoParams)
 	pSpectInfo = pSpectInfoParams->pSpectCh;
 	for (j = 0; j < pSpectInfoParams->numSpectChans; j++) {
 		if ((pSpectInfo[j].chNum >= WLAN_REG_CH_NUM(CHAN_ENUM_1) &&
-		     pSpectInfo[j].chNum <= WLAN_REG_CH_NUM(CHAN_ENUM_14)) ||
+		     pSpectInfo[j].chNum <= WLAN_REG_CH_NUM(CHAN_ENUM_13)) ||
 		    (pSpectInfo[j].chNum >= CHANNEL_165))
 			pSpectInfo[j].weight = SAP_ACS_WEIGHT_MAX * 4;
 	}
@@ -2130,7 +2129,7 @@ static void sap_sort_chl_weight_vht160(tSapChSelSpectInfo *pSpectInfoParams)
 	pSpectInfo = pSpectInfoParams->pSpectCh;
 	for (j = 0; j < pSpectInfoParams->numSpectChans; j++) {
 		if ((pSpectInfo[j].chNum >= WLAN_REG_CH_NUM(CHAN_ENUM_1) &&
-		     pSpectInfo[j].chNum <= WLAN_REG_CH_NUM(CHAN_ENUM_14)) ||
+		     pSpectInfo[j].chNum <= WLAN_REG_CH_NUM(CHAN_ENUM_13)) ||
 		    (pSpectInfo[j].chNum >= WLAN_REG_CH_NUM(CHAN_ENUM_132) &&
 		     pSpectInfo[j].chNum <= WLAN_REG_CH_NUM(CHAN_ENUM_173)))
 			pSpectInfo[j].weight = SAP_ACS_WEIGHT_MAX * 8;
@@ -2168,7 +2167,7 @@ static void sap_allocate_max_weight_ht40_24_g(
 	spect_info = spect_info_params->pSpectCh;
 	for (j = 0; j < spect_info_params->numSpectChans; j++) {
 		if ((spect_info[j].chNum >= WLAN_REG_CH_NUM(CHAN_ENUM_1) &&
-		     spect_info[j].chNum <= WLAN_REG_CH_NUM(CHAN_ENUM_14)))
+		     spect_info[j].chNum <= WLAN_REG_CH_NUM(CHAN_ENUM_13)))
 			spect_info[j].weight = SAP_ACS_WEIGHT_MAX * 2;
 	}
 }
