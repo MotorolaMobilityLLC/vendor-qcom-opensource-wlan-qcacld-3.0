@@ -5088,18 +5088,6 @@ void ol_register_lro_flush_cb(void (lro_flush_cb)(void *),
 		TXRX_ASSERT2(0);
 		goto out;
 	}
-	if (pdev->lro_info.lro_flush_cb != NULL) {
-		TXRX_PRINT(TXRX_PRINT_LEVEL_ERR,
-			   "%s: LRO already initialised\n", __func__);
-		if (pdev->lro_info.lro_flush_cb != lro_flush_cb) {
-			TXRX_PRINT(TXRX_PRINT_LEVEL_ERR,
-				   "lro_flush_cb is differ to previously registered callback\n")
-			TXRX_ASSERT2(0);
-			goto out;
-		}
-		qdf_atomic_inc(&pdev->lro_info.lro_dev_cnt);
-		goto out;
-	}
 	pdev->lro_info.lro_flush_cb = lro_flush_cb;
 	hif_device = (struct hif_opaque_softc *)
 				cds_get_context(QDF_MODULE_ID_HIF);
@@ -5112,7 +5100,6 @@ void ol_register_lro_flush_cb(void (lro_flush_cb)(void *),
 	}
 
 	hif_lro_flush_cb_register(hif_device, ol_txrx_lro_flush, lro_init_cb);
-	qdf_atomic_inc(&pdev->lro_info.lro_dev_cnt);
 
 out:
 	return;
@@ -5136,14 +5123,8 @@ void ol_deregister_lro_flush_cb(void (lro_deinit_cb)(void *))
 		TXRX_PRINT(TXRX_PRINT_LEVEL_ERR, "%s: pdev NULL!", __func__);
 		return;
 	}
-	if (qdf_atomic_dec_and_test(&pdev->lro_info.lro_dev_cnt) == 0) {
-		TXRX_PRINT(TXRX_PRINT_LEVEL_ERR,
-			   "%s: Other LRO enabled modules still exist, do not unregister the lro_flush_cb\n", __func__);
-		return;
-	}
 	hif_device =
 		(struct hif_opaque_softc *)cds_get_context(QDF_MODULE_ID_HIF);
-
 	if (qdf_unlikely(hif_device == NULL)) {
 		TXRX_PRINT(TXRX_PRINT_LEVEL_ERR,
 			"%s: hif_device NULL!", __func__);
