@@ -9970,6 +9970,29 @@ enum dot11p_mode {
 #define CFG_ENABLE_PACKET_FILTERS_MIN      (0)
 #define CFG_ENABLE_PACKET_FILTERS_MAX      (63)
 
+/*
+ * g_is_bssid_hint_priority - Set priority for connection with bssid_hint
+ * BSSID.
+ * @Min: 0
+ * @Max: 1
+ * @Default: 1
+ *
+ * This ini is used to give priority to BSS for connection which comes
+ * as part of bssid_hint
+ *
+ * Related: None
+ *
+ * Supported Feature: STA
+ *
+ * Usage: External
+ *
+ * </ini>
+ */
+#define CFG_IS_BSSID_HINT_PRIORITY_NAME    "g_is_bssid_hint_priority"
+#define CFG_IS_BSSID_HINT_PRIORITY_DEFAULT (1)
+#define CFG_IS_BSSID_HINT_PRIORITY_MIN     (0)
+#define CFG_IS_BSSID_HINT_PRIORITY_MAX     (1)
+
 /*---------------------------------------------------------------------------
    Type declarations
    -------------------------------------------------------------------------*/
@@ -10719,6 +10742,7 @@ struct hdd_config {
 	uint8_t packet_filters_bitmap;
 	/* threshold of packet drops at which FW initiates disconnect */
 	uint16_t pkt_err_disconn_th;
+	bool is_bssid_hint_priority;
 };
 
 #define VAR_OFFSET(_Struct, _Var) (offsetof(_Struct, _Var))

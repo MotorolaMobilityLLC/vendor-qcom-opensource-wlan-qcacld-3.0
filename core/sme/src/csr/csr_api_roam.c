@@ -2642,6 +2642,9 @@ QDF_STATUS csr_change_default_config_param(tpAniSirGlobal pMac,
 			pParam->qcn_ie_support;
 		pMac->roam.configParam.fils_max_chan_guard_time =
 			pParam->fils_max_chan_guard_time;
+		pMac->roam.configParam.is_bssid_hint_priority =
+			pParam->is_bssid_hint_priority;
+
 
 	}
 	return status;
@@ -2883,6 +2886,8 @@ QDF_STATUS csr_get_config_param(tpAniSirGlobal pMac, tCsrConfigParam *pParam)
 		pMac->roam.configParam.qcn_ie_support;
 	pParam->fils_max_chan_guard_time =
 		pMac->roam.configParam.fils_max_chan_guard_time;
+	pParam->is_bssid_hint_priority =
+		pMac->roam.configParam.is_bssid_hint_priority;
 
 	return QDF_STATUS_SUCCESS;
 }
@@ -7720,6 +7725,37 @@ QDF_STATUS csr_dequeue_roam_command(tpAniSirGlobal pMac, eCsrRoamReason reason)
 	return QDF_STATUS_SUCCESS;
 }
 
+/**
+ * csr_roam_print_candidate_aps() - print all candidate AP in sorted
+ * score.
+ * @pMac: global mac context
+ * @hScanList: Handle for scan list
+ *
+ * Return : void
+ */
+static void csr_roam_print_candidate_aps(tpAniSirGlobal pMac,
+		tScanResultHandle hScanList)
+{
+	tListElem *pEntry;
+	tCsrScanResult *pBssDesc = NULL;
+	tScanResultList *bss_list = NULL;
+
+	bss_list = (tScanResultList *)hScanList;
+	pEntry = csr_ll_peek_head(&bss_list->List, LL_ACCESS_NOLOCK);
+	while (pEntry) {
+		pBssDesc = GET_BASE_ADDR(pEntry,
+				tCsrScanResult, Link);
+		sms_log(pMac, LOG1, FL("BSSID "MAC_ADDRESS_STR" score is %d"),
+			MAC_ADDR_ARRAY(pBssDesc->Result.BssDescriptor.bssId),
+			pBssDesc->bss_score);
+
+		pEntry = csr_ll_next(&bss_list->List, pEntry,
+				LL_ACCESS_NOLOCK);
+	}
+	return;
+
+}
+
 QDF_STATUS csr_roam_connect(tpAniSirGlobal pMac, uint32_t sessionId,
 		tCsrRoamProfile *pProfile,
 		uint32_t *pRoamId)
@@ -7832,6 +7868,7 @@ QDF_STATUS csr_roam_connect(tpAniSirGlobal pMac, uint32_t sessionId,
 	status = csr_scan_get_result(pMac, pScanFilter, &hBSSList);
 	sms_log(pMac, LOG1,
 		FL("******* csr_scan_get_result Status ****** %d"), status);
+	csr_roam_print_candidate_aps(pMac, hBSSList);
 	if (QDF_IS_STATUS_SUCCESS(status)) {
 		/* check if set hw mode needs to be done */
 		if ((pScanFilter->csrPersona == QDF_STA_MODE) ||
