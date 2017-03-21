@@ -9016,6 +9016,11 @@ int hdd_register_cb(hdd_context_t *hdd_ctx)
 
 	wlan_hdd_dcc_register_for_dcc_stats_event(hdd_ctx);
 
+	status = sme_congestion_register_callback(hdd_ctx->hHal,
+					     hdd_update_cca_info_cb);
+	if (!QDF_IS_STATUS_SUCCESS(status))
+		hdd_err("set congestion callback failed");
+
 	EXIT();
 
 	return ret;

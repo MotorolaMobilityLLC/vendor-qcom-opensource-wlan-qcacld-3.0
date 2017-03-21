@@ -3670,4 +3670,16 @@ void hdd_process_defer_disconnect(hdd_adapter_t *adapter);
  * Return: 0 for success, non-zero for failure
  */
 int wlan_hdd_try_disconnect(hdd_adapter_t *adapter);
+
+/**
+ * hdd_update_cca_info_cb() - stores congestion value in station context
+ * @context : HDD context
+ * @congestion : congestion
+ * @vdev_id : vdev id
+ *
+ * Return: None
+ */
+void hdd_update_cca_info_cb(void *context, uint32_t congestion,
+			uint32_t vdev_id);
+
 #endif
