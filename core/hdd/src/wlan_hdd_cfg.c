@@ -4294,6 +4294,13 @@ REG_TABLE_ENTRY g_registry_table[] = {
 		CFG_SAP_INTERNAL_RESTART_MIN,
 		CFG_SAP_INTERNAL_RESTART_MAX),
 
+	REG_VARIABLE(CFG_SAP_RESTART_ON_CH_AVOID_NAME, WLAN_PARAM_Integer,
+		struct hdd_config, sap_restart_on_ch_avoid,
+		VAR_FLAGS_OPTIONAL | VAR_FLAGS_RANGE_CHECK_ASSUME_DEFAULT,
+		CFG_SAP_RESTART_ON_CH_AVOID_DEFAULT,
+		CFG_SAP_RESTART_ON_CH_AVOID_MIN,
+		CFG_SAP_RESTART_ON_CH_AVOID_MAX),
+
 	REG_VARIABLE(CFG_ENABLE_BCAST_PROBE_RESP_NAME, WLAN_PARAM_Integer,
 		struct hdd_config, enable_bcast_probe_rsp,
 		VAR_FLAGS_OPTIONAL | VAR_FLAGS_RANGE_CHECK_ASSUME_DEFAULT,
@@ -5858,6 +5865,9 @@ void hdd_cfg_print(hdd_context_t *pHddCtx)
 	hdd_info("Name = [%s] Value = [%d]",
 		CFG_SAP_INTERNAL_RESTART_NAME,
 		pHddCtx->config->sap_internal_restart);
+	hdd_debug("Name = [%s] Value = [%d]",
+		CFG_SAP_RESTART_ON_CH_AVOID_NAME,
+		pHddCtx->config->sap_restart_on_ch_avoid);
 	hdd_info("Name = [%s] value = [%u]",
 		 CFG_DROPPED_PKT_DISCONNECT_TH_NAME,
 		 pHddCtx->config->pkt_err_disconn_th);
