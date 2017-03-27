@@ -828,6 +828,26 @@ static void hdd_update_vdev_nss(hdd_context_t *hdd_ctx)
 			cfg_ini->vdev_type_nss_5g, eCSR_BAND_5G);
 }
 
+/**
+ * hdd_update_hw_dbs_capable() - sets the dbs capability of the device
+ * @hdd_ctx: HDD context
+ *
+ * Sets the DBS capability as per INI and firmware capability
+ *
+ * Return: None
+ */
+static void hdd_update_hw_dbs_capable(hdd_context_t *hdd_ctx)
+{
+	struct hdd_config *cfg_ini = hdd_ctx->config;
+	uint8_t hw_dbs_capable = 0;
+
+	if ((!cfg_ini->dual_mac_feature_disable)
+	    && wma_is_hw_dbs_capable())
+		hw_dbs_capable = 1;
+
+	sme_update_hw_dbs_capable(hdd_ctx->hHal, hw_dbs_capable);
+}
+
 static void hdd_update_tgt_ht_cap(hdd_context_t *hdd_ctx,
 				  struct wma_tgt_ht_cap *cfg)
 {
@@ -1448,6 +1468,8 @@ void hdd_update_tgt_cfg(void *context, void *param)
 	hdd_update_tgt_vht_cap(hdd_ctx, &cfg->vht_cap);
 
 	hdd_update_vdev_nss(hdd_ctx);
+
+	hdd_update_hw_dbs_capable(hdd_ctx);
 
 	hdd_ctx->config->fine_time_meas_cap &= cfg->fine_time_measurement_cap;
 	hdd_ctx->fine_time_meas_cap_target = cfg->fine_time_measurement_cap;
@@ -8397,6 +8419,16 @@ int hdd_wlan_stop_modules(hdd_context_t *hdd_ctx)
 	}
 	mutex_lock(&hdd_ctx->iface_change_lock);
 	hdd_ctx->stop_modules_in_progress = true;
+
+	if (cds_return_external_threads_count() || hdd_ctx->isWiphySuspended) {
+		mutex_unlock(&hdd_ctx->iface_change_lock);
+		hdd_warn("External threads %d wiphy suspend %d",
+			cds_return_external_threads_count(),
+			hdd_ctx->isWiphySuspended);
+		qdf_mc_timer_start(&hdd_ctx->iface_change_timer,
+				   hdd_ctx->config->iface_change_wait_time);
+		return 0;
+	}
 
 	hdd_info("Present Driver Status: %d", hdd_ctx->driver_status);
 
