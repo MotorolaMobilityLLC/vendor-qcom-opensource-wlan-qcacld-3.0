@@ -2487,6 +2487,16 @@ QDF_STATUS wma_open(void *cds_context,
 				wma_flush_complete_evt_handler,
 				WMA_RX_WORK_CTX);
 
+	wma_handle->auto_power_save_enabled =
+		cds_cfg->auto_power_save_fail_mode;
+	/* Register PWR_SAVE_FAIL event only in case of recovery(1) */
+	if (wma_handle->auto_power_save_enabled) {
+		wmi_unified_register_event_handler(wma_handle->wmi_handle,
+			WMI_PDEV_CHIP_POWER_SAVE_FAILURE_DETECTED_EVENTID,
+			wma_chip_power_save_failure_detected_handler,
+			WMA_RX_SERIALIZER_CTX);
+	}
+
 	wma_ndp_register_all_event_handlers(wma_handle);
 	wma_register_debug_callback();
 

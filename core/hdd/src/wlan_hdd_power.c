@@ -1653,6 +1653,9 @@ QDF_STATUS hdd_wlan_re_init(void)
 	}
 
 	hdd_lpass_notify_start(pHddCtx);
+	/* set chip power save failure detected callback */
+	sme_set_chip_pwr_save_fail_cb(pHddCtx->hHal,
+				      hdd_chip_pwr_save_fail_detected_cb);
 
 	hdd_err("WLAN host driver reinitiation completed!");
 	goto success;

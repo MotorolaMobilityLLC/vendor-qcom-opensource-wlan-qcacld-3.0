@@ -9955,6 +9955,25 @@ enum dot11p_mode {
    Type declarations
    -------------------------------------------------------------------------*/
 
+/*
+ * <ini>
+ * g_auto_detect_power_failure_mode - auto detect power save failure mode
+ * @Min: 0 : Recovery
+ * @Max: 1 : WMI
+ * @Default: 0
+ *
+ * This ini specifies the behavior of FW in case of
+ * CHIP_POWER_SAVE_FAIL_DETECTED event
+ *
+ * Usage: External
+ *
+ * </ini>
+ */
+#define CFG_AUTO_DETECT_POWER_FAIL_MODE_NAME "g_auto_detect_power_failure_mode"
+#define CFG_AUTO_DETECT_POWER_FAIL_MODE_MIN             (0)
+#define CFG_AUTO_DETECT_POWER_FAIL_MODE_MAX             (1)
+#define CFG_AUTO_DETECT_POWER_FAIL_MODE_DEFAULT         (0)
+
 struct hdd_config {
 	/* Bitmap to track what is explicitly configured */
 	DECLARE_BITMAP(bExplicitCfg, MAX_CFG_INI_ITEMS);
@@ -10676,6 +10695,7 @@ struct hdd_config {
 	uint8_t                     rssi_penalize_factor_5g;
 	uint8_t                     max_rssi_penalize_5g;
 
+	uint8_t                     auto_pwr_save_fail_mode;
 	uint8_t packet_filters_bitmap;
 	/* threshold of packet drops at which FW initiates disconnect */
 	uint16_t pkt_err_disconn_th;
