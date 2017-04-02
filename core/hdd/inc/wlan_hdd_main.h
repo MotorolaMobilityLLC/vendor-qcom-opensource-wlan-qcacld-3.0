@@ -2066,7 +2066,7 @@ int hdd_start_ftm_adapter(hdd_adapter_t *adapter);
 int hdd_set_fw_params(hdd_adapter_t *adapter);
 int hdd_wlan_start_modules(hdd_context_t *hdd_ctx, hdd_adapter_t *adapter,
 			   bool reinit);
-int hdd_wlan_stop_modules(hdd_context_t *hdd_ctx);
+int hdd_wlan_stop_modules(hdd_context_t *hdd_ctx, bool ftm_mode);
 int hdd_start_adapter(hdd_adapter_t *adapter);
 
 /**
@@ -2171,4 +2171,13 @@ static inline void hdd_init_nud_stats_ctx(hdd_context_t *hdd_ctx)
  */
 
 void hdd_start_complete(int ret);
+
+/**
+ * hdd_unregister_notifiers()- unregister kernel notifiers
+ * @hdd_ctx: Hdd Context
+ *
+ * Unregister netdev notifiers like Netdevice,IPv4 and IPv6.
+ *
+ */
+void hdd_unregister_notifiers(hdd_context_t *hdd_ctx);
 #endif /* end #if !defined(WLAN_HDD_MAIN_H) */

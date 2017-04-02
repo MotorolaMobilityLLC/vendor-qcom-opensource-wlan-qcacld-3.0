@@ -1161,11 +1161,16 @@ QDF_STATUS cds_sched_close(void *p_cds_context)
 {
 	QDF_TRACE(QDF_MODULE_ID_QDF, QDF_TRACE_LEVEL_INFO_HIGH,
 		  "%s: invoked", __func__);
+
 	if (gp_cds_sched_context == NULL) {
 		QDF_TRACE(QDF_MODULE_ID_QDF, QDF_TRACE_LEVEL_ERROR,
 			  "%s: gp_cds_sched_context == NULL", __func__);
 		return QDF_STATUS_E_FAILURE;
 	}
+
+	if (gp_cds_sched_context->McThread == 0)
+		return QDF_STATUS_SUCCESS;
+
 	/* shut down MC Thread */
 	set_bit(MC_SHUTDOWN_EVENT, &gp_cds_sched_context->mcEventFlag);
 	set_bit(MC_POST_EVENT, &gp_cds_sched_context->mcEventFlag);
@@ -1192,6 +1197,7 @@ QDF_STATUS cds_sched_close(void *p_cds_context)
 	unregister_hotcpu_notifier(&cds_cpu_hotplug_notifier);
 	gp_cds_sched_context->cpu_hot_plug_notifier = NULL;
 #endif
+	gp_cds_sched_context = NULL;
 	return QDF_STATUS_SUCCESS;
 } /* cds_sched_close() */
 
@@ -1392,8 +1398,7 @@ void cds_ssr_protect_init(void)
  * Return:
  *        void
  */
-
-static void cds_print_external_threads(void)
+void cds_print_external_threads(void)
 {
 	int i = 0;
 	unsigned long irq_flags;

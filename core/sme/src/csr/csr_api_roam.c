@@ -6576,7 +6576,7 @@ static void csr_roam_process_start_bss_success(tpAniSirGlobal mac_ctx,
 	if (!CSR_IS_INFRA_AP(profile)) {
 		scan_res =
 			csr_scan_append_bss_description(mac_ctx,
-					bss_desc, ies_ptr, false,
+					bss_desc, ies_ptr,
 					session_id);
 	}
 	csr_roam_save_connected_bss_desc(mac_ctx, session_id, bss_desc);
@@ -8670,7 +8670,14 @@ static void csr_roam_join_rsp_processor(tpAniSirGlobal pMac,
 					QDF_TRACE_LEVEL_ERROR,
 					FL("disconnect is pending, complete roam"));
 
+			if (session_ptr->bRefAssocStartCnt)
+				session_ptr->bRefAssocStartCnt--;
+
 			session_ptr->join_bssid_count = 0;
+			csr_roam_call_callback(pMac, session_ptr->sessionId,
+				NULL, roamId,
+				eCSR_ROAM_ASSOCIATION_COMPLETION,
+				eCSR_ROAM_RESULT_NOT_ASSOCIATED);
 			csr_roam_complete(pMac, eCsrNothingToJoin, NULL);
 		}
 	} /*else: ( eSIR_SME_SUCCESS == pSmeJoinRsp->statusCode ) */
@@ -19547,7 +19554,7 @@ QDF_STATUS csr_issue_stored_joinreq(tpAniSirGlobal mac_ctx,
 void csr_process_set_hw_mode(tpAniSirGlobal mac, tSmeCmd *command)
 {
 	uint32_t len;
-	struct s_sir_set_hw_mode *cmd;
+	struct s_sir_set_hw_mode *cmd = NULL;
 	QDF_STATUS status;
 	tSirMsgQ msg;
 	struct sir_set_hw_mode_resp *param;
@@ -19634,6 +19641,8 @@ void csr_process_set_hw_mode(tpAniSirGlobal mac, tSmeCmd *command)
 	}
 	return;
 fail:
+	if (cmd)
+		qdf_mem_free(cmd);
 	param = qdf_mem_malloc(sizeof(*param));
 	if (!param) {
 		sms_log(mac, LOGE,
@@ -20181,6 +20190,7 @@ QDF_STATUS csr_roam_synch_callback(tpAniSirGlobal mac_ctx,
 		eCSR_ASSOC_STATE_TYPE_INFRA_ASSOCIATED;
 	sme_qos_csr_event_ind(mac_ctx, session_id,
 		SME_QOS_CSR_REASSOC_COMPLETE, &assoc_info);
+	sme_qos_remove_addts_delts_cmd(mac_ctx, session_id);
 	roam_info->pBssDesc = bss_desc;
 	conn_profile->acm_mask = sme_qos_get_acm_mask(mac_ctx,
 			bss_desc, NULL);

@@ -3726,23 +3726,26 @@ QDF_STATUS hdd_stop_adapter(hdd_context_t *hdd_ctx, hdd_adapter_t *adapter,
 					hdd_ctx->hHal,
 					adapter->sessionId,
 					eCSR_DISCONNECT_REASON_IBSS_LEAVE);
+			else if (QDF_STA_MODE == adapter->device_mode)
+				qdf_ret_status =
+					wlan_hdd_try_disconnect(adapter);
 			else
 				qdf_ret_status = sme_roam_disconnect(
 					hdd_ctx->hHal,
 					adapter->sessionId,
 					eCSR_DISCONNECT_REASON_UNSPECIFIED);
 			/* success implies disconnect command got queued up successfully */
-			if (qdf_ret_status == QDF_STATUS_SUCCESS) {
+			if (qdf_ret_status == QDF_STATUS_SUCCESS &&
+					QDF_STA_MODE != adapter->device_mode) {
 				rc = wait_for_completion_timeout(
 					&adapter->disconnect_comp_var,
 					msecs_to_jiffies
 						(WLAN_WAIT_TIME_DISCONNECT));
-				if (!rc) {
+				if (!rc)
 					hdd_warn("wait on disconnect_comp_var failed");
-				}
-			} else {
-				hdd_warn("failed to post disconnect event to SME");
 			}
+			if (qdf_ret_status != QDF_STATUS_SUCCESS)
+				hdd_warn("failed to post disconnect");
 			memset(&wrqu, '\0', sizeof(wrqu));
 			wrqu.ap_addr.sa_family = ARPHRD_ETHER;
 			memset(wrqu.ap_addr.sa_data, '\0', ETH_ALEN);
@@ -4880,7 +4883,7 @@ out:
  *
  * Return: None.
  */
-static void hdd_unregister_notifiers(hdd_context_t *hdd_ctx)
+void hdd_unregister_notifiers(hdd_context_t *hdd_ctx)
 {
 	hdd_wlan_unregister_ip6_notifier(hdd_ctx);
 
@@ -5158,9 +5161,9 @@ static void hdd_wlan_exit(hdd_context_t *hdd_ctx)
 	}
 
 	/*
-	 * Close the scheduler before calling cds_close to make sure no thread
-	 * is scheduled after the each module close is called i.e after all the
-	 * data structures are freed.
+	 * Close the scheduler before calling cds_close to make sure
+	 * no thread is scheduled after the each module close is
+	 * is called i.e after all the data structures are freed.
 	 */
 	qdf_status = cds_sched_close(p_cds_context);
 	if (!QDF_IS_STATUS_SUCCESS(qdf_status)) {
@@ -5168,7 +5171,7 @@ static void hdd_wlan_exit(hdd_context_t *hdd_ctx)
 		QDF_ASSERT(QDF_IS_STATUS_SUCCESS(qdf_status));
 	}
 
-	hdd_wlan_stop_modules(hdd_ctx);
+	hdd_wlan_stop_modules(hdd_ctx, false);
 
 	qdf_spinlock_destroy(&hdd_ctx->hdd_adapter_lock);
 	qdf_spinlock_destroy(&hdd_ctx->sta_update_info_lock);
@@ -5191,10 +5194,15 @@ static void hdd_wlan_exit(hdd_context_t *hdd_ctx)
 	cds_flush_work(&hdd_ctx->roc_req_work);
 
 	wlansap_global_deinit();
-	wiphy_unregister(wiphy);
-	wlan_hdd_cfg80211_deinit(wiphy);
-
-	hdd_lpass_notify_stop(hdd_ctx);
+	/*
+	 * If there is re_init failure wiphy would have already de-registered
+	 * check the wiphy status before un-registering again
+	 */
+	if (wiphy && wiphy->registered) {
+		wiphy_unregister(wiphy);
+		wlan_hdd_cfg80211_deinit(wiphy);
+		hdd_lpass_notify_stop(hdd_ctx);
+	}
 
 	hdd_exit_netlink_services(hdd_ctx);
 	mutex_destroy(&hdd_ctx->iface_change_lock);
@@ -5887,10 +5895,11 @@ static int wlan_hdd_init_tx_rx_histogram(hdd_context_t *hdd_ctx)
  */
 void wlan_hdd_deinit_tx_rx_histogram(hdd_context_t *hdd_ctx)
 {
-	if (hdd_ctx->hdd_txrx_hist) {
-		qdf_mem_free(hdd_ctx->hdd_txrx_hist);
-		hdd_ctx->hdd_txrx_hist = NULL;
-	}
+	if (!hdd_ctx || hdd_ctx->hdd_txrx_hist == NULL)
+		return;
+
+	qdf_mem_free(hdd_ctx->hdd_txrx_hist);
+	hdd_ctx->hdd_txrx_hist = NULL;
 }
 
 static uint8_t *convert_level_to_string(uint32_t level)
@@ -8388,6 +8397,7 @@ static int hdd_deconfigure_cds(hdd_context_t *hdd_ctx)
 /**
  * hdd_wlan_stop_modules - Single driver state machine for stoping modules
  * @hdd_ctx: HDD context
+ * @ftm_mode: ftm mode
  *
  * This function maintains the driver state machine it will be invoked from
  * exit, shutdown and con_mode change handler. Depending on the driver state
@@ -8395,16 +8405,19 @@ static int hdd_deconfigure_cds(hdd_context_t *hdd_ctx)
  *
  * Return: 0 for success; non-zero for failure
  */
-int hdd_wlan_stop_modules(hdd_context_t *hdd_ctx)
+int hdd_wlan_stop_modules(hdd_context_t *hdd_ctx, bool ftm_mode)
 {
 	void *hif_ctx;
 	qdf_device_t qdf_ctx;
 	QDF_STATUS qdf_status;
 	int ret = 0;
 	p_cds_sched_context cds_sched_context = NULL;
+	bool is_unload_stop = cds_is_driver_unloading();
+	bool is_recover_stop = cds_is_driver_recovering();
+	bool is_idle_stop = !is_unload_stop && !is_recover_stop;
+	int active_threads;
 
 	ENTER();
-
 
 	qdf_ctx = cds_get_context(QDF_MODULE_ID_QDF_DEVICE);
 	if (!qdf_ctx) {
@@ -8412,22 +8425,23 @@ int hdd_wlan_stop_modules(hdd_context_t *hdd_ctx)
 		return -EINVAL;
 	}
 
-	cds_sched_context = get_cds_sched_ctxt();
-	if (!cds_sched_context) {
-		hdd_err("cds scheduler context NULL");
-		return -EINVAL;
-	}
 	mutex_lock(&hdd_ctx->iface_change_lock);
 	hdd_ctx->stop_modules_in_progress = true;
 
-	if (cds_return_external_threads_count() || hdd_ctx->isWiphySuspended) {
-		mutex_unlock(&hdd_ctx->iface_change_lock);
+	active_threads = cds_return_external_threads_count();
+	if (active_threads > 0 || hdd_ctx->isWiphySuspended) {
 		hdd_warn("External threads %d wiphy suspend %d",
-			cds_return_external_threads_count(),
-			hdd_ctx->isWiphySuspended);
-		qdf_mc_timer_start(&hdd_ctx->iface_change_timer,
-				   hdd_ctx->config->iface_change_wait_time);
-		return 0;
+			 active_threads, hdd_ctx->isWiphySuspended);
+
+		cds_print_external_threads();
+
+		if (is_idle_stop && !ftm_mode) {
+			mutex_unlock(&hdd_ctx->iface_change_lock);
+			qdf_mc_timer_start(&hdd_ctx->iface_change_timer,
+				hdd_ctx->config->iface_change_wait_time);
+			hdd_ctx->stop_modules_in_progress = false;
+			return 0;
+		}
 	}
 
 	hdd_info("Present Driver Status: %d", hdd_ctx->driver_status);
@@ -8473,9 +8487,13 @@ int hdd_wlan_stop_modules(hdd_context_t *hdd_ctx)
 		ret = -EINVAL;
 		QDF_ASSERT(0);
 	}
+
 	/* Clean up message queues of TX, RX and MC thread */
-	if (!cds_is_driver_recovering())
-		cds_sched_flush_mc_mqs(cds_sched_context);
+	if (!is_recover_stop) {
+		cds_sched_context = get_cds_sched_ctxt();
+		if (cds_sched_context)
+			cds_sched_flush_mc_mqs(cds_sched_context);
+	}
 
 	hif_ctx = cds_get_context(QDF_MODULE_ID_HIF);
 	if (!hif_ctx) {
@@ -8487,7 +8505,7 @@ int hdd_wlan_stop_modules(hdd_context_t *hdd_ctx)
 
 	ol_cds_free();
 
-	if (!cds_is_driver_recovering() && !cds_is_driver_unloading()) {
+	if (is_idle_stop) {
 		ret = pld_power_off(qdf_ctx->dev);
 		if (ret)
 			hdd_err("CNSS power down failed put device into Low power mode:%d",
@@ -8526,7 +8544,7 @@ static void hdd_iface_change_callback(void *priv)
 
 	ENTER();
 	hdd_info("Interface change timer expired close the modules!");
-	ret = hdd_wlan_stop_modules(hdd_ctx);
+	ret = hdd_wlan_stop_modules(hdd_ctx, false);
 	if (ret)
 		hdd_alert("Failed to stop modules");
 	EXIT();
@@ -8752,7 +8770,7 @@ err_wiphy_unregister:
 	wiphy_unregister(hdd_ctx->wiphy);
 
 err_stop_modules:
-	hdd_wlan_stop_modules(hdd_ctx);
+	hdd_wlan_stop_modules(hdd_ctx, false);
 
 err_exit_nl_srv:
 	if (DRIVER_MODULES_CLOSED == hdd_ctx->driver_status) {
@@ -10356,7 +10374,7 @@ static int __con_mode_handler(const char *kmessage, struct kernel_param *kp,
 	/* Cleanup present mode before switching to new mode */
 	hdd_cleanup_present_mode(hdd_ctx, curr_mode);
 
-	ret = hdd_wlan_stop_modules(hdd_ctx);
+	ret = hdd_wlan_stop_modules(hdd_ctx, true);
 	if (ret) {
 		hdd_err("Stop wlan modules failed");
 		goto reset_flags;
