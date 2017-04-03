@@ -179,5 +179,7 @@ tSirRetStatus mac_close(tHalHandle hHal)
 
 	log_deinit(pMac);
 
+	qdf_mem_zero(pMac, sizeof(*pMac));
+
 	return eSIR_SUCCESS;
 }
