@@ -5564,8 +5564,12 @@ static int hdd_wiphy_init(hdd_context_t *hdd_ctx)
 
 	/* registration of wiphy dev with cfg80211 */
 	ret_val = wlan_hdd_cfg80211_register(wiphy);
-	if (0 > ret_val)
+	if (0 > ret_val) {
 		hdd_err("wiphy registration failed");
+		return ret_val;
+	}
+
+	hdd_program_country_code(hdd_ctx);
 
 	return ret_val;
 }
@@ -7965,8 +7969,6 @@ static int hdd_pre_enable_configure(hdd_context_t *hdd_ctx)
 		hdd_err("WMI_PDEV_PARAM_TX_CHAIN_MASK_1SS failed %d", ret);
 		goto out;
 	}
-
-	hdd_program_country_code(hdd_ctx);
 
 	status = hdd_set_sme_chan_list(hdd_ctx);
 	if (status != QDF_STATUS_SUCCESS) {

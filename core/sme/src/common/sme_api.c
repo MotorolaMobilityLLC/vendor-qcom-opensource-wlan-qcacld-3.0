@@ -1357,13 +1357,22 @@ QDF_STATUS sme_get_soft_ap_domain(tHalHandle hHal, v_REGDOMAIN_t *domainIdSoftAp
 QDF_STATUS sme_set_reg_info(tHalHandle hHal, uint8_t *apCntryCode)
 {
 	QDF_STATUS status = QDF_STATUS_E_FAILURE;
+	int32_t ctry_val;
+
 	tpAniSirGlobal pMac = PMAC_STRUCT(hHal);
 
 	MTRACE(qdf_trace(QDF_MODULE_ID_SME,
 			 TRACE_CODE_SME_RX_HDD_MSG_SET_REGINFO, NO_SESSION, 0));
+
 	if (NULL == apCntryCode) {
 		sms_log(pMac, LOGE, "Empty Country Code, nothing to update");
 		return status;
+	}
+
+	ctry_val = cds_get_country_from_alpha2(apCntryCode);
+	if (ctry_val == CTRY_DEFAULT) {
+		sms_log(pMac, LOGE, "invalid AP alpha2");
+		return  status;
 	}
 
 	status = csr_set_reg_info(hHal, apCntryCode);
