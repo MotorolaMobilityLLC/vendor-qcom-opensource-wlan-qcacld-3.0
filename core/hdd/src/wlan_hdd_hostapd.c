@@ -7317,6 +7317,7 @@ int wlan_hdd_cfg80211_start_bss(hdd_adapter_t *pHostapdAdapter,
 		return -EINVAL;
 	}
 
+	wlan_hdd_tdls_disable_offchan_and_teardown_links(pHddCtx);
 	if (cds_is_hw_mode_change_in_progress()) {
 		status = qdf_wait_for_connection_update();
 		if (!QDF_IS_STATUS_SUCCESS(status)) {
@@ -8414,7 +8415,6 @@ static int __wlan_hdd_cfg80211_change_beacon(struct wiphy *wiphy,
 	hdd_context_t *pHddCtx;
 	beacon_data_t *old, *new;
 	int status;
-	bool update_beacon;
 
 	ENTER();
 
@@ -8462,11 +8462,9 @@ static int __wlan_hdd_cfg80211_change_beacon(struct wiphy *wiphy,
 	}
 
 	pAdapter->sessionCtx.ap.beacon = new;
-	update_beacon = (pAdapter->device_mode ==
-			     QDF_P2P_GO_MODE) ? true : false;
-	hdd_info("update beacon for P2P GO: %d", update_beacon);
+	hdd_debug("update beacon for P2P GO/SAP");
 	status = wlan_hdd_cfg80211_start_bss(pAdapter, params, NULL,
-					0, 0, false, update_beacon);
+					0, 0, false, true);
 
 	EXIT();
 	return status;

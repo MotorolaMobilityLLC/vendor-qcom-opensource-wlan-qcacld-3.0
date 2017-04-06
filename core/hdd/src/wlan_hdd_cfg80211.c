@@ -2534,6 +2534,10 @@ __wlan_hdd_cfg80211_set_ext_roam_params(struct wiphy *wiphy,
 			goto fail;
 		}
 		hdd_debug("Num of Preferred BSSID (%d)", count);
+		if (!tb[QCA_WLAN_VENDOR_ATTR_ROAMING_PARAM_SET_BSSID_PREFS]) {
+			hdd_err("attr Preferred BSSID failed");
+			goto fail;
+		}
 		i = 0;
 		nla_for_each_nested(curr_attr,
 			tb[QCA_WLAN_VENDOR_ATTR_ROAMING_PARAM_SET_BSSID_PREFS],
@@ -4660,7 +4664,7 @@ static int __wlan_hdd_cfg80211_wifi_logger_get_ring_data(struct wiphy *wiphy,
 	} else {
 		wlan_report_log_completion(WLAN_LOG_TYPE_NON_FATAL,
 					   WLAN_LOG_INDICATOR_FRAMEWORK,
-					   WLAN_LOG_REASON_CODE_UNUSED);
+					   WLAN_LOG_REASON_CODE_UNUSED, ring_id);
 	}
 	return 0;
 }
@@ -12350,6 +12354,8 @@ static int wlan_hdd_cfg80211_connect_start(hdd_adapter_t *pAdapter,
 		status = -EINVAL;
 		goto ret_status;
 	}
+
+	wlan_hdd_tdls_disable_offchan_and_teardown_links(pHddCtx);
 
 	pRoamProfile = &pWextState->roamProfile;
 	qdf_mem_zero(&hdd_sta_ctx->conn_info.conn_flag,
