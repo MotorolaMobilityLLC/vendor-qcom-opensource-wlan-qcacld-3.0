@@ -2534,6 +2534,10 @@ __wlan_hdd_cfg80211_set_ext_roam_params(struct wiphy *wiphy,
 			goto fail;
 		}
 		hdd_debug("Num of Preferred BSSID (%d)", count);
+		if (!tb[QCA_WLAN_VENDOR_ATTR_ROAMING_PARAM_SET_BSSID_PREFS]) {
+			hdd_err("attr Preferred BSSID failed");
+			goto fail;
+		}
 		i = 0;
 		nla_for_each_nested(curr_attr,
 			tb[QCA_WLAN_VENDOR_ATTR_ROAMING_PARAM_SET_BSSID_PREFS],
@@ -4660,7 +4664,7 @@ static int __wlan_hdd_cfg80211_wifi_logger_get_ring_data(struct wiphy *wiphy,
 	} else {
 		wlan_report_log_completion(WLAN_LOG_TYPE_NON_FATAL,
 					   WLAN_LOG_INDICATOR_FRAMEWORK,
-					   WLAN_LOG_REASON_CODE_UNUSED);
+					   WLAN_LOG_REASON_CODE_UNUSED, ring_id);
 	}
 	return 0;
 }
@@ -8623,9 +8627,9 @@ static int __wlan_hdd_cfg80211_set_nud_stats(struct wiphy *wiphy,
 	if (arp_stats_params.flag) {
 		QDF_TRACE(QDF_MODULE_ID_HDD, QDF_TRACE_LEVEL_INFO,
 			  "%s STATS_SET_START Cleared!!", __func__);
-		qdf_mem_zero(&adapter->hdd_stats.hdd_arp_stats,
-			     sizeof(adapter->hdd_stats.hdd_arp_stats));
 	}
+	qdf_mem_zero(&adapter->hdd_stats.hdd_arp_stats,
+		     sizeof(adapter->hdd_stats.hdd_arp_stats));
 
 	arp_stats_params.pkt_type = WLAN_NUD_STATS_ARP_PKT_TYPE;
 	arp_stats_params.vdev_id = adapter->sessionId;
@@ -12351,6 +12355,8 @@ static int wlan_hdd_cfg80211_connect_start(hdd_adapter_t *pAdapter,
 		goto ret_status;
 	}
 
+	wlan_hdd_tdls_disable_offchan_and_teardown_links(pHddCtx);
+
 	pRoamProfile = &pWextState->roamProfile;
 	qdf_mem_zero(&hdd_sta_ctx->conn_info.conn_flag,
 		     sizeof(hdd_sta_ctx->conn_info.conn_flag));
@@ -14624,14 +14630,6 @@ int __wlan_hdd_cfg80211_del_station(struct wiphy *wiphy,
 						pAdapter->aStaInfo[i].
 							macAddrSTA.bytes,
 						QDF_MAC_ADDR_SIZE);
-					if (hdd_ipa_uc_is_enabled(pHddCtx)) {
-						hdd_ipa_wlan_evt(pAdapter,
-							pAdapter->
-								 aStaInfo[i].
-								 ucSTAId,
-							HDD_IPA_CLIENT_DISCONNECT,
-							mac);
-					}
 					hdd_notice("Delete STA with MAC::"
 						  MAC_ADDRESS_STR,
 					       MAC_ADDR_ARRAY(mac));
@@ -14670,11 +14668,6 @@ int __wlan_hdd_cfg80211_del_station(struct wiphy *wiphy,
 					  MAC_ADDRESS_STR,
 				       MAC_ADDR_ARRAY(mac));
 				return -ENOENT;
-			}
-
-			if (hdd_ipa_uc_is_enabled(pHddCtx)) {
-				hdd_ipa_wlan_evt(pAdapter, staId,
-					HDD_IPA_CLIENT_DISCONNECT, mac);
 			}
 
 			if (pAdapter->aStaInfo[staId].isDeauthInProgress ==

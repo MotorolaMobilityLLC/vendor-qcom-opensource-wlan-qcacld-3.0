@@ -8602,6 +8602,33 @@ enum dot11p_mode {
 #define CFG_SAP_INTERNAL_RESTART_DEFAULT (1)
 
 /*
+ * <ini>
+ * restart_beaconing_on_chan_avoid_event - control the beaconing entity to move
+ * away from active LTE channels
+ * @Min: 0
+ * @Max: 1
+ * @Default: 1
+ *
+ * This ini is used to control the beaconing entity (SAP/GO) to move away from
+ * active LTE channels when channel avoidance event is received
+ * restart_beaconing_on_chan_avoid_event=0: Don't allow beaconing entity move
+ * from active LTE channels
+ * restart_beaconing_on_chan_avoid_event=1: Allow beaconing entity move from
+ * active LTE channels
+ *
+ * Related: None
+ *
+ * Supported Feature: channel avoidance
+ *
+ * Usage: Internal/External
+ *
+ * </ini>
+ */
+#define CFG_RESTART_BEACONING_ON_CH_AVOID_NAME    "restart_beaconing_on_chan_avoid_event"
+#define CFG_RESTART_BEACONING_ON_CH_AVOID_MIN     (0)
+#define CFG_RESTART_BEACONING_ON_CH_AVOID_MAX     (1)
+#define CFG_RESTART_BEACONING_ON_CH_AVOID_DEFAULT (1)
+/*
  * This parameter will avoid updating ap_sta_inactivity from hostapd.conf
  * file. If a station does not send anything in ap_max_inactivity seconds, an
  * empty data frame is sent to it in order to verify whether it is
@@ -9075,7 +9102,7 @@ enum dot11p_mode {
 #define CFG_PER_ROAM_ENABLE_NAME           "gper_roam_enabled"
 #define CFG_PER_ROAM_ENABLE_MIN            (0)
 #define CFG_PER_ROAM_ENABLE_MAX            (3)
-#define CFG_PER_ROAM_ENABLE_DEFAULT        (0)
+#define CFG_PER_ROAM_ENABLE_DEFAULT        (3)
 
 /*
  * <ini>
@@ -10316,7 +10343,7 @@ struct hdd_config {
 	uint32_t ibssPs1RxChainInAtimEnable;
 
 	bool enable_ip_tcp_udp_checksum_offload;
-	bool enablePowersaveOffload;
+	uint8_t enablePowersaveOffload;
 	bool enablefwprint;
 	uint8_t enable_fw_log;
 	uint8_t fVhtAmpduLenExponent;
@@ -10635,6 +10662,7 @@ struct hdd_config {
 	enum active_bpf_mode active_bpf_mode;
 	bool hw_broadcast_filter;
 	bool sap_internal_restart;
+	bool restart_beaconing_on_chan_avoid_event;
 	bool enable_bcast_probe_rsp;
 	bool qcn_ie_support;
 	uint8_t fils_max_chan_guard_time;

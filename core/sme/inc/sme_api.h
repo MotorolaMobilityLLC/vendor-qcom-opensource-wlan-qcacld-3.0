@@ -1278,6 +1278,7 @@ void sme_set_pdev_ht_vht_ies(tHalHandle hHal, bool enable2x2);
 
 void sme_update_vdev_type_nss(tHalHandle hal, uint8_t max_supp_nss,
 		uint32_t vdev_type_nss, eCsrBand band);
+void sme_update_hw_dbs_capable(tHalHandle hal, uint8_t hw_dbs_capable);
 void sme_register_p2p_lo_event(tHalHandle hHal, void *context,
 					p2p_lo_callback callback);
 
@@ -1507,5 +1508,7 @@ QDF_STATUS sme_rso_cmd_status_cb(tHalHandle hal,
 
 void sme_set_5g_band_pref(tHalHandle hal_handle,
 			  struct sme_5g_band_pref_params *pref_params);
+
+QDF_STATUS sme_delete_all_tdls_peers(tHalHandle hal, uint8_t session_id);
 
 #endif /* #if !defined( __SME_API_H ) */
