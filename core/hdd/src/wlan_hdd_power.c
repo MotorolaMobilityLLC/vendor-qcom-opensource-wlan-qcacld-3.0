@@ -1273,7 +1273,7 @@ hdd_suspend_wlan(void (*callback)(void *callbackContext, bool suspended),
 
 		/* stop all TX queues before suspend */
 		hdd_notice("Disabling queues");
-		wlan_hdd_netif_queue_control(pAdapter, WLAN_NETIF_TX_DISABLE,
+		wlan_hdd_netif_queue_control(pAdapter, WLAN_STOP_ALL_NETIF_QUEUE,
 					   WLAN_CONTROL_PATH);
 
 		if (pAdapter->device_mode == QDF_STA_MODE)
