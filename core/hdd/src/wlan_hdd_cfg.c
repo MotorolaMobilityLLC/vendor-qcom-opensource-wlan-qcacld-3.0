@@ -3065,6 +3065,13 @@ REG_TABLE_ENTRY g_registry_table[] = {
 		     CFG_BUS_BANDWIDTH_COMPUTE_INTERVAL_MIN,
 		     CFG_BUS_BANDWIDTH_COMPUTE_INTERVAL_MAX),
 
+	REG_VARIABLE(CFG_ENABLE_TCP_ADV_WIN_SCALE, WLAN_PARAM_Integer,
+		     struct hdd_config, enable_tcp_adv_win_scale,
+		     VAR_FLAGS_OPTIONAL | VAR_FLAGS_RANGE_CHECK_ASSUME_DEFAULT,
+		     CFG_ENABLE_TCP_ADV_WIN_SCALE_DEFAULT,
+		     CFG_ENABLE_TCP_ADV_WIN_SCALE_MIN,
+		     CFG_ENABLE_TCP_ADV_WIN_SCALE_MAX),
+
 	REG_VARIABLE(CFG_ENABLE_TCP_DELACK, WLAN_PARAM_Integer,
 		     struct hdd_config, enable_tcp_delack,
 		     VAR_FLAGS_OPTIONAL | VAR_FLAGS_RANGE_CHECK_ASSUME_DEFAULT,
@@ -5554,7 +5561,10 @@ void hdd_cfg_print(hdd_context_t *pHddCtx)
 	hdd_info("Name = [gbusBandwidthComputeInterval] Value = [%u] ",
 		  pHddCtx->config->busBandwidthComputeInterval);
 	hdd_info("Name = [%s] Value = [%u] ",
-		  CFG_ENABLE_TCP_DELACK,
+		  CFG_ENABLE_TCP_ADV_WIN_SCALE,
+		  pHddCtx->config->enable_tcp_adv_win_scale);
+	hdd_info("Name = [%s] Value = [%u] ",
+	CFG_ENABLE_TCP_DELACK,
 		  pHddCtx->config->enable_tcp_delack);
 	hdd_info("Name = [gTcpDelAckThresholdHigh] Value = [%u] ",
 		  pHddCtx->config->tcpDelackThresholdHigh);
