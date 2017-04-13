@@ -8354,6 +8354,11 @@ static int __wlan_hdd_cfg80211_start_ap(struct wiphy *wiphy,
 				params->ssid, params->ssid_len,
 				params->hidden_ssid, true, false);
 
+		if (status != 0) {
+			hdd_err("Error Start bss Failed");
+			goto err_start_bss;
+		}
+
 		if (pHddCtx->config->sap_max_inactivity_override) {
 			sta_inactivity_timer = qdf_mem_malloc(
 					sizeof(*sta_inactivity_timer));
@@ -8376,6 +8381,13 @@ static int __wlan_hdd_cfg80211_start_ap(struct wiphy *wiphy,
 		}
 	}
 
+	goto success;
+
+err_start_bss:
+	if (pAdapter->sessionCtx.ap.beacon)
+		qdf_mem_free(pAdapter->sessionCtx.ap.beacon);
+	pAdapter->sessionCtx.ap.beacon = NULL;
+success:
 	EXIT();
 	return status;
 }
