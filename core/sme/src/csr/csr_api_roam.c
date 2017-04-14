@@ -7883,6 +7883,7 @@ QDF_STATUS csr_roam_connect(tpAniSirGlobal pMac, uint32_t sessionId,
 						FL("conn update error"));
 					csr_scan_result_purge(pMac, hBSSList);
 					fCallCallback = true;
+					status = QDF_STATUS_E_TIMEOUT;
 					goto error;
 			} else if (status == QDF_STATUS_E_FAILURE) {
 				sms_log(pMac, LOG1, FL("conn update error"));
