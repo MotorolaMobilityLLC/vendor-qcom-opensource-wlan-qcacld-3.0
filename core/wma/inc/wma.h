@@ -2465,5 +2465,16 @@ void wma_set_sap_wow_bitmask(uint32_t *bitmask, uint32_t wow_bitmask_size);
  */
 bool wma_is_wow_bitmask_zero(uint32_t *bitmask,
 			     uint32_t wow_bitmask_size);
+/**
+ * wma_process_roaming_config() - process roam request
+ * @wma_handle: wma handle
+ * @roam_req: roam request parameters
+ *
+ * Main routine to handle ROAM commands coming from CSR module.
+ *
+ * Return: QDF status
+ */
+QDF_STATUS wma_process_roaming_config(tp_wma_handle wma_handle,
+				     tSirRoamOffloadScanReq *roam_req);
 
 #endif
