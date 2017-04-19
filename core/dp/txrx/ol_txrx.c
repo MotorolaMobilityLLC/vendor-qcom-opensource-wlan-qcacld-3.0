@@ -4832,8 +4832,9 @@ void ol_rx_data_process(struct ol_txrx_peer_t *peer,
 	if (!data_rx) {
 		if (ol_txrx_enqueue_rx_frames(&peer->bufq_info, rx_buf_list)
 				!= QDF_STATUS_SUCCESS)
-			TXRX_PRINT(TXRX_PRINT_LEVEL_ERR,
-			"failed to enqueue rx frm to cached_bufq");
+			QDF_TRACE(QDF_MODULE_ID_TXRX, QDF_TRACE_LEVEL_INFO_HIGH,
+				  "%s: failed to enqueue rx frm to cached_bufq",
+				  __func__);
 	} else {
 #ifdef QCA_CONFIG_SMP
 		/*
