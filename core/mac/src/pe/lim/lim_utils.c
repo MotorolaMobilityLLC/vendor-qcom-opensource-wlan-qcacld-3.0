@@ -6922,6 +6922,7 @@ void lim_update_extcap_struct(tpAniSirGlobal mac_ctx,
 	uint8_t *buf, tDot11fIEExtCap *dst)
 {
 	uint8_t out[DOT11F_IE_EXTCAP_MAX_LEN];
+	uint32_t status;
 
 	if (NULL == buf) {
 		lim_log(mac_ctx, LOGE, FL("Invalid Buffer Address"));
@@ -6942,9 +6943,10 @@ void lim_update_extcap_struct(tpAniSirGlobal mac_ctx,
 	qdf_mem_set((uint8_t *)&out[0], DOT11F_IE_EXTCAP_MAX_LEN, 0);
 	qdf_mem_copy(&out[0], &buf[2], buf[1]);
 
-	if (DOT11F_PARSE_SUCCESS != dot11f_unpack_ie_ext_cap(mac_ctx, &out[0],
-					buf[1], dst))
-		lim_log(mac_ctx, LOGE, FL("dot11f_unpack Parse Error "));
+	status = dot11f_unpack_ie_ext_cap(mac_ctx, &out[0],
+					buf[1], dst);
+	if (DOT11F_PARSE_SUCCESS != status)
+		pe_err("dot11f_unpack Parse Error %d", status);
 }
 
 /**
