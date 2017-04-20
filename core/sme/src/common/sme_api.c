@@ -1691,7 +1691,7 @@ QDF_STATUS sme_hdd_ready_ind(tHalHandle hHal)
 		Msg.length = sizeof(tSirSmeReadyReq);
 		Msg.add_bssdescr_cb = csr_scan_process_single_bssdescr;
 		Msg.csr_roam_synch_cb = csr_roam_synch_callback;
-
+		Msg.sme_msg_cb = sme_process_msg_callback;
 
 		if (eSIR_FAILURE != u_mac_post_ctrl_msg(hHal, (tSirMbMsg *) &Msg)) {
 			status = QDF_STATUS_SUCCESS;
@@ -15395,6 +15395,27 @@ bool sme_is_any_session_in_connected_state(tHalHandle h_hal)
 	return ret;
 }
 
+QDF_STATUS sme_set_chip_pwr_save_fail_cb(tHalHandle hal,
+		 void (*cb)(void *,
+		 struct chip_pwr_save_fail_detected_params *))
+{
+
+	QDF_STATUS status  = QDF_STATUS_SUCCESS;
+	tpAniSirGlobal mac = PMAC_STRUCT(hal);
+
+	status = sme_acquire_global_lock(&mac->sme);
+	if (status != QDF_STATUS_SUCCESS) {
+		sms_log(mac, LOGE,
+			FL("sme_AcquireGlobalLock failed!(status=%d)"),
+			status);
+		return status;
+	}
+	mac->sme.chip_power_save_fail_cb = cb;
+	sme_release_global_lock(&mac->sme);
+
+	return status;
+}
+
 /**
  * sme_set_rssi_monitoring() - set rssi monitoring
  * @hal: global hal handle
@@ -17650,5 +17671,18 @@ QDF_STATUS sme_delete_all_tdls_peers(tHalHandle hal, uint8_t session_id)
 		status = QDF_STATUS_E_FAILURE;
 	}
 
+	return status;
+}
+
+QDF_STATUS sme_process_msg_callback(tHalHandle hal, cds_msg_t *msg)
+{
+	QDF_STATUS status = QDF_STATUS_E_FAILURE;
+
+	if (msg == NULL) {
+		QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_ERROR,
+			FL("Empty message for SME Msg callback"));
+		return status;
+	}
+	status = sme_process_msg(hal, msg);
 	return status;
 }

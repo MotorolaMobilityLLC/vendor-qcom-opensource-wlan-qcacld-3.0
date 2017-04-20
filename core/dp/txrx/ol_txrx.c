@@ -3306,11 +3306,12 @@ void peer_unmap_timer_handler(void *data)
 		 peer->mac_addr.raw[0], peer->mac_addr.raw[1],
 		 peer->mac_addr.raw[2], peer->mac_addr.raw[3],
 		 peer->mac_addr.raw[4], peer->mac_addr.raw[5]);
-	wma_peer_debug_dump();
-	if (cds_is_self_recovery_enabled())
-		cds_trigger_recovery(false);
-	else
+	if (!cds_is_driver_recovering()) {
+		wma_peer_debug_dump();
 		QDF_BUG(0);
+	} else {
+		WMA_LOGE("%s: Recovery is in progress, ignore!", __func__);
+	}
 }
 
 
@@ -4772,6 +4773,7 @@ static QDF_STATUS ol_txrx_enqueue_rx_frames(
 
 	buf = rx_buf_list;
 	while (buf) {
+		QDF_NBUF_CB_RX_LRO_INELIGIBLE(buf) = 1;
 		next_buf = qdf_nbuf_queue_next(buf);
 		cache_buf = qdf_mem_malloc(sizeof(*cache_buf));
 		if (!cache_buf) {

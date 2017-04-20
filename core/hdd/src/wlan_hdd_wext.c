@@ -7044,7 +7044,7 @@ static int __iw_set_mlme(struct net_device *dev,
 
 			hdd_notice("Disabling queues");
 			wlan_hdd_netif_queue_control(pAdapter,
-					WLAN_NETIF_TX_DISABLE_N_CARRIER,
+					WLAN_STOP_ALL_NETIF_QUEUE_N_CARRIER,
 					WLAN_CONTROL_PATH);
 
 		} else {
@@ -11467,6 +11467,12 @@ static int __iw_set_packet_filter_params(struct net_device *dev,
 		hdd_err("invalid priv data %p or invalid priv data length %d",
 			priv_data.pointer, priv_data.length);
 		return -EINVAL;
+	}
+
+	if (adapter->device_mode != QDF_STA_MODE) {
+		hdd_err("Packet filter not supported for this mode :%d",
+			adapter->device_mode);
+		return -ENOTSUPP;
 	}
 
 	/* copy data using copy_from_user */

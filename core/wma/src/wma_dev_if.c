@@ -672,6 +672,9 @@ static void wma_vdev_start_rsp(tp_wma_handle wma,
 			       resp_event)
 {
 	struct beacon_info *bcn;
+	ol_txrx_pdev_handle pdev;
+	ol_txrx_peer_handle peer = NULL;
+	uint8_t peer_id;
 
 #ifdef QCA_IBSS_SUPPORT
 	WMA_LOGD("%s: vdev start response received for %s mode", __func__,
@@ -728,6 +731,25 @@ static void wma_vdev_start_rsp(tp_wma_handle wma,
 	}
 	add_bss->smpsMode = host_map_smps_mode(resp_event->smps_mode);
 send_fail_resp:
+	if (add_bss->status != QDF_STATUS_SUCCESS) {
+		WMA_LOGE("%s: ADD BSS failure %d", __func__, add_bss->status);
+
+		pdev = cds_get_context(QDF_MODULE_ID_TXRX);
+		if (NULL == pdev)
+			WMA_LOGE("%s: Failed to get pdev", __func__);
+
+		if (pdev)
+			peer = ol_txrx_find_peer_by_addr(pdev,
+				add_bss->bssId, &peer_id);
+		if (!peer)
+			WMA_LOGE("%s Failed to find peer %pM", __func__,
+				add_bss->bssId);
+
+		if (peer)
+			wma_remove_peer(wma, add_bss->bssId,
+				resp_event->vdev_id, peer, false);
+	}
+
 	WMA_LOGD("%s: Sending add bss rsp to umac(vdev %d status %d)",
 		 __func__, resp_event->vdev_id, add_bss->status);
 	wma_send_msg(wma, WMA_ADD_BSS_RSP, (void *)add_bss, 0);
@@ -3042,6 +3064,7 @@ static void wma_add_bss_ap_mode(tp_wma_handle wma, tpAddBssParams add_bss)
 	QDF_STATUS ret;
 #endif /* WLAN_FEATURE_11W */
 	struct sir_hw_mode_params hw_mode = {0};
+	uint32_t wow_mask[WMI_WOW_MAX_EVENT_BM_LEN] = {0};
 
 	pdev = cds_get_context(QDF_MODULE_ID_TXRX);
 
@@ -3057,9 +3080,14 @@ static void wma_add_bss_ap_mode(tp_wma_handle wma, tpAddBssParams add_bss)
 
 		goto send_fail_resp;
 	}
-	if (SAP_WPS_DISABLED == add_bss->wps_state)
+	if (SAP_WPS_DISABLED == add_bss->wps_state) {
+		wma_set_wow_event_bitmap(WOW_PROBE_REQ_WPS_IE_EVENT,
+					 WMI_WOW_MAX_EVENT_BM_LEN,
+					 wow_mask);
+
 		wma_enable_disable_wakeup_event(wma, vdev_id,
-			(1 << WOW_PROBE_REQ_WPS_IE_EVENT), false);
+			wow_mask, false);
+	}
 	wma_set_bss_rate_flags(&wma->interfaces[vdev_id], add_bss);
 	status = wma_create_peer(wma, pdev, vdev, add_bss->bssId,
 				 WMI_PEER_TYPE_DEFAULT, vdev_id, false);
