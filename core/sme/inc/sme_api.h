@@ -1509,6 +1509,16 @@ QDF_STATUS sme_rso_cmd_status_cb(tHalHandle hal,
 void sme_set_5g_band_pref(tHalHandle hal_handle,
 			  struct sme_5g_band_pref_params *pref_params);
 
+/**
+ * sme_congestion_register_callback(): registers congestion callback
+ * @hal: handler for HAL
+ * @congestion_cb: congestion callback
+ *
+ * Return: QDF_STATUS
+ */
+QDF_STATUS sme_congestion_register_callback(tHalHandle hal,
+	void (*congestion_cb)(void *, uint32_t congestion, uint32_t vdev_id));
+
 QDF_STATUS sme_delete_all_tdls_peers(tHalHandle hal, uint8_t session_id);
 
 /**

@@ -682,6 +682,11 @@ void wma_set_sta_sa_query_param(tp_wma_handle wma,
 
 	WMA_LOGD(FL("Enter:"));
 
+	if (!mac) {
+		WMA_LOGE(FL("mac context is NULL"));
+		return;
+	}
+
 	if (wlan_cfg_get_int
 		    (mac, WNI_CFG_PMF_SA_QUERY_MAX_RETRIES,
 		    &max_retries) != eSIR_SUCCESS) {
@@ -3437,14 +3442,15 @@ static int wma_mgmt_rx_process(void *handle, uint8_t *data,
 			if (iface->rmfEnabled) {
 				status = wma_process_rmf_frame(wma_handle,
 					iface, wh, rx_pkt, wbuf);
+				if (status)
+					return status;
 				/*
 				 * CCMP header might have been pulled off
 				 * reinitialize the start pointer of mac header
 				 */
 				wh = (struct ieee80211_frame *)
 						qdf_nbuf_data(wbuf);
-				if (status != 0)
-					return status;
+
 			}
 		}
 	}

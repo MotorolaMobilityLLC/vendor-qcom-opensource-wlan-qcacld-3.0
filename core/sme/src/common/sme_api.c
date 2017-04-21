@@ -8041,16 +8041,13 @@ QDF_STATUS sme_8023_multicast_list(tHalHandle hHal, uint8_t sessionId,
 		  pMulticastAddrs->multicastAddr[0].bytes);
 
 	/* Find the connected Infra / P2P_client connected session */
-	if (CSR_IS_SESSION_VALID(pMac, sessionId) &&
-			(csr_is_conn_state_infra(pMac, sessionId) ||
-			csr_is_ndi_started(pMac, sessionId))) {
-		pSession = CSR_GET_SESSION(pMac, sessionId);
-	}
 
-	if (pSession == NULL) {
-		QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_WARN,
-			  "%s: Unable to find the session Id: %d", __func__,
-			  sessionId);
+	pSession = CSR_GET_SESSION(pMac, sessionId);
+	if (!CSR_IS_SESSION_VALID(pMac, sessionId) ||
+			(!csr_is_conn_state_infra(pMac, sessionId) &&
+			 !csr_is_ndi_started(pMac, sessionId))) {
+		QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_ERROR,
+			  "%s: Invalid session: %d", __func__, sessionId);
 		return QDF_STATUS_E_FAILURE;
 	}
 
@@ -17233,9 +17230,9 @@ bool sme_roam_is_ese_assoc(tCsrRoamInfo *roam_info)
 {
 	return roam_info->isESEAssoc;
 }
-
+#endif
 /**
- * sme_set_band_specific_pref(): If 5G preference is enabled,set boost/drop
+ * sme_set_5g_band_pref(): If 5G preference is enabled,set boost/drop
  * params from ini.
  * @hal_handle: Handle returned by mac_open
  * @5g_pref_params: pref params from ini.
@@ -17277,7 +17274,6 @@ void sme_set_5g_band_pref(tHalHandle hal_handle,
 			  "Unable to acquire global sme lock");
 }
 
-#endif
 
 bool sme_neighbor_roam_is11r_assoc(tHalHandle hal_ctx,
 			uint8_t session_id)
@@ -17684,5 +17680,25 @@ QDF_STATUS sme_process_msg_callback(tHalHandle hal, cds_msg_t *msg)
 		return status;
 	}
 	status = sme_process_msg(hal, msg);
+	return status;
+}
+
+QDF_STATUS sme_congestion_register_callback(tHalHandle hal,
+	void (*congestion_cb)(void *, uint32_t congestion, uint32_t vdev_id))
+{
+	QDF_STATUS status;
+	tpAniSirGlobal mac = PMAC_STRUCT(hal);
+
+	status = sme_acquire_global_lock(&mac->sme);
+	if (QDF_IS_STATUS_SUCCESS(status)) {
+		mac->sme.congestion_cb = congestion_cb;
+		sme_release_global_lock(&mac->sme);
+		QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_INFO,
+			  FL("congestion callback set"));
+	} else {
+		QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_ERROR,
+			  FL("sme_acquire_global_lock failed %d"), status);
+	}
+
 	return status;
 }

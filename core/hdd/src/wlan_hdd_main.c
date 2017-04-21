@@ -8905,16 +8905,18 @@ static void hdd_get_nud_stats_cb(void *data, struct rsp_stats *rsp)
 
 	ENTER();
 
-	adapter = hdd_get_adapter_by_vdev(hdd_ctx, rsp->vdev_id);
-	if (NULL == adapter)
+	if (!rsp) {
+		hdd_err("data is null");
 		return;
+	}
 
 	status = wlan_hdd_validate_context(hdd_ctx);
 	if (0 != status)
 		return;
 
-	if (!rsp) {
-		hdd_err("data is null");
+	adapter = hdd_get_adapter_by_vdev(hdd_ctx, rsp->vdev_id);
+	if ((NULL == adapter) || (WLAN_HDD_ADAPTER_MAGIC != adapter->magic)) {
+		hdd_err("Invalid adapter or adapter has invalid magic");
 		return;
 	}
 
@@ -9015,6 +9017,11 @@ int hdd_register_cb(hdd_context_t *hdd_ctx)
 		hdd_err("set lost link info callback failed");
 
 	wlan_hdd_dcc_register_for_dcc_stats_event(hdd_ctx);
+
+	status = sme_congestion_register_callback(hdd_ctx->hHal,
+					     hdd_update_cca_info_cb);
+	if (!QDF_IS_STATUS_SUCCESS(status))
+		hdd_err("set congestion callback failed");
 
 	EXIT();
 

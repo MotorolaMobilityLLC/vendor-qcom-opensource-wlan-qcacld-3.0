@@ -1583,6 +1583,10 @@ int wma_vdev_stop_resp_handler(void *handle, uint8_t *cmd_param_info,
 			goto free_req_msg;
 		}
 
+		/* CCA is required only for sta interface */
+		if (iface->type == WMI_VDEV_TYPE_STA)
+			wma_get_cca_stats(wma, resp_event->vdev_id);
+
 		/* Clear arp and ns offload cache */
 		qdf_mem_zero(&iface->ns_offload_req,
 			sizeof(iface->ns_offload_req));
@@ -2116,25 +2120,9 @@ QDF_STATUS wma_vdev_start(tp_wma_handle wma,
 	else if (req->is_quarter_rate)
 		temp_chan_info |=  (1 << WMI_CHAN_FLAG_QUARTER_RATE);
 
-	/*
-	 * If the channel has DFS set, flip on radar reporting.
-	 *
-	 * It may be that this should only be done for IBSS/hostap operation
-	 * as this flag may be interpreted (at some point in the future)
-	 * by the firmware as "oh, and please do radar DETECTION."
-	 *
-	 * If that is ever the case we would insert the decision whether to
-	 * enable the firmware flag here.
-	 */
-
-	/*
-	 * If the Channel is DFS,
-	 * set the WMI_CHAN_FLAG_DFS flag
-	 */
 	params.is_dfs = req->is_dfs;
 	params.is_restart = isRestart;
 	if ((QDF_GLOBAL_MONITOR_MODE != cds_get_conparam()) && req->is_dfs) {
-		params.flag_dfs = WMI_CHAN_FLAG_DFS;
 		temp_chan_info |=  (1 << WMI_CHAN_FLAG_DFS);
 		params.dis_hw_ack = true;
 		req->dfs_pri_multiplier = wma->dfs_pri_multiplier;
@@ -2151,6 +2139,11 @@ QDF_STATUS wma_vdev_start(tp_wma_handle wma,
 		 * does not support operation on DFS Channels.
 		 */
 		if (wma_is_vdev_in_ap_mode(wma, params.vdev_id) == true) {
+			/*
+			 * If the Channel is DFS,
+			 * set the WMI_CHAN_FLAG_DFS flag
+			 */
+			params.flag_dfs = WMI_CHAN_FLAG_DFS;
 			/*
 			 * If DFS regulatory domain is invalid,
 			 * then, DFS radar filters intialization
