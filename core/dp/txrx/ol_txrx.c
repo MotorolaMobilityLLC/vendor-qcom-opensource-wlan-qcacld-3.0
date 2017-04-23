@@ -4773,7 +4773,7 @@ static QDF_STATUS ol_txrx_enqueue_rx_frames(
 
 	buf = rx_buf_list;
 	while (buf) {
-		QDF_NBUF_CB_RX_LRO_INELIGIBLE(buf) = 1;
+		QDF_NBUF_CB_RX_PEER_CACHED_FRM(buf) = 1;
 		next_buf = qdf_nbuf_queue_next(buf);
 		cache_buf = qdf_mem_malloc(sizeof(*cache_buf));
 		if (!cache_buf) {
@@ -4832,8 +4832,9 @@ void ol_rx_data_process(struct ol_txrx_peer_t *peer,
 	if (!data_rx) {
 		if (ol_txrx_enqueue_rx_frames(&peer->bufq_info, rx_buf_list)
 				!= QDF_STATUS_SUCCESS)
-			TXRX_PRINT(TXRX_PRINT_LEVEL_ERR,
-			"failed to enqueue rx frm to cached_bufq");
+			QDF_TRACE(QDF_MODULE_ID_TXRX, QDF_TRACE_LEVEL_INFO_HIGH,
+				  "%s: failed to enqueue rx frm to cached_bufq",
+				  __func__);
 	} else {
 #ifdef QCA_CONFIG_SMP
 		/*
