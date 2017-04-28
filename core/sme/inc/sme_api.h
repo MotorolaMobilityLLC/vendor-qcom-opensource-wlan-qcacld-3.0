@@ -83,6 +83,10 @@
 
 #define SME_ACTIVE_LIST_CMD_TIMEOUT_VALUE (30*1000)
 #define SME_CMD_TIMEOUT_VALUE (SME_ACTIVE_LIST_CMD_TIMEOUT_VALUE + 1000)
+
+#define sme_err(format, args...) \
+	QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_ERROR, FL(format), ## args)
+
 /*--------------------------------------------------------------------------
   Type declarations
   ------------------------------------------------------------------------*/
@@ -491,25 +495,15 @@ QDF_STATUS sme_set_host_offload(tHalHandle hHal, uint8_t sessionId,
 		tpSirHostOffloadReq pRequest);
 
 /**
- * sme_enable_non_arp_broadcast_filter(): API to enable Broadcast filter
- * when target goes to wow suspend/resume mode
- * @hal: The handle returned by mac_open.
- * @session_id: Session Identifier
+ * sme_conf_hw_filter_mode() - configure the given mode for the given session
+ * @hal: internal hal handle
+ * @session_id: the Id of the session to configure the hw filter for
+ * @mode_bitmap: the hw filter mode to configure
  *
- * Return QDF_STATUS
+ * Return: QDF_STATUS
  */
-QDF_STATUS sme_enable_non_arp_broadcast_filter(tHalHandle hal,
-						uint8_t session_id);
-/**
- * sme_disable_nonarp_broadcast_filter(): API to disable Broadcast filter
- * when target goes to wow suspend/resume mode
- * @hal: The handle returned by mac_open.
- * @session_id: Session Identifier
- *
- * Return QDF_STATUS
- */
-QDF_STATUS sme_disable_nonarp_broadcast_filter(tHalHandle hal,
-						uint8_t session_id);
+QDF_STATUS sme_conf_hw_filter_mode(tHalHandle hal, uint8_t session_id,
+				   uint8_t mode_bitmap);
 
 QDF_STATUS sme_set_keep_alive(tHalHandle hHal, uint8_t sessionId,
 		tpSirKeepAliveReq pRequest);
