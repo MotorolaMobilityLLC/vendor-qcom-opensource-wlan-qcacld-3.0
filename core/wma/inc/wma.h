@@ -2481,4 +2481,12 @@ bool wma_is_wow_bitmask_zero(uint32_t *bitmask,
 QDF_STATUS wma_process_roaming_config(tp_wma_handle wma_handle,
 				     tSirRoamOffloadScanReq *roam_req);
 
+/**
+ * wma_ipa_uc_stat_request() - set ipa config parameters
+ * @privcmd: private command
+ *
+ * Return: None
+ */
+void wma_ipa_uc_stat_request(wma_cli_set_cmd_t *privcmd);
+
 #endif
