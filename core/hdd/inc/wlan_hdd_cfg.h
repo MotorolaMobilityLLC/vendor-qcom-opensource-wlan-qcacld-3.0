@@ -2995,10 +2995,47 @@ typedef enum {
 #define CFG_FW_MCC_BCAST_PROB_RESP_MAX         (1)
 #define CFG_FW_MCC_BCAST_PROB_RESP_DEFAULT     (0)
 
+/*
+ * <ini>
+ * gDataInactivityTimeout - Data activity timeout for non wow mode.
+ * @Min: 1
+ * @Max: 255
+ * @Default: 200
+ *
+ * This ini is used to set data inactivity timeout in non wow mode.
+ *
+ * Supported Feature: inactivity timeout in non wow mode
+ *
+ * Usage: Internal/External
+ *
+ * </ini>
+ */
+
 #define CFG_DATA_INACTIVITY_TIMEOUT_NAME       "gDataInactivityTimeout"
 #define CFG_DATA_INACTIVITY_TIMEOUT_MIN        (1)
 #define CFG_DATA_INACTIVITY_TIMEOUT_MAX        (255)
 #define CFG_DATA_INACTIVITY_TIMEOUT_DEFAULT    (200)
+
+/*
+ * <ini>
+ * g_wow_data_inactivity_timeout - Data activity timeout in wow mode.
+ * @Min: 1
+ * @Max: 255
+ * @Default: 50
+ *
+ * This ini is used to set data inactivity timeout in wow mode.
+ *
+ * Supported Feature: inactivity timeout in wow mode
+ *
+ * Usage: Internal/External
+ *
+ * </ini>
+ */
+#define CFG_WOW_DATA_INACTIVITY_TIMEOUT_NAME     "g_wow_data_inactivity_timeout"
+#define CFG_WOW_DATA_INACTIVITY_TIMEOUT_MIN      (1)
+#define CFG_WOW_DATA_INACTIVITY_TIMEOUT_MAX      (255)
+#define CFG_WOW_DATA_INACTIVITY_TIMEOUT_DEFAULT  (50)
+
 /*
  * <ini>
  * rfSettlingTimeUs - Settle the TimeUs
@@ -5012,7 +5049,7 @@ typedef enum {
 #define CFG_ENABLE_EGAP_ENABLE_FEATURE             "gEnableEGAP"
 #define CFG_ENABLE_EGAP_ENABLE_FEATURE_MIN         (0)
 #define CFG_ENABLE_EGAP_ENABLE_FEATURE_MAX         (1)
-#define CFG_ENABLE_EGAP_ENABLE_FEATURE_DEFAULT     (0)
+#define CFG_ENABLE_EGAP_ENABLE_FEATURE_DEFAULT     (1)
 
 #define CFG_ENABLE_EGAP_INACT_TIME_FEATURE         "gEGAPInactTime"
 #define CFG_ENABLE_EGAP_INACT_TIME_FEATURE_MIN     (0)
@@ -10135,6 +10172,7 @@ struct hdd_config {
 	bool mcc_rts_cts_prot_enable;
 	bool mcc_bcast_prob_resp_enable;
 	uint8_t nDataInactivityTimeout;
+	uint8_t wow_data_inactivity_timeout;
 
 	/* WMM QoS Configuration */
 	hdd_wmm_user_mode_t WmmMode;
