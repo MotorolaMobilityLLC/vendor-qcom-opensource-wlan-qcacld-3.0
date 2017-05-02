@@ -4129,7 +4129,7 @@ void wma_peer_debug_log(uint8_t vdev_id, uint8_t op,
 	struct peer_debug_rec *rec;
 
 	if (!wma) {
-		WMA_LOGD("%s: WMA handle NULL. Exiting", __func__);
+		WMA_LOGE("%s: WMA handle NULL. Exiting", __func__);
 		return;
 	}
 
@@ -4213,7 +4213,7 @@ void wma_peer_debug_dump(void)
 	uint32_t delta;
 
 	if (!wma) {
-		WMA_LOGD("%s: WMA handle NULL. Exiting", __func__);
+		WMA_LOGE("%s: WMA handle NULL. Exiting", __func__);
 		return;
 	}
 
@@ -4224,7 +4224,7 @@ void wma_peer_debug_dump(void)
 		WMA_LOGE("%s: No records to dump", __func__);
 		return;
 	} else {
-		WMA_LOGE("%s: Dumping all records. current index %d",
+		WMA_LOGD("%s: Dumping all records. current index %d",
 			 __func__, current_index);
 	}
 
@@ -4248,7 +4248,7 @@ void wma_peer_debug_dump(void)
 				    0xffffffff);
 		delta = delta / (DEBUG_CLOCK_TICKS_PER_MSEC >> 8);
 
-		WMA_LOGE("index = %5d timestamp = 0x%016llx delta ms = %-12u "
+		WMA_LOGD("index = %5d timestamp = 0x%016llx delta ms = %-12u "
 			 "info = %-24s vdev_id = %-3d mac addr = %pM "
 			 "peer obj = 0x%p peer_id = %-4d "
 			 "arg1 = 0x%-8x arg2 = 0x%-8x",
