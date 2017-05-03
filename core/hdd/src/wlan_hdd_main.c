@@ -1392,6 +1392,7 @@ void hdd_update_tgt_cfg(void *context, void *param)
 	struct wma_tgt_cfg *cfg = param;
 	uint8_t temp_band_cap;
 	struct cds_config_info *cds_cfg = cds_get_ini_config();
+	uint8_t antenna_mode;
 
 	if (cds_cfg) {
 		if (hdd_ctx->config->enable_sub_20_channel_width !=
@@ -1476,9 +1477,9 @@ void hdd_update_tgt_cfg(void *context, void *param)
 	hdd_info("fine_time_meas_cap: 0x%x",
 		hdd_ctx->config->fine_time_meas_cap);
 
-	hdd_ctx->current_antenna_mode =
-		(hdd_ctx->config->enable2x2 == 0x01) ?
-		HDD_ANTENNA_MODE_2X2 : HDD_ANTENNA_MODE_1X1;
+	antenna_mode = (hdd_ctx->config->enable2x2 == 0x01) ?
+			HDD_ANTENNA_MODE_2X2 : HDD_ANTENNA_MODE_1X1;
+	hdd_update_smps_antenna_mode(hdd_ctx, antenna_mode);
 	hdd_info("Init current antenna mode: %d",
 		 hdd_ctx->current_antenna_mode);
 
@@ -5016,6 +5017,41 @@ static int hdd_roc_context_init(hdd_context_t *hdd_ctx)
 }
 
 /**
+ * hdd_destroy_roc_req_q() - Free allocations in ROC Req Queue
+ * @hdd_ctx: HDD context.
+ *
+ * Free memory allocations made in ROC Req Queue nodes.
+ *
+ * Return: None.
+ */
+static void hdd_destroy_roc_req_q(hdd_context_t *hdd_ctx)
+{
+	hdd_roc_req_t *hdd_roc_req;
+	QDF_STATUS status;
+
+	qdf_spin_lock(&hdd_ctx->hdd_roc_req_q_lock);
+
+	while (!qdf_list_empty(&hdd_ctx->hdd_roc_req_q)) {
+		status = qdf_list_remove_front(&hdd_ctx->hdd_roc_req_q,
+				(qdf_list_node_t **) &hdd_roc_req);
+
+		if (QDF_STATUS_SUCCESS != status) {
+			hdd_debug("unable to remove roc element from list in %s",
+					__func__);
+			QDF_ASSERT(0);
+			return;
+		}
+
+		if (hdd_roc_req->pRemainChanCtx)
+			qdf_mem_free(hdd_roc_req->pRemainChanCtx);
+
+		qdf_mem_free(hdd_roc_req);
+	}
+
+	qdf_spin_unlock(&hdd_ctx->hdd_roc_req_q_lock);
+}
+
+/**
  * hdd_roc_context_destroy() - Destroy ROC context
  * @hdd_ctx:	HDD context.
  *
@@ -5026,7 +5062,7 @@ static int hdd_roc_context_init(hdd_context_t *hdd_ctx)
 static void hdd_roc_context_destroy(hdd_context_t *hdd_ctx)
 {
 	flush_delayed_work(&hdd_ctx->roc_req_work);
-	qdf_list_destroy(&hdd_ctx->hdd_roc_req_q);
+	hdd_destroy_roc_req_q(hdd_ctx);
 	qdf_spinlock_destroy(&hdd_ctx->hdd_roc_req_q_lock);
 }
 
@@ -8035,6 +8071,10 @@ static int hdd_pre_enable_configure(hdd_context_t *hdd_ctx)
 
 	hdd_init_channel_avoidance(hdd_ctx);
 
+	/* update enable sap mandatory chan list */
+	cds_enable_disable_sap_mandatory_chan_list(
+			hdd_ctx->config->enable_sap_mandatory_chan_list);
+
 out:
 	return ret;
 }
@@ -8386,7 +8426,6 @@ hdd_features_deinit:
 	wlan_hdd_cfg80211_deregister_frames(adapter);
 cds_disable:
 	cds_disable(hdd_ctx->pcds_context);
-
 out:
 	return -EINVAL;
 }

@@ -196,9 +196,10 @@ typedef struct tagCsrScanResult {
 	eCsrEncryptionType ucEncryptionType;    /* Preferred Encryption type that matched with profile. */
 	eCsrEncryptionType mcEncryptionType;
 	eCsrAuthType authType;  /* Preferred auth type that matched with the profile. */
+	int  bss_score;
 
 	tCsrScanResultInfo Result;
-	int  bss_score;
+	/* Do not add any element here */
 } tCsrScanResult;
 
 typedef struct {

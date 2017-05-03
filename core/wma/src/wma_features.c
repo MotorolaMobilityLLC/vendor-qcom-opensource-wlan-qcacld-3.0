@@ -4113,11 +4113,7 @@ QDF_STATUS wma_enable_wow_in_fw(WMA_HANDLE handle, uint32_t wow_flags)
 			 wmi_get_pending_cmds(wma->wmi_handle));
 		wmi_set_target_suspend(wma->wmi_handle, false);
 		if (!cds_is_driver_recovering()) {
-			if (pMac->sme.enableSelfRecovery) {
-				cds_trigger_recovery(false);
-			} else {
-				QDF_BUG(0);
-			}
+			cds_trigger_recovery(false);
 		} else {
 			WMA_LOGE("%s: LOGP is in progress, ignore!", __func__);
 		}
@@ -4879,12 +4875,8 @@ static QDF_STATUS wma_send_host_wakeup_ind_to_fw(tp_wma_handle wma)
 			 wmi_get_pending_cmds(wma->wmi_handle),
 			 wmi_get_host_credits(wma->wmi_handle));
 		if (!cds_is_driver_recovering()) {
-			if (pMac->sme.enableSelfRecovery) {
-				wmi_tag_crash_inject(wma->wmi_handle, true);
-				cds_trigger_recovery(false);
-			} else {
-				QDF_BUG(0);
-			}
+			wmi_tag_crash_inject(wma->wmi_handle, true);
+			cds_trigger_recovery(false);
 		} else {
 			WMA_LOGE("%s: SSR in progress, ignore resume timeout",
 				 __func__);
@@ -6882,10 +6874,8 @@ static inline void wma_suspend_target_timeout(bool is_self_recovery_enabled)
 	else if (cds_is_driver_recovering())
 		WMA_LOGE("%s: Module recovering; Ignoring suspend timeout",
 			 __func__);
-	else if (is_self_recovery_enabled)
-		cds_trigger_recovery(false);
 	else
-		QDF_BUG(0);
+		cds_trigger_recovery(false);
 }
 
 /**
@@ -7055,11 +7045,7 @@ QDF_STATUS wma_resume_target(WMA_HANDLE handle)
 			wmi_get_pending_cmds(wma->wmi_handle),
 			wmi_get_host_credits(wma->wmi_handle));
 		if (!cds_is_driver_recovering()) {
-			if (pMac->sme.enableSelfRecovery) {
-				cds_trigger_recovery(false);
-			} else {
-				QDF_BUG(0);
-			}
+			cds_trigger_recovery(false);
 		} else {
 			WMA_LOGE("%s: SSR in progress, ignore resume timeout",
 				__func__);
@@ -7358,6 +7344,24 @@ int wma_update_tdls_peer_state(WMA_HANDLE handle,
 					 chanId);
 	}
 
+	/* Make sure that peer exists before sending peer state cmd*/
+	pdev = cds_get_context(QDF_MODULE_ID_TXRX);
+	if (!pdev) {
+		WMA_LOGE("%s: Failed to find pdev", __func__);
+		ret = -EIO;
+		goto end_tdls_peer_state;
+	}
+
+	peer = ol_txrx_find_peer_by_addr(pdev,
+			peerStateParams->peerMacAddr,
+			&peer_id);
+	if (!peer) {
+		WMA_LOGE("%s: peer not exists %pM",
+				__func__, peerStateParams->peerMacAddr);
+		ret = -EIO;
+		goto end_tdls_peer_state;
+	}
+
 	if (wmi_unified_update_tdls_peer_state_cmd(wma_handle->wmi_handle,
 				 (struct tdls_peer_state_params *)peerStateParams,
 				 ch_mhz)) {
@@ -7369,22 +7373,6 @@ int wma_update_tdls_peer_state(WMA_HANDLE handle,
 
 	/* in case of teardown, remove peer from fw */
 	if (WMA_TDLS_PEER_STATE_TEARDOWN == peerStateParams->peerState) {
-		pdev = cds_get_context(QDF_MODULE_ID_TXRX);
-		if (!pdev) {
-			WMA_LOGE("%s: Failed to find pdev", __func__);
-			ret = -EIO;
-			goto end_tdls_peer_state;
-		}
-
-		peer = ol_txrx_find_peer_by_addr(pdev,
-						 peerStateParams->peerMacAddr,
-						 &peer_id);
-		if (!peer) {
-			WMA_LOGE("%s: Failed to get peer handle using peer mac %pM",
-				__func__, peerStateParams->peerMacAddr);
-			ret = -EIO;
-			goto end_tdls_peer_state;
-		}
 		peer_mac_addr = ol_txrx_peer_get_peer_mac_addr(peer);
 		restore_last_peer = is_vdev_restore_last_peer(peer);
 
@@ -7406,7 +7394,6 @@ end_tdls_peer_state:
 	return ret;
 }
 #endif /* FEATURE_WLAN_TDLS */
-
 
 /**
  * wma_dfs_attach() - Attach DFS methods to the umac state.
