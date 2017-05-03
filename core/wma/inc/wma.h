@@ -88,6 +88,8 @@
 
 #define FRAGMENT_SIZE 3072
 
+#define MAX_PRINT_FAILURE_CNT 50
+
 #define WMA_INVALID_VDEV_ID                             0xFF
 #define MAX_MEM_CHUNKS                                  32
 #define WMA_MAX_VDEV_SIZE                               20
@@ -1664,6 +1666,8 @@ typedef struct {
 	struct peer_debug_info *peer_dbg;
 	bool auto_power_save_enabled;
 	uint8_t in_imps;
+	uint64_t tx_fail_cnt;
+	uint64_t wmi_desc_fail_count;
 } t_wma_handle, *tp_wma_handle;
 
 /**
