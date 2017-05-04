@@ -10856,6 +10856,23 @@ bool hdd_is_roaming_in_progress(hdd_adapter_t *adapter)
 	return ret_status;
 }
 
+int hdd_get_rssi_snr_by_bssid(hdd_adapter_t *adapter, const uint8_t *bssid,
+			      int8_t *rssi, int8_t *snr)
+{
+	QDF_STATUS status;
+	hdd_wext_state_t *wext_state = WLAN_HDD_GET_WEXT_STATE_PTR(adapter);
+	tCsrRoamProfile *profile = &wext_state->roamProfile;
+
+	status = sme_get_rssi_snr_by_bssid(WLAN_HDD_GET_HAL_CTX(adapter),
+				profile, bssid, rssi, snr);
+	if (QDF_STATUS_SUCCESS != status) {
+		hdd_warn("sme_get_rssi_snr_by_bssid failed");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
 /* Register the module init/exit functions */
 module_init(hdd_module_init);
 module_exit(hdd_module_exit);
