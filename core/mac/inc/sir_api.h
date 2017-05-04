@@ -1208,6 +1208,7 @@ typedef struct sSirSmeJoinReq {
 	tSirMacPowerCapInfo powerCap;
 	tSirSupChnl supportedChannels;
 	bool enable_bcast_probe_rsp;
+	bool ignore_assoc_disallowed;
 	tSirBssDescription bssDescription;
 	/*
 	 * WARNING: Pls make bssDescription as last variable in struct
