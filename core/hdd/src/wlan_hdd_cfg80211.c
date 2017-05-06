@@ -14157,6 +14157,7 @@ static int __wlan_hdd_cfg80211_disconnect(struct wiphy *wiphy,
 							 pAdapter->sessionId, mac);
 			}
 		}
+		wlan_hdd_tdls_notify_disconnect(pAdapter, true);
 #endif
 		hdd_notice("Disconnecting with reasoncode:%u",
 		       reasonCode);
