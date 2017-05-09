@@ -88,6 +88,8 @@
 
 #define FRAGMENT_SIZE 3072
 
+#define MAX_PRINT_FAILURE_CNT 50
+
 #define WMA_INVALID_VDEV_ID                             0xFF
 #define MAX_MEM_CHUNKS                                  32
 #define WMA_MAX_VDEV_SIZE                               20
@@ -265,13 +267,10 @@ enum ds_mode {
 #define WMA_VDEV_START_REQUEST_TIMEOUT (6000)   /* 6 seconds */
 #define WMA_VDEV_STOP_REQUEST_TIMEOUT  (6000)   /* 6 seconds */
 
-/*
- * The firmware value has been changed recently to 0x127
- * But, to maintain backward compatibility, the old
- * value is also preserved.
- */
-#define WMA_TGT_INVALID_SNR_OLD (-1)
-#define WMA_TGT_INVALID_SNR_NEW 0x127
+#define WMA_TGT_INVALID_SNR (0)
+
+#define WMA_TGT_IS_VALID_SNR(x)  ((x) >= 0 && (x) < WMA_TGT_MAX_SNR)
+#define WMA_TGT_IS_INVALID_SNR(x) (!WMA_TGT_IS_VALID_SNR(x))
 
 #define WMA_TX_Q_RECHECK_TIMER_WAIT      2      /* 2 ms */
 #define WMA_TX_Q_RECHECK_TIMER_MAX_WAIT  20     /* 20 ms */
@@ -1664,6 +1663,8 @@ typedef struct {
 	struct peer_debug_info *peer_dbg;
 	bool auto_power_save_enabled;
 	uint8_t in_imps;
+	uint64_t tx_fail_cnt;
+	uint64_t wmi_desc_fail_count;
 } t_wma_handle, *tp_wma_handle;
 
 /**
@@ -2476,5 +2477,13 @@ bool wma_is_wow_bitmask_zero(uint32_t *bitmask,
  */
 QDF_STATUS wma_process_roaming_config(tp_wma_handle wma_handle,
 				     tSirRoamOffloadScanReq *roam_req);
+
+/**
+ * wma_ipa_uc_stat_request() - set ipa config parameters
+ * @privcmd: private command
+ *
+ * Return: None
+ */
+void wma_ipa_uc_stat_request(wma_cli_set_cmd_t *privcmd);
 
 #endif

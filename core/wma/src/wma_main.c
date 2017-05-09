@@ -1751,9 +1751,7 @@ static void wma_cleanup_vdev_resp_queue(tp_wma_handle wma)
 		req_msg = qdf_container_of(node1, struct wma_target_req, node);
 		qdf_spin_unlock_bh(&wma->vdev_respq_lock);
 		qdf_mc_timer_stop(&req_msg->event_timeout);
-		qdf_mc_timer_destroy(&req_msg->event_timeout);
 		wma_vdev_resp_timer(req_msg);
-		qdf_mem_free(req_msg);
 		qdf_spin_lock_bh(&wma->vdev_respq_lock);
 	}
 	qdf_spin_unlock_bh(&wma->vdev_respq_lock);
@@ -1785,7 +1783,6 @@ static void wma_cleanup_hold_req(tp_wma_handle wma)
 		qdf_mc_timer_stop(&req_msg->event_timeout);
 		qdf_mc_timer_destroy(&req_msg->event_timeout);
 		wma_hold_req_timer(req_msg);
-		qdf_mem_free(req_msg);
 		qdf_spin_lock_bh(&wma->wma_hold_req_q_lock);
 	}
 	qdf_spin_unlock_bh(&wma->wma_hold_req_q_lock);
@@ -7215,14 +7212,12 @@ QDF_STATUS wma_mc_process_msg(void *cds_context, cds_msg_t *msg)
 				 (struct sme_rcpi_req *)msg->bodyptr);
 		qdf_mem_free(msg->bodyptr);
 		break;
-	case WMA_ENABLE_BCAST_FILTER:
-		wma_configure_non_arp_broadcast_filter(wma_handle,
-			(struct broadcast_filter_request *) msg->bodyptr);
+	case WMA_CONF_HW_FILTER: {
+		struct hw_filter_request *req = msg->bodyptr;
+
+		qdf_status = wma_conf_hw_filter_mode(wma_handle, req);
 		break;
-	case WMA_DISABLE_HW_BCAST_FILTER:
-		wma_configure_non_arp_broadcast_filter(wma_handle,
-			(struct broadcast_filter_request *) msg->bodyptr);
-		break;
+	}
 	case WMA_SET_ARP_STATS_REQ:
 		wma_set_arp_req_stats(wma_handle,
 			(struct set_arp_stats_params *)msg->bodyptr);
@@ -7581,3 +7576,12 @@ int wma_lro_init(struct wma_lro_config_cmd_t *lro_config)
 	return 0;
 }
 #endif
+
+
+void wma_ipa_uc_stat_request(wma_cli_set_cmd_t *privcmd)
+{
+	tp_wma_handle wma = cds_get_context(QDF_MODULE_ID_WMA);
+
+	if (wma_set_priv_cfg(wma, privcmd))
+		WMA_LOGE("Failed to set wma priv congiuration");
+}

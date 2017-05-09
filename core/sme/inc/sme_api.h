@@ -83,6 +83,10 @@
 
 #define SME_ACTIVE_LIST_CMD_TIMEOUT_VALUE (30*1000)
 #define SME_CMD_TIMEOUT_VALUE (SME_ACTIVE_LIST_CMD_TIMEOUT_VALUE + 1000)
+
+#define sme_err(format, args...) \
+	QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_ERROR, FL(format), ## args)
+
 /*--------------------------------------------------------------------------
   Type declarations
   ------------------------------------------------------------------------*/
@@ -491,25 +495,15 @@ QDF_STATUS sme_set_host_offload(tHalHandle hHal, uint8_t sessionId,
 		tpSirHostOffloadReq pRequest);
 
 /**
- * sme_enable_non_arp_broadcast_filter(): API to enable Broadcast filter
- * when target goes to wow suspend/resume mode
- * @hal: The handle returned by mac_open.
- * @session_id: Session Identifier
+ * sme_conf_hw_filter_mode() - configure the given mode for the given session
+ * @hal: internal hal handle
+ * @session_id: the Id of the session to configure the hw filter for
+ * @mode_bitmap: the hw filter mode to configure
  *
- * Return QDF_STATUS
+ * Return: QDF_STATUS
  */
-QDF_STATUS sme_enable_non_arp_broadcast_filter(tHalHandle hal,
-						uint8_t session_id);
-/**
- * sme_disable_nonarp_broadcast_filter(): API to disable Broadcast filter
- * when target goes to wow suspend/resume mode
- * @hal: The handle returned by mac_open.
- * @session_id: Session Identifier
- *
- * Return QDF_STATUS
- */
-QDF_STATUS sme_disable_nonarp_broadcast_filter(tHalHandle hal,
-						uint8_t session_id);
+QDF_STATUS sme_conf_hw_filter_mode(tHalHandle hal, uint8_t session_id,
+				   uint8_t mode_bitmap);
 
 QDF_STATUS sme_set_keep_alive(tHalHandle hHal, uint8_t sessionId,
 		tpSirKeepAliveReq pRequest);
@@ -1480,6 +1474,20 @@ static inline QDF_STATUS sme_set_udp_resp_offload(struct udp_resp_offload
 QDF_STATUS sme_get_rcpi(tHalHandle hal, struct sme_rcpi_req *rcpi);
 
 /**
+ * sme_get_rssi_snr_by_bssid() - gets the rssi and snr by bssid from scan cache
+ * @hal: handle returned by mac_open
+ * @profile: current connected profile
+ * @bssid: bssid to look for in scan cache
+ * @rssi: rssi value found
+ * @snr: snr value found
+ *
+ * Return: QDF_STATUS
+ */
+QDF_STATUS sme_get_rssi_snr_by_bssid(tHalHandle hal, tCsrRoamProfile *profile,
+				     const uint8_t *bssid, int8_t *rssi,
+				     int8_t *snr);
+
+/**
  * sme_get_beacon_frm() - gets the bss descriptor from scan cache and prepares
  * beacon frame
  * @hal: handle returned by mac_open
@@ -1543,4 +1551,16 @@ QDF_STATUS sme_set_chip_pwr_save_fail_cb(tHalHandle hal, void (*cb)(void *,
  */
 QDF_STATUS sme_process_msg_callback(tHalHandle hal, cds_msg_t *msg);
 
+/**
+ * sme_ipa_uc_stat_request() - set ipa config parameters
+ * @vdev_id: virtual device for the command
+ * @param_id: parameter id
+ * @param_val: parameter value
+ * @req_cat: parameter category
+ *
+ * Return: QDF_STATUS_SUCCESS or non-zero on failure
+ */
+QDF_STATUS sme_ipa_uc_stat_request(tHalHandle hal,
+			uint32_t vdev_id, uint32_t param_id,
+			uint32_t param_val, uint32_t req_cat);
 #endif /* #if !defined( __SME_API_H ) */

@@ -2603,6 +2603,7 @@ static hdd_adapter_t *hdd_alloc_station_adapter(hdd_context_t *hdd_ctx,
 		init_completion(&adapter->session_open_comp_var);
 		init_completion(&adapter->session_close_comp_var);
 		init_completion(&adapter->disconnect_comp_var);
+		init_completion(&adapter->roaming_comp_var);
 		init_completion(&adapter->linkup_event_var);
 		init_completion(&adapter->cancel_rem_on_chan_var);
 		init_completion(&adapter->rem_on_chan_ready_event);
@@ -5105,8 +5106,8 @@ static int hdd_context_deinit(hdd_context_t *hdd_ctx)
  */
 static void hdd_context_destroy(hdd_context_t *hdd_ctx)
 {
-	if (QDF_GLOBAL_FTM_MODE != hdd_get_conparam())
-		hdd_logging_sock_deactivate_svc(hdd_ctx);
+
+	hdd_logging_sock_deactivate_svc(hdd_ctx);
 
 	wlan_hdd_deinit_tx_rx_histogram(hdd_ctx);
 
@@ -10853,6 +10854,23 @@ bool hdd_is_roaming_in_progress(hdd_adapter_t *adapter)
 	ret_status = ((adapter->device_mode == QDF_STA_MODE) &&
 			hdd_ctx->roaming_in_progress);
 	return ret_status;
+}
+
+int hdd_get_rssi_snr_by_bssid(hdd_adapter_t *adapter, const uint8_t *bssid,
+			      int8_t *rssi, int8_t *snr)
+{
+	QDF_STATUS status;
+	hdd_wext_state_t *wext_state = WLAN_HDD_GET_WEXT_STATE_PTR(adapter);
+	tCsrRoamProfile *profile = &wext_state->roamProfile;
+
+	status = sme_get_rssi_snr_by_bssid(WLAN_HDD_GET_HAL_CTX(adapter),
+				profile, bssid, rssi, snr);
+	if (QDF_STATUS_SUCCESS != status) {
+		hdd_warn("sme_get_rssi_snr_by_bssid failed");
+		return -EINVAL;
+	}
+
+	return 0;
 }
 
 /* Register the module init/exit functions */
