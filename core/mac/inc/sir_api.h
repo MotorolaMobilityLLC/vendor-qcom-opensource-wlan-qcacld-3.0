@@ -3590,6 +3590,15 @@ typedef struct sAniSetTmLevelReq {
 	uint16_t newTmLevel;
 } tAniSetTmLevelReq, *tpAniSetTmLevelReq;
 
+/* access categories */
+enum sir_wifi_traffic_ac {
+	WIFI_AC_VO = 0,
+	WIFI_AC_VI = 1,
+	WIFI_AC_BE = 2,
+	WIFI_AC_BK = 3,
+	WIFI_AC_MAX = 4,
+};
+
 #ifdef FEATURE_WLAN_TDLS
 /* TDLS Request struct SME-->PE */
 typedef struct sSirTdlsSendMgmtReq {
@@ -3605,6 +3614,7 @@ typedef struct sSirTdlsSendMgmtReq {
 	/* For multi-session, for PE to locate peSession ID */
 	struct qdf_mac_addr bssid;
 	struct qdf_mac_addr peer_mac;
+	enum sir_wifi_traffic_ac ac;
 	/* Variable length. Dont add any field after this. */
 	uint8_t addIe[1];
 } tSirTdlsSendMgmtReq, *tpSirSmeTdlsSendMgmtReq;
@@ -5239,15 +5249,6 @@ typedef struct {
 	/* number of long data pkt retries */
 	uint32_t retriesLong;
 } tSirWifiRateStat, *tpSirWifiRateStat;
-
-/* access categories */
-typedef enum {
-	WIFI_AC_VO = 0,
-	WIFI_AC_VI = 1,
-	WIFI_AC_BE = 2,
-	WIFI_AC_BK = 3,
-	WIFI_AC_MAX = 4,
-} tSirWifiTrafficAc;
 
 /* wifi peer type */
 typedef enum {
