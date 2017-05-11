@@ -2274,7 +2274,7 @@ QDF_STATUS csr_scan_flush_result(tpAniSirGlobal pMac)
 		return QDF_STATUS_E_FAILURE;
 	}
 
-	sms_log(pMac, LOG4, "%s: Flushing all scan results", __func__);
+	sms_log(pMac, LOG1, "%s: Flushing all scan results", __func__);
 	csr_ll_scan_purge_result(pMac, &pMac->scan.tempScanResults);
 	csr_ll_scan_purge_result(pMac, &pMac->scan.scanResultList);
 	return QDF_STATUS_SUCCESS;
