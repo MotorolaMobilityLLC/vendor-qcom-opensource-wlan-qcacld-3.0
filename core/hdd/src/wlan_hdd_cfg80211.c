@@ -8528,6 +8528,7 @@ static int __wlan_hdd_cfg80211_set_fast_roaming(struct wiphy *wiphy,
 	int ret;
 	QDF_STATUS qdf_status;
 	unsigned long rc;
+	hdd_station_ctx_t *hdd_sta_ctx = WLAN_HDD_GET_STATION_CTX_PTR(adapter);
 
 	ENTER_DEV(dev);
 
@@ -8573,9 +8574,10 @@ static int __wlan_hdd_cfg80211_set_fast_roaming(struct wiphy *wiphy,
 				qdf_status);
 	ret = qdf_status_to_os_return(qdf_status);
 
-	INIT_COMPLETION(adapter->lfr_fw_status.disable_lfr_event);
-	if (QDF_IS_STATUS_SUCCESS(qdf_status) && !enable_lfr_fw) {
+	if (eConnectionState_Associated == hdd_sta_ctx->conn_info.connState &&
+		QDF_IS_STATUS_SUCCESS(qdf_status) && !enable_lfr_fw) {
 
+		INIT_COMPLETION(adapter->lfr_fw_status.disable_lfr_event);
 		/*
 		 * wait only for LFR disable in fw as LFR enable
 		 * is always success
@@ -10283,6 +10285,27 @@ uint8_t *wlan_hdd_cfg80211_get_ie_ptr(const uint8_t *ies_ptr, int length,
 		ptr += (elem_len + 2);
 	}
 	return NULL;
+}
+
+bool wlan_hdd_is_ap_supports_immediate_power_save(uint8_t *ies, int length)
+{
+	uint8_t *vendor_ie;
+
+	if (length < 2) {
+		hdd_debug("bss size is less than expected");
+		return true;
+	}
+	if (!ies) {
+		hdd_debug("invalid IE pointer");
+		return true;
+	}
+	vendor_ie = wlan_hdd_get_vendor_oui_ie_ptr(VENDOR1_AP_OUI_TYPE,
+				VENDOR1_AP_OUI_TYPE_SIZE, ies, length);
+	if (vendor_ie) {
+		hdd_debug("AP can't support immediate powersave. defer it");
+		return false;
+	}
+	return true;
 }
 
 /*

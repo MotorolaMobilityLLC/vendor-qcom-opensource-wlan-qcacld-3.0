@@ -2885,13 +2885,6 @@ QDF_STATUS sme_process_msg(tHalHandle hHal, cds_msg_t *pMsg)
 		}
 		break;
 #endif
-	case eWNI_SME_LINK_SPEED_IND:
-		if (pMac->sme.pLinkSpeedIndCb)
-			pMac->sme.pLinkSpeedIndCb(pMsg->bodyptr,
-						pMac->sme.pLinkSpeedCbContext);
-		if (pMsg->bodyptr)
-			qdf_mem_free(pMsg->bodyptr);
-		break;
 	case eWNI_SME_CSA_OFFLOAD_EVENT:
 		if (pMsg->bodyptr) {
 			csr_scan_flush_bss_entry(pMac, pMsg->bodyptr);
@@ -10787,11 +10780,9 @@ QDF_STATUS sme_get_link_speed(tHalHandle hHal, tSirLinkSpeedInfo *lsReq,
 			      void (*pCallbackfn)(tSirLinkSpeedInfo *indParam,
 						  void *pContext))
 {
-
 	QDF_STATUS status = QDF_STATUS_SUCCESS;
-	QDF_STATUS qdf_status = QDF_STATUS_SUCCESS;
 	tpAniSirGlobal pMac = PMAC_STRUCT(hHal);
-	cds_msg_t cds_message;
+	void *wma_handle;
 
 	status = sme_acquire_global_lock(&pMac->sme);
 	if (QDF_STATUS_SUCCESS == status) {
@@ -10806,20 +10797,18 @@ QDF_STATUS sme_get_link_speed(tHalHandle hHal, tSirLinkSpeedInfo *lsReq,
 			pMac->sme.pLinkSpeedCbContext = plsContext;
 			pMac->sme.pLinkSpeedIndCb = pCallbackfn;
 		}
-		/* serialize the req through MC thread */
-		cds_message.bodyptr = lsReq;
-		cds_message.type = WMA_GET_LINK_SPEED;
-		qdf_status = cds_mq_post_message(CDS_MQ_ID_WMA, &cds_message);
-		if (!QDF_IS_STATUS_SUCCESS(qdf_status)) {
+		wma_handle = cds_get_context(QDF_MODULE_ID_WMA);
+		if (!wma_handle) {
 			QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_ERROR,
-				  "%s: Post Link Speed msg fail", __func__);
+					"wma handle is NULL");
 			status = QDF_STATUS_E_FAILURE;
-		}
+		} else
+			status = wma_get_link_speed(wma_handle, lsReq);
 		sme_release_global_lock(&pMac->sme);
 	}
+
 	return status;
 }
-
 
 /*
  * SME API to enable/disable WLAN driver initiated SSR
@@ -15631,6 +15620,8 @@ QDF_STATUS sme_pdev_set_hw_mode(tHalHandle hal,
 	}
 
 	cmd->command = e_sme_command_set_hw_mode;
+	cmd->sessionId = msg.session_id;
+
 	cmd->u.set_hw_mode_cmd.hw_mode_index = msg.hw_mode_index;
 	cmd->u.set_hw_mode_cmd.set_hw_mode_cb = msg.set_hw_mode_cb;
 	cmd->u.set_hw_mode_cmd.reason = msg.reason;

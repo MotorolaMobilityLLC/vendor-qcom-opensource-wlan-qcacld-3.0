@@ -2274,7 +2274,7 @@ QDF_STATUS csr_scan_flush_result(tpAniSirGlobal pMac)
 		return QDF_STATUS_E_FAILURE;
 	}
 
-	sms_log(pMac, LOG4, "%s: Flushing all scan results", __func__);
+	sms_log(pMac, LOG1, "%s: Flushing all scan results", __func__);
 	csr_ll_scan_purge_result(pMac, &pMac->scan.tempScanResults);
 	csr_ll_scan_purge_result(pMac, &pMac->scan.scanResultList);
 	return QDF_STATUS_SUCCESS;
@@ -7697,6 +7697,7 @@ void csr_scan_active_list_timeout_handle(void *userData)
 	}
 	csr_save_scan_results(mac_ctx, scan_cmd->u.scanCmd.reason,
 		scan_cmd->sessionId);
+	scan_cmd->u.scanCmd.abort_scan_indication = eCSR_SCAN_ABORT_DEFAULT;
 	csr_release_scan_command(mac_ctx, scan_cmd, eCSR_SCAN_FAILURE);
 	return;
 }

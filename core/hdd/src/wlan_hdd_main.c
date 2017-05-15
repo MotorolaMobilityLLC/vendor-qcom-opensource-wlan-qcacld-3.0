@@ -2789,9 +2789,8 @@ QDF_STATUS hdd_init_station_mode(hdd_adapter_t *adapter)
 	if (!rc) {
 		hdd_alert("Session is not opened within timeout period code %ld",
 			rc);
-		adapter->sessionId = HDD_SESSION_ID_INVALID;
 		status = QDF_STATUS_E_FAILURE;
-		goto error_sme_open;
+		goto error_register_wext;
 	}
 
 	sme_set_vdev_ies_per_band(hdd_ctx->hHal, adapter->sessionId);
@@ -2868,14 +2867,12 @@ error_wmm_init:
 error_init_txrx:
 	hdd_unregister_wext(pWlanDev);
 error_register_wext:
-	if (test_bit(SME_SESSION_OPENED, &adapter->event_flags)) {
+	if (adapter->sessionId != HDD_SESSION_ID_INVALID) {
 		INIT_COMPLETION(adapter->session_close_comp_var);
 		if (QDF_STATUS_SUCCESS == sme_close_session(hdd_ctx->hHal,
 							    adapter->sessionId,
 							    hdd_sme_close_session_callback,
 							    adapter)) {
-			unsigned long rc;
-
 			/*
 			 * Block on a completion variable.
 			 * Can't wait forever though.
@@ -2885,9 +2882,10 @@ error_register_wext:
 				msecs_to_jiffies
 					(WLAN_WAIT_TIME_SESSIONOPENCLOSE));
 			if (rc <= 0)
-				hdd_err("Session is not opened within timeout period code %ld",
+				hdd_err("Session is not closed within timeout period code %ld",
 				       rc);
 		}
+		adapter->sessionId = HDD_SESSION_ID_INVALID;
 	}
 error_sme_open:
 	return status;
@@ -3486,12 +3484,6 @@ hdd_adapter_t *hdd_open_adapter(hdd_context_t *hdd_ctx, uint8_t session_type,
 	if (QDF_STATUS_SUCCESS == status) {
 		cds_set_concurrency_mode(session_type);
 
-		/* Initialize the WoWL service */
-		if (!hdd_init_wowl(adapter)) {
-			hdd_alert("hdd_init_wowl failed");
-			goto err_close_adapter;
-		}
-
 		/* Adapter successfully added. Increment the vdev count */
 		hdd_ctx->current_intf_count++;
 
@@ -3506,8 +3498,6 @@ hdd_adapter_t *hdd_open_adapter(hdd_context_t *hdd_ctx, uint8_t session_type,
 
 	return adapter;
 
-err_close_adapter:
-	hdd_close_adapter(hdd_ctx, adapter, rtnl_held);
 err_free_netdev:
 	wlan_hdd_release_intf_addr(hdd_ctx, adapter->macAddressCurrent.bytes);
 	free_netdev(adapter->dev);
@@ -9946,6 +9936,7 @@ err_out:
  */
 void hdd_deinit(void)
 {
+	hdd_deinit_wowl();
 	cds_deinit();
 
 #ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
