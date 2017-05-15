@@ -2589,6 +2589,9 @@ static inline bool wma_crash_on_fw_timeout(bool crash_enabled)
 	if (cds_is_driver_recovering())
 		return false;
 
+	if (cds_is_driver_unloading())
+		return false;
+
 	return crash_enabled;
 }
 
