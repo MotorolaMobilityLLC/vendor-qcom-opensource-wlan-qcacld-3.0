@@ -4809,6 +4809,7 @@ QDF_STATUS csr_scan_process_single_bssdescr(tpAniSirGlobal mac_ctx,
 	tCsrRoamInfo *roam_info;
 	uint8_t session_id;
 
+	session_id = csr_scan_get_session_id(mac_ctx);
 	sms_log(mac_ctx, LOG4, "CSR: Processing single bssdescr");
 	if (QDF_IS_STATUS_SUCCESS(
 		csr_get_cfg_valid_channels(mac_ctx,
@@ -4835,7 +4836,6 @@ QDF_STATUS csr_scan_process_single_bssdescr(tpAniSirGlobal mac_ctx,
 			qdf_mem_zero(roam_info, sizeof(*roam_info));
 			roam_info->pBssDesc = bssdescr;
 
-			session_id = csr_scan_get_session_id(mac_ctx);
 			if (session_id == CSR_SESSION_ID_INVALID) {
 				if (ies != NULL)
 					qdf_mem_free(ies);
@@ -4849,6 +4849,21 @@ QDF_STATUS csr_scan_process_single_bssdescr(tpAniSirGlobal mac_ctx,
 			qdf_mem_free(roam_info);
 		} else {
 			sms_log(mac_ctx, LOG1, "qdf_mem_malloc failed");
+		}
+		/*
+		 * If scan is not in progress and interim list
+		 * reach threashold, move scan results from temp
+		 * to main list and age out old results.
+		 */
+		if (csr_ll_is_list_empty(&mac_ctx->sme.smeScanCmdActiveList,
+		   LL_ACCESS_LOCK) &&
+		   csr_ll_count(&mac_ctx->scan.tempScanResults) >=
+				   CSR_MAX_BSS_SUPPORT/10) {
+			csr_remove_from_tmp_list(mac_ctx, eCsrScanOther,
+				session_id);
+			/* Purge the scan results based on Aging */
+			if (mac_ctx->scan.scanResultCfgAgingTime)
+				csr_purge_scan_result_by_age(mac_ctx);
 		}
 		csr_update_scantype(mac_ctx, ies, bssdescr->channelId);
 		/* Free the resource */
