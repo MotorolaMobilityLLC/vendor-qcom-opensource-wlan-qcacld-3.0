@@ -7365,11 +7365,14 @@ static void cds_check_sta_ap_concurrent_ch_intf(void *data)
 	if (hal_handle == NULL)
 		return;
 
+	qdf_mutex_acquire(&cds_ctx->qdf_conc_list_lock);
 	intf_ch = wlansap_check_cc_intf(hdd_ap_ctx->sapContext);
 	cds_info("intf_ch:%d", intf_ch);
 
-	if (intf_ch == 0)
+	if (intf_ch == 0) {
+		qdf_mutex_release(&cds_ctx->qdf_conc_list_lock);
 		return;
+	}
 
 	cds_info("SAP restarts due to MCC->SCC switch, orig chan: %d, new chan: %d",
 		hdd_ap_ctx->sapConfig.channel, intf_ch);
@@ -7394,7 +7397,7 @@ static void cds_check_sta_ap_concurrent_ch_intf(void *data)
 	} else {
 		cds_restart_sap(ap_adapter);
 	}
-
+	qdf_mutex_release(&cds_ctx->qdf_conc_list_lock);
 }
 
 /**
