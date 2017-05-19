@@ -14680,6 +14680,10 @@ QDF_STATUS csr_send_join_req_msg(tpAniSirGlobal pMac, uint32_t sessionId,
 					break;
 			}
 		}
+		if (pSession->pCurRoamProfile->csrPersona == QDF_STA_MODE)
+			csr_join_req->enable_bcast_probe_rsp =
+				pMac->roam.configParam.enable_bcast_probe_rsp;
+
 		status = cds_send_mb_message_to_mac(csr_join_req);
 		if (!QDF_IS_STATUS_SUCCESS(status)) {
 			/*
@@ -17611,6 +17615,18 @@ csr_create_roam_scan_offload_request(tpAniSirGlobal mac_ctx,
 						curr_ch_lst_info, req_buf);
 	}
 #endif
+
+	if (req_buf->ConnectedNetwork.ChannelCount == 0) {
+		/* Maintain the Valid Channels List */
+		status = csr_fetch_valid_ch_lst(mac_ctx, req_buf);
+		if (!QDF_IS_STATUS_SUCCESS(status)) {
+			QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_ERROR,
+					"Fetch channel list fail");
+			qdf_mem_free(req_buf);
+			return NULL;
+		}
+	}
+
 	for (i = 0, j = 0; i < req_buf->ConnectedNetwork.ChannelCount; i++) {
 		if (j < sizeof(ch_cache_str)) {
 			j += snprintf(ch_cache_str + j,
@@ -17624,15 +17640,6 @@ csr_create_roam_scan_offload_request(tpAniSirGlobal mac_ctx,
 		  FL("ChnlCacheType:%d, No of Chnls:%d,Channels: %s"),
 		  req_buf->ChannelCacheType,
 		  req_buf->ConnectedNetwork.ChannelCount, ch_cache_str);
-
-	/* Maintain the Valid Channels List */
-	status = csr_fetch_valid_ch_lst(mac_ctx, req_buf);
-	if (!QDF_IS_STATUS_SUCCESS(status)) {
-		QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_ERROR,
-			FL("Fetch channel list fail"));
-		qdf_mem_free(req_buf);
-		return NULL;
-	}
 
 	req_buf->MDID.mdiePresent =
 		mac_ctx->roam.roamSession[session_id].
@@ -19997,24 +20004,9 @@ void csr_roam_fill_tdls_info(tpAniSirGlobal mac_ctx, tCsrRoamInfo *roam_info,
 #endif
 
 #ifdef WLAN_FEATURE_ROAM_OFFLOAD
-/**
- * csr_roam_synch_callback() - SME level callback for roam synch propagation
- * @mac_ctx: MAC Context
- * @roam_synch_data: Roam synch data buffer pointer
- * @bss_desc: BSS descriptor pointer
- * @reason: Reason for calling the callback
- *
- * This callback is registered with WMA and used after roaming happens in
- * firmware and the call to this routine completes the roam synch
- * propagation at both CSR and HDD levels. The HDD level propagation
- * is achieved through the already defined callback for assoc completion
- * handler.
- *
- * Return: Success or Failure.
- */
-QDF_STATUS csr_roam_synch_callback(tpAniSirGlobal mac_ctx,
+static QDF_STATUS csr_process_roam_sync_callback(tpAniSirGlobal mac_ctx,
 		roam_offload_synch_ind *roam_synch_data,
-		tpSirBssDescription  bss_desc, enum sir_roam_op_code reason)
+		tpSirBssDescription bss_desc, enum sir_roam_op_code reason)
 {
 	uint8_t session_id = roam_synch_data->roamedVdevId;
 	tCsrRoamSession *session = CSR_GET_SESSION(mac_ctx, session_id);
@@ -20031,14 +20023,8 @@ QDF_STATUS csr_roam_synch_callback(tpAniSirGlobal mac_ctx,
 	tCsrRoamHTProfile *dst_profile = NULL;
 #endif
 
-	status = sme_acquire_global_lock(&mac_ctx->sme);
-	if (!QDF_IS_STATUS_SUCCESS(status)) {
-		sms_log(mac_ctx, LOGE, FL("LFR3: Locking failed, bailing out"));
-		return status;
-	}
 	if (!session) {
 		sms_log(mac_ctx, LOGE, FL("LFR3: Session not found"));
-		sme_release_global_lock(&mac_ctx->sme);
 		return QDF_STATUS_E_FAILURE;
 	}
 
@@ -20058,7 +20044,6 @@ QDF_STATUS csr_roam_synch_callback(tpAniSirGlobal mac_ctx,
 		}
 		csr_roam_call_callback(mac_ctx, session_id, NULL, 0,
 				eCSR_ROAM_FT_START, eSIR_SME_SUCCESS);
-		sme_release_global_lock(&mac_ctx->sme);
 		return status;
 	case SIR_ROAMING_START:
 		csr_roam_roaming_offload_timer_action(mac_ctx,
@@ -20066,19 +20051,16 @@ QDF_STATUS csr_roam_synch_callback(tpAniSirGlobal mac_ctx,
 				ROAMING_OFFLOAD_TIMER_START);
 		csr_roam_call_callback(mac_ctx, session_id, NULL, 0,
 				eCSR_ROAM_START, eSIR_SME_SUCCESS);
-		sme_release_global_lock(&mac_ctx->sme);
 		return status;
 	case SIR_ROAMING_ABORT:
 		csr_roam_roaming_offload_timer_action(mac_ctx,
 				0, session_id, ROAMING_OFFLOAD_TIMER_STOP);
 		csr_roam_call_callback(mac_ctx, session_id, NULL, 0,
 				eCSR_ROAM_ABORT, eSIR_SME_SUCCESS);
-		sme_release_global_lock(&mac_ctx->sme);
 		return status;
 	case SIR_ROAM_SYNCH_NAPI_OFF:
 		csr_roam_call_callback(mac_ctx, session_id, NULL, 0,
 				eCSR_ROAM_NAPI_OFF, eSIR_SME_SUCCESS);
-		sme_release_global_lock(&mac_ctx->sme);
 		return status;
 	case SIR_ROAM_SYNCH_PROPAGATION:
 		break;
@@ -20103,11 +20085,9 @@ QDF_STATUS csr_roam_synch_callback(tpAniSirGlobal mac_ctx,
 		cds_set_connection_in_progress(false);
 		session->roam_synch_in_progress = false;
 		cds_check_concurrent_intf_and_restart_sap(session->pContext);
-		sme_release_global_lock(&mac_ctx->sme);
 		return status;
 	default:
 		sms_log(mac_ctx, LOGE, FL("LFR3: callback reason %d"), reason);
-		sme_release_global_lock(&mac_ctx->sme);
 		return QDF_STATUS_E_FAILURE;
 	}
 	session->roam_synch_in_progress = true;
@@ -20117,7 +20097,6 @@ QDF_STATUS csr_roam_synch_callback(tpAniSirGlobal mac_ctx,
 	if (!QDF_IS_STATUS_SUCCESS(status)) {
 		sms_log(mac_ctx, LOGE, FL("LFR3: fail to parse IEs"));
 		session->roam_synch_in_progress = false;
-		sme_release_global_lock(&mac_ctx->sme);
 		return status;
 	}
 	conn_profile = &session->connectedProfile;
@@ -20133,7 +20112,6 @@ QDF_STATUS csr_roam_synch_callback(tpAniSirGlobal mac_ctx,
 			FL("LFR3: Mem Alloc failed for roam info"));
 		session->roam_synch_in_progress = false;
 		qdf_mem_free(ies_local);
-		sme_release_global_lock(&mac_ctx->sme);
 		return QDF_STATUS_E_NOMEM;
 	}
 	csr_scan_save_roam_offload_ap_to_scan_cache(mac_ctx, roam_synch_data,
@@ -20207,7 +20185,6 @@ QDF_STATUS csr_roam_synch_callback(tpAniSirGlobal mac_ctx,
 		if (roam_info)
 			qdf_mem_free(roam_info);
 		qdf_mem_free(ies_local);
-		sme_release_global_lock(&mac_ctx->sme);
 		return QDF_STATUS_E_NOMEM;
 	}
 	qdf_mem_copy(roam_info->pbFrames,
@@ -20348,6 +20325,40 @@ QDF_STATUS csr_roam_synch_callback(tpAniSirGlobal mac_ctx,
 	qdf_mem_free(roam_info->pbFrames);
 	qdf_mem_free(roam_info);
 	qdf_mem_free(ies_local);
+
+	return status;
+}
+
+/**
+ * csr_roam_synch_callback() - SME level callback for roam synch propagation
+ * @mac_ctx: MAC Context
+ * @roam_synch_data: Roam synch data buffer pointer
+ * @bss_desc: BSS descriptor pointer
+ * @reason: Reason for calling the callback
+ *
+ * This callback is registered with WMA and used after roaming happens in
+ * firmware and the call to this routine completes the roam synch
+ * propagation at both CSR and HDD levels. The HDD level propagation
+ * is achieved through the already defined callback for assoc completion
+ * handler.
+ *
+ * Return: Success or Failure.
+ */
+QDF_STATUS csr_roam_synch_callback(tpAniSirGlobal mac_ctx,
+		roam_offload_synch_ind *roam_synch_data,
+		tpSirBssDescription  bss_desc, enum sir_roam_op_code reason)
+{
+	QDF_STATUS status;
+
+	status = sme_acquire_global_lock(&mac_ctx->sme);
+	if (!QDF_IS_STATUS_SUCCESS(status)) {
+		sms_log(mac_ctx, LOGE, FL("LFR3: Locking failed, bailing out"));
+		return status;
+	}
+
+	status = csr_process_roam_sync_callback(mac_ctx, roam_synch_data,
+					    bss_desc, reason);
+
 	sme_release_global_lock(&mac_ctx->sme);
 
 	return status;
