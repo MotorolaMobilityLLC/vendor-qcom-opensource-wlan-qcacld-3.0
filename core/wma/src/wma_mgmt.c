@@ -3280,6 +3280,7 @@ end:
 	return should_drop;
 }
 
+#define RATE_LIMIT 16
 /**
  * wma_mgmt_rx_process() - process management rx frame.
  * @handle: wma handle
@@ -3302,6 +3303,9 @@ static int wma_mgmt_rx_process(void *handle, uint8_t *data,
 	uint8_t mgt_type, mgt_subtype;
 	int status;
 	tp_wma_packetdump_cb packetdump_cb;
+	static uint8_t limit_prints_invalid_len = RATE_LIMIT - 1;
+	static uint8_t limit_prints_load_unload = RATE_LIMIT - 1;
+	static uint8_t limit_prints_recovery = RATE_LIMIT - 1;
 
 	if (!wma_handle) {
 		WMA_LOGE("%s: Failed to get WMA  context", __func__);
@@ -3321,17 +3325,29 @@ static int wma_mgmt_rx_process(void *handle, uint8_t *data,
 	}
 
 	if (hdr->buf_len < sizeof(struct ieee80211_frame)) {
-		WMA_LOGE("Invalid rx mgmt packet");
+		limit_prints_invalid_len++;
+		if (limit_prints_invalid_len == RATE_LIMIT) {
+			WMA_LOGD("Invalid rx mgmt packet");
+			limit_prints_invalid_len = 0;
+		}
 		return -EINVAL;
 	}
 
 	if (cds_is_load_or_unload_in_progress()) {
-		WMA_LOGW(FL("Load/Unload in progress"));
+		limit_prints_load_unload++;
+		if (limit_prints_load_unload == RATE_LIMIT) {
+			WMA_LOGD(FL("Load/Unload in progress"));
+			limit_prints_load_unload = 0;
+		}
 		return -EINVAL;
 	}
 
 	if (cds_is_driver_recovering()) {
-		WMA_LOGW(FL("Recovery in progress"));
+		limit_prints_recovery++;
+		if (limit_prints_recovery == RATE_LIMIT) {
+			WMA_LOGD(FL("Recovery in progress"));
+			limit_prints_recovery = 0;
+		}
 		return -EINVAL;
 	}
 
