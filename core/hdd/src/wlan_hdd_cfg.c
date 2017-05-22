@@ -685,6 +685,13 @@ REG_TABLE_ENTRY g_registry_table[] = {
 		CFG_FORCE_SAP_ACS_END_CH_MIN,
 		CFG_FORCE_SAP_ACS_END_CH_MAX),
 
+	REG_VARIABLE(CFG_ENABLE_SAP_MANDATORY_CHAN_LIST, WLAN_PARAM_Integer,
+		struct hdd_config, enable_sap_mandatory_chan_list,
+		VAR_FLAGS_OPTIONAL | VAR_FLAGS_RANGE_CHECK_ASSUME_DEFAULT,
+		CFG_ENABLE_SAP_MANDATORY_CHAN_LIST_DEFAULT,
+		CFG_ENABLE_SAP_MANDATORY_CHAN_LIST_MIN,
+		CFG_ENABLE_SAP_MANDATORY_CHAN_LIST_MAX),
+
 	REG_VARIABLE(CFG_AP_KEEP_ALIVE_PERIOD_NAME, WLAN_PARAM_Integer,
 		     struct hdd_config, apKeepAlivePeriod,
 		     VAR_FLAGS_OPTIONAL | VAR_FLAGS_RANGE_CHECK_ASSUME_DEFAULT,
@@ -4294,12 +4301,12 @@ REG_TABLE_ENTRY g_registry_table[] = {
 		CFG_ACTIVE_BPF_MODE_MIN,
 		CFG_ACTIVE_BPF_MODE_MAX),
 
-	REG_VARIABLE(CFG_HW_BC_FILTER_NAME, WLAN_PARAM_Integer,
-		struct hdd_config, hw_broadcast_filter,
+	REG_VARIABLE(CFG_HW_FILTER_MODE_NAME, WLAN_PARAM_Integer,
+		struct hdd_config, hw_filter_mode,
 		VAR_FLAGS_OPTIONAL | VAR_FLAGS_RANGE_CHECK_ASSUME_DEFAULT,
-		CFG_HW_FILTER_DEFAULT,
-		CFG_HW_FILTER_MIN,
-		CFG_HW_FILTER_MAX),
+		CFG_HW_FILTER_MODE_DEFAULT,
+		CFG_HW_FILTER_MODE_MIN,
+		CFG_HW_FILTER_MODE_MAX),
 
 	REG_VARIABLE(CFG_SAP_INTERNAL_RESTART_NAME, WLAN_PARAM_Integer,
 		struct hdd_config, sap_internal_restart,
@@ -5889,9 +5896,9 @@ void hdd_cfg_print(hdd_context_t *pHddCtx)
 	hdd_info("Name = [%s] Value = [%u]",
 		CFG_ENABLE_PHY_REG_NAME,
 		pHddCtx->config->enable_phy_reg_retention);
-	hdd_err("Name = [%s] Value = [%u]",
-		CFG_HW_BC_FILTER_NAME,
-		pHddCtx->config->hw_broadcast_filter);
+	hdd_debug("Name = [%s] Value = [%u]",
+		CFG_HW_FILTER_MODE_NAME,
+		pHddCtx->config->hw_filter_mode);
 	hdd_err("Name = [%s] Value = [%u]",
 		CFG_AUTO_DETECT_POWER_FAIL_MODE_NAME,
 		pHddCtx->config->auto_pwr_save_fail_mode);

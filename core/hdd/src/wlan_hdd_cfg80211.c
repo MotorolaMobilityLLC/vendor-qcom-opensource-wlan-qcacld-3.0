@@ -2356,6 +2356,11 @@ __wlan_hdd_cfg80211_set_ext_roam_params(struct wiphy *wiphy,
 	if (ret)
 		return ret;
 
+	if (pHddCtx->driver_status == DRIVER_MODULES_CLOSED) {
+		hdd_err("Driver Modules are closed");
+		return -EINVAL;
+	}
+
 	if (nla_parse(tb, QCA_WLAN_VENDOR_ATTR_ROAMING_PARAM_MAX,
 		data, data_len,
 		NULL)) {
@@ -3942,19 +3947,6 @@ int wlan_hdd_send_roam_auth_event(hdd_adapter_t *adapter, uint8_t *bssid,
 	if (!roaming_offload_enabled(hdd_ctx_ptr) ||
 			!roam_info_ptr->roamSynchInProgress)
 		return 0;
-
-	/*
-	 * The user space has issued a disconnect when roaming is in
-	 * progress. The disconnect should be honored gracefully.
-	 * If the roaming is complete and the roam event is sent
-	 * back to the user space, it will get confused as it is
-	 * expecting a disconnect event. So, do not send the event
-	 * and handle the disconnect later.
-	 */
-	if (adapter->defer_disconnect) {
-		hdd_notice("LFR3:Do not send roam auth event");
-		return 0;
-	}
 
 	skb = cfg80211_vendor_event_alloc(hdd_ctx_ptr->wiphy,
 			&(adapter->wdev),
@@ -9108,7 +9100,9 @@ const struct wiphy_vendor_command hdd_wiphy_vendor_commands[] = {
 	{
 		.info.vendor_id = QCA_NL80211_VENDOR_ID,
 		.info.subcmd = QCA_NL80211_VENDOR_SUBCMD_SCANNING_MAC_OUI,
-		.flags = WIPHY_VENDOR_CMD_NEED_WDEV | WIPHY_VENDOR_CMD_NEED_NETDEV,
+		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
+			WIPHY_VENDOR_CMD_NEED_NETDEV |
+			WIPHY_VENDOR_CMD_NEED_RUNNING,
 		.doit = wlan_hdd_cfg80211_set_scanning_mac_oui
 	},
 	{
@@ -9121,14 +9115,16 @@ const struct wiphy_vendor_command hdd_wiphy_vendor_commands[] = {
 		.info.vendor_id = QCA_NL80211_VENDOR_ID,
 		.info.subcmd = QCA_NL80211_VENDOR_SUBCMD_NO_DFS_FLAG,
 		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
-			WIPHY_VENDOR_CMD_NEED_NETDEV,
+			WIPHY_VENDOR_CMD_NEED_NETDEV |
+			WIPHY_VENDOR_CMD_NEED_RUNNING,
 		.doit = wlan_hdd_cfg80211_disable_dfs_chan_scan
 	},
 	{
 		.info.vendor_id = QCA_NL80211_VENDOR_ID,
 		.info.subcmd = QCA_NL80211_VENDOR_SUBCMD_WISA,
 		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
-			WIPHY_VENDOR_CMD_NEED_NETDEV,
+			WIPHY_VENDOR_CMD_NEED_NETDEV |
+			WIPHY_VENDOR_CMD_NEED_RUNNING,
 		.doit = wlan_hdd_cfg80211_handle_wisa_cmd
 	},
 	{
@@ -9202,21 +9198,24 @@ const struct wiphy_vendor_command hdd_wiphy_vendor_commands[] = {
 		.info.vendor_id = QCA_NL80211_VENDOR_ID,
 		.info.subcmd = QCA_NL80211_VENDOR_SUBCMD_ROAM,
 		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
-			WIPHY_VENDOR_CMD_NEED_NETDEV,
+			WIPHY_VENDOR_CMD_NEED_NETDEV |
+			WIPHY_VENDOR_CMD_NEED_RUNNING,
 		.doit = wlan_hdd_cfg80211_set_ext_roam_params
 	},
 	{
 		.info.vendor_id = QCA_NL80211_VENDOR_ID,
 		.info.subcmd = QCA_NL80211_VENDOR_SUBCMD_WIFI_LOGGER_START,
 		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
-			WIPHY_VENDOR_CMD_NEED_NETDEV,
+			WIPHY_VENDOR_CMD_NEED_NETDEV |
+			WIPHY_VENDOR_CMD_NEED_RUNNING,
 		.doit = wlan_hdd_cfg80211_wifi_logger_start
 	},
 	{
 		.info.vendor_id = QCA_NL80211_VENDOR_ID,
 		.info.subcmd = QCA_NL80211_VENDOR_SUBCMD_GET_RING_DATA,
 		.flags = WIPHY_VENDOR_CMD_NEED_WDEV |
-			WIPHY_VENDOR_CMD_NEED_NETDEV,
+			WIPHY_VENDOR_CMD_NEED_NETDEV |
+			WIPHY_VENDOR_CMD_NEED_RUNNING,
 		.doit = wlan_hdd_cfg80211_wifi_logger_get_ring_data
 	},
 	{
@@ -13463,27 +13462,28 @@ int wlan_hdd_try_disconnect(hdd_adapter_t *pAdapter)
 	hal = WLAN_HDD_GET_HAL_CTX(pAdapter);
 	if (pAdapter->device_mode ==  QDF_STA_MODE) {
 		hdd_notice("Stop firmware roaming");
-		sme_stop_roaming(hal, pAdapter->sessionId, eCsrHddIssued);
-	}
-	/*
-	 * If firmware has already started roaming process, driver
-	 * needs to defer the processing of this disconnect request.
-	 *
-	 */
-	if (hdd_is_roaming_in_progress(pAdapter)) {
-		/*
-		 * Defer the disconnect action until firmware roaming
-		 * result is received. If STA is in connected state after
-		 * that, send the disconnect command to CSR, otherwise
-		 * CSR would have already sent disconnect event to upper
-		 * layer.
-		 */
+		sme_stop_roaming(hal, pAdapter->sessionId, eCsrForcedDisassoc);
 
-		hdd_err("Roaming in progress, <try disconnect> deferred.");
-		pAdapter->defer_disconnect = DEFER_DISCONNECT_TRY_DISCONNECT;
-		pAdapter->cfg80211_disconnect_reason =
-			eCSR_DISCONNECT_REASON_UNSPECIFIED;
-		return 0;
+		/*
+		 * If firmware has already started roaming process, driver
+		 * needs to wait for processing of this disconnect request.
+		 *
+		 */
+		INIT_COMPLETION(pAdapter->roaming_comp_var);
+		if (hdd_is_roaming_in_progress(pAdapter)) {
+			rc = wait_for_completion_timeout(
+				&pAdapter->roaming_comp_var,
+				msecs_to_jiffies(WLAN_WAIT_TIME_STOP_ROAM));
+			if (!rc) {
+				hdd_err("roaming comp var timed out session Id: %d",
+					pAdapter->sessionId);
+			}
+			if (pAdapter->roam_ho_fail) {
+				INIT_COMPLETION(pAdapter->disconnect_comp_var);
+				hdd_conn_set_connection_state(pAdapter,
+						eConnectionState_Disconnecting);
+			}
+		}
 	}
 
 	if ((QDF_IBSS_MODE == pAdapter->device_mode) ||
@@ -13758,26 +13758,32 @@ static int wlan_hdd_disconnect(hdd_adapter_t *pAdapter, u16 reason)
 	if (pAdapter->device_mode ==  QDF_STA_MODE) {
 		hdd_notice("Stop firmware roaming");
 		status = sme_stop_roaming(hal, pAdapter->sessionId,
-				eCsrHddIssued);
-	}
-	/*
-	 * If firmware has already started roaming process, driver
-	 * needs to defer the processing of this disconnect request.
-	 *
-	 */
-	if (hdd_is_roaming_in_progress(pAdapter)) {
+				eCsrForcedDisassoc);
 		/*
-		 * Defer the disconnect action until firmware roaming
-		 * result is received. If STA is in connected state after
-		 * that, send the disconnect command to CSR, otherwise
-		 * CSR would have already sent disconnect event to upper
-		 * layer.
+		 * If firmware has already started roaming process, driver
+		 * needs to wait for processing of this disconnect request.
+		 *
 		 */
-		hdd_err("Roaming in progress, disconnect command deferred.");
-		pAdapter->defer_disconnect =
-			DEFER_DISCONNECT_CFG80211_DISCONNECT;
-		pAdapter->cfg80211_disconnect_reason = reason;
-		return 0;
+		INIT_COMPLETION(pAdapter->roaming_comp_var);
+		if (hdd_is_roaming_in_progress(pAdapter)) {
+			rc = wait_for_completion_timeout(
+				&pAdapter->roaming_comp_var,
+				msecs_to_jiffies(WLAN_WAIT_TIME_STOP_ROAM));
+			if (!rc) {
+				hdd_err("roaming comp var timed out session Id: %d",
+					pAdapter->sessionId);
+			}
+			if (pAdapter->roam_ho_fail) {
+				INIT_COMPLETION(pAdapter->disconnect_comp_var);
+					hdd_notice("Disabling queues");
+				wlan_hdd_netif_queue_control(pAdapter,
+					WLAN_STOP_ALL_NETIF_QUEUE_N_CARRIER,
+					WLAN_CONTROL_PATH);
+				hdd_conn_set_connection_state(pAdapter,
+						eConnectionState_Disconnecting);
+				goto wait_for_disconnect;
+			}
+		}
 	}
 
 	prev_conn_state = pHddStaCtx->conn_info.connState;
@@ -13816,6 +13822,7 @@ static int wlan_hdd_disconnect(hdd_adapter_t *pAdapter, u16 reason)
 		result = -EINVAL;
 		goto disconnected;
 	}
+wait_for_disconnect:
 	rc = wait_for_completion_timeout(&pAdapter->disconnect_comp_var,
 					 msecs_to_jiffies
 						 (WLAN_WAIT_TIME_DISCONNECT));
@@ -15909,6 +15916,7 @@ __wlan_hdd_cfg80211_set_ap_channel_width(struct wiphy *wiphy,
 	sme_get_config_param(pHddCtx->hHal, &sme_config);
 	switch (chandef->width) {
 	case NL80211_CHAN_WIDTH_20:
+	case NL80211_CHAN_WIDTH_20_NOHT:
 		if (sme_config.csrConfig.channelBondingMode24GHz !=
 		    eCSR_INI_SINGLE_CHANNEL_CENTERED) {
 			sme_config.csrConfig.channelBondingMode24GHz =
@@ -16211,38 +16219,6 @@ void wlan_hdd_clear_link_layer_stats(hdd_adapter_t *adapter)
 
 	return;
 }
-
-/**
- * hdd_process_defer_disconnect() - Handle the deferred disconnect
- * @adapter: HDD Adapter
- *
- * If roaming is in progress and there is a request to
- * disconnect the session, then it is deferred. Once
- * roaming is complete/aborted, then this routine is
- * used to resume the disconnect that was deferred
- *
- * Return: None
- */
-void hdd_process_defer_disconnect(hdd_adapter_t *adapter)
-{
-	switch (adapter->defer_disconnect) {
-	case DEFER_DISCONNECT_CFG80211_DISCONNECT:
-		adapter->defer_disconnect = 0;
-		wlan_hdd_disconnect(adapter,
-				adapter->cfg80211_disconnect_reason);
-			break;
-	case DEFER_DISCONNECT_TRY_DISCONNECT:
-		wlan_hdd_try_disconnect(adapter);
-		adapter->defer_disconnect = 0;
-		break;
-	default:
-		hdd_info("Invalid source to defer:%d. Hence not handling it",
-				adapter->defer_disconnect);
-		break;
-	}
-
-}
-
 
 /**
  * struct cfg80211_ops - cfg80211_ops

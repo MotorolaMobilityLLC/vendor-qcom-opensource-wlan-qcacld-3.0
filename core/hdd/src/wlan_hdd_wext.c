@@ -3389,6 +3389,7 @@ static void hdd_get_rssi_cb(int8_t rssi, uint32_t staId, void *pContext)
 {
 	struct statsContext *pStatsContext;
 	hdd_adapter_t *pAdapter;
+	hdd_station_ctx_t *pHddStaCtx;
 
 	if (ioctl_debug) {
 		pr_info("%s: rssi [%d] STA [%d] pContext [%p]\n",
@@ -3402,6 +3403,7 @@ static void hdd_get_rssi_cb(int8_t rssi, uint32_t staId, void *pContext)
 
 	pStatsContext = pContext;
 	pAdapter = pStatsContext->pAdapter;
+	pHddStaCtx = WLAN_HDD_GET_STATION_CTX_PTR(pAdapter);
 
 	/* there is a race condition that exists between this callback
 	 * function and the caller since the caller could time out
@@ -3430,11 +3432,15 @@ static void hdd_get_rssi_cb(int8_t rssi, uint32_t staId, void *pContext)
 	/* paranoia: invalidate the magic */
 	pStatsContext->magic = 0;
 
-	/* copy over the rssi */
-	pAdapter->rssi = rssi;
+	/* update rssi only if its valid else return previous valid rssi */
+	if (rssi)
+		pAdapter->rssi = rssi;
 
-	if (pAdapter->rssi > 0)
-		pAdapter->rssi = 0;
+	/* for new connection there might be no valid previous RSSI */
+	if (!pAdapter->rssi)
+		hdd_get_rssi_snr_by_bssid(pAdapter,
+			pHddStaCtx->conn_info.bssId.bytes,
+			&pAdapter->rssi, NULL);
 
 	/* notify the caller */
 	complete(&pStatsContext->completion);

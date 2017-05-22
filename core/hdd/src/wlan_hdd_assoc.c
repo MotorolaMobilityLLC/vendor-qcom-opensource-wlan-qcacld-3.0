@@ -1900,11 +1900,6 @@ static void hdd_send_re_assoc_event(struct net_device *dev,
 
 	qdf_mem_zero(&roam_profile, sizeof(roam_profile));
 
-	if (pAdapter->defer_disconnect) {
-		hdd_debug("Do not send roam event as discon will be processed");
-		goto done;
-	}
-
 	if (!rspRsnIe) {
 		hdd_err("Unable to allocate RSN IE");
 		goto done;
@@ -2531,32 +2526,30 @@ static QDF_STATUS hdd_association_completion_handler(hdd_adapter_t *pAdapter,
 							QDF_TRACE_LEVEL_DEBUG,
 							pFTAssocReq,
 							assocReqlen);
-						if (!pAdapter->defer_disconnect) {
-							roam_bss =
-								hdd_cfg80211_get_bss(
-									pAdapter->wdev.wiphy,
-									chan,
-									pRoamInfo->bssid.bytes,
-									pRoamInfo->u.
-									pConnectedProfile->SSID.ssId,
-									pRoamInfo->u.
-									pConnectedProfile->SSID.length);
-							cfg80211_roamed_bss(dev,
-								roam_bss,
-								pFTAssocReq,
-								assocReqlen,
-								pFTAssocRsp,
-								assocRsplen,
-								GFP_KERNEL);
-							wlan_hdd_send_roam_auth_event(
-								pAdapter,
+						roam_bss =
+							hdd_cfg80211_get_bss(
+								pAdapter->wdev.wiphy,
+								chan,
 								pRoamInfo->bssid.bytes,
-								pFTAssocReq,
-								assocReqlen,
-								pFTAssocRsp,
-								assocRsplen,
-								pRoamInfo);
-						}
+								pRoamInfo->u.
+								pConnectedProfile->SSID.ssId,
+								pRoamInfo->u.
+								pConnectedProfile->SSID.length);
+						cfg80211_roamed_bss(dev,
+							roam_bss,
+							pFTAssocReq,
+							assocReqlen,
+							pFTAssocRsp,
+							assocRsplen,
+							GFP_KERNEL);
+						wlan_hdd_send_roam_auth_event(
+							pAdapter,
+							pRoamInfo->bssid.bytes,
+							pFTAssocReq,
+							assocReqlen,
+							pFTAssocRsp,
+							assocRsplen,
+							pRoamInfo);
 					}
 					if (sme_get_ftptk_state
 						    (WLAN_HDD_GET_HAL_CTX(pAdapter),
@@ -3767,6 +3760,14 @@ hdd_roam_tdls_status_update_handler(hdd_adapter_t *pAdapter,
 		curr_peer =
 			wlan_hdd_tdls_find_peer(pAdapter,
 						pRoamInfo->peerMac.bytes);
+
+		if (!curr_peer) {
+			mutex_unlock(&pHddCtx->tdls_lock);
+			hdd_debug("peer doesn't exists");
+			status = QDF_STATUS_SUCCESS;
+			break;
+		}
+
 		wlan_hdd_tdls_indicate_teardown(pAdapter, curr_peer,
 						pRoamInfo->reasonCode);
 		hdd_send_wlan_tdls_teardown_event(eTDLS_TEARDOWN_BSS_DISCONNECT,
@@ -4699,8 +4700,11 @@ hdd_sme_roam_callback(void *pContext, tCsrRoamInfo *pRoamInfo, uint32_t roamId,
 		hdd_info("After Roam Synch Comp: NAPI Serialize OFF");
 		hdd_napi_serialize(0);
 		hdd_set_roaming_in_progress(false);
-		if (pAdapter->defer_disconnect)
-			hdd_process_defer_disconnect(pAdapter);
+		if (roamResult == eCSR_ROAM_RESULT_FAILURE)
+			pAdapter->roam_ho_fail = true;
+		else
+			pAdapter->roam_ho_fail = false;
+		complete(&pAdapter->roaming_comp_var);
 		break;
 	case eCSR_ROAM_SHOULD_ROAM:
 		/* notify apps that we can't pass traffic anymore */
@@ -4729,7 +4733,8 @@ hdd_sme_roam_callback(void *pContext, tCsrRoamInfo *pRoamInfo, uint32_t roamId,
 		hdd_napi_serialize(0);
 		cds_set_connection_in_progress(false);
 		hdd_set_roaming_in_progress(false);
-		pAdapter->defer_disconnect = 0;
+		pAdapter->roam_ho_fail = false;
+		complete(&pAdapter->roaming_comp_var);
 
 		qdf_ret_status =
 			hdd_dis_connect_handler(pAdapter, pRoamInfo, roamId,
@@ -4965,11 +4970,8 @@ hdd_sme_roam_callback(void *pContext, tCsrRoamInfo *pRoamInfo, uint32_t roamId,
 				WLAN_CONTROL_PATH);
 		cds_set_connection_in_progress(false);
 		hdd_set_roaming_in_progress(false);
-		/*
-		 * If disconnect operation is in deferred state, do it now.
-		 */
-		if (pAdapter->defer_disconnect)
-			hdd_process_defer_disconnect(pAdapter);
+		pAdapter->roam_ho_fail = false;
+		complete(&pAdapter->roaming_comp_var);
 		break;
 
 	default:

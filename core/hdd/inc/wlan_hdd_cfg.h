@@ -5193,6 +5193,31 @@ typedef enum {
 
 /*
  * <ini>
+ * gEnableSAPManadatoryChanList - Enable SAP Mandatory channel list
+ * Options.
+ * @Min: 0
+ * @Max: 1
+ * @Default: 0
+ *
+ * This ini is used to enable/disable the SAP manadatory chan list
+ * 0 - Disable SAP mandatory chan list
+ * 1 - Enable SAP mandatory chan list
+ *
+ * Supported Feature: SAP
+ *
+ *
+ * Usage: Internal/External
+ *
+ * </ini>
+ */
+#define CFG_ENABLE_SAP_MANDATORY_CHAN_LIST       "gEnableSAPManadatoryChanList"
+#define CFG_ENABLE_SAP_MANDATORY_CHAN_LIST_MIN   (0)
+#define CFG_ENABLE_SAP_MANDATORY_CHAN_LIST_MAX   (1)
+#define CFG_ENABLE_SAP_MANDATORY_CHAN_LIST_DEFAULT (0)
+
+
+/*
+ * <ini>
  * gSkipDfsChannelInP2pSearch - Skip DFS Channel in case of P2P Search
  * options
  * @Min: 0
@@ -9883,24 +9908,44 @@ enum dot11p_mode {
 #define CFG_ACTIVE_BPF_MODE_MAX     (ACTIVE_BPF_MODE_COUNT - 1)
 #define CFG_ACTIVE_BPF_MODE_DEFAULT (ACTIVE_BPF_DISABLED)
 
+enum hw_filter_mode {
+	HW_FILTER_DISABLED = 0,
+	HW_FILTER_NON_ARP_BC = 1,
+	HW_FILTER_NON_ICMPV6_MC = 2,
+};
+
 /*
  * <ini>
- * g_enable_non_arp_bc_hw_filter - Enable HW broadcast filtering
+ * gHwFilterMode - configure hardware filter for DTIM mode
  * @Min: 0
- * @Max: 1
+ * @Max: 3
  * @Default: 0
  *
- * This ini support to dynamically enable/disable Broadast filter
- * when target goes to wow suspend/resume mode
+ * The hardware filter is only effective in DTIM mode. Use this configuration
+ * to blanket drop broadcast/multicast packets at the hardware level, without
+ * waking up the firmware
  *
- * Usage: External
+ * Takes a bitmap of frame types to drop
+ * @E.g.
+ *	# disable feature (default)
+ *	gHwFilterMode=0
+ *	# drop all broadcast frames, except ARP
+ *	gHwFilterMode=1
+ *	# drop all multicast frames, except ICMPv6
+ *	gHwFilterMode=2
+ *	# drop all broadcast and multicast frames, except ARP and ICMPv6
+ *	gHwFilterMode=3
+ *
+ * Related: N/A
+ *
+ * Usage: Internal/External
  *
  * </ini>
  */
-#define CFG_HW_BC_FILTER_NAME     "g_enable_non_arp_bc_hw_filter"
-#define CFG_HW_FILTER_DEFAULT         (0)
-#define CFG_HW_FILTER_MIN             (0)
-#define CFG_HW_FILTER_MAX             (1)
+#define CFG_HW_FILTER_MODE_NAME		"gHwFilterMode"
+#define CFG_HW_FILTER_MODE_MIN		(0)
+#define CFG_HW_FILTER_MODE_MAX		(3)
+#define CFG_HW_FILTER_MODE_DEFAULT	(0)
 
 /*
  * <ini>
@@ -10556,7 +10601,7 @@ struct hdd_config {
 	uint8_t force_sap_acs;
 	uint8_t force_sap_acs_st_ch;
 	uint8_t force_sap_acs_end_ch;
-
+	uint8_t enable_sap_mandatory_chan_list;
 	int32_t dfsRadarPriMultiplier;
 	uint8_t reorderOffloadSupport;
 
@@ -10760,7 +10805,7 @@ struct hdd_config {
 	uint32_t max_sched_scan_plan_iterations;
 	uint8_t enable_phy_reg_retention;
 	enum active_bpf_mode active_bpf_mode;
-	bool hw_broadcast_filter;
+	enum hw_filter_mode hw_filter_mode;
 	bool sap_internal_restart;
 	bool restart_beaconing_on_chan_avoid_event;
 	bool enable_bcast_probe_rsp;

@@ -62,7 +62,7 @@
  * similar to the mentioned the WMA
  */
 #define WMA_TGT_NOISE_FLOOR_DBM (-96)
-#define WMA_TGT_RSSI_INVALID      96
+#define WMA_TGT_MAX_SNR         (WMA_TGT_NOISE_FLOOR_DBM * (-1))
 
 /*
  * Make sure that link monitor and keep alive
@@ -272,9 +272,6 @@ QDF_STATUS wma_roam_scan_bmiss_cnt(tp_wma_handle wma_handle,
 
 QDF_STATUS wma_roam_scan_offload_command(tp_wma_handle wma_handle,
 					 uint32_t command, uint32_t vdev_id);
-
-QDF_STATUS wma_process_roaming_config(tp_wma_handle wma_handle,
-				     tSirRoamOffloadScanReq *roam_req);
 
 QDF_STATUS wma_roam_preauth_chan_set(tp_wma_handle wma_handle,
 				     tpSwitchChannelParams params,
@@ -1047,16 +1044,14 @@ QDF_STATUS wma_enable_arp_ns_offload(tp_wma_handle wma,
 				     bool bArpOnly);
 
 /**
- * wma_configure_non_arp_broadcast_filter() - API to Enable/Disable Broadcast
- * filter
- * when target goes to wow suspend/resume mode
+ * wma_conf_hw_filter_mode() - configure hw filter to the given mode
  * @wma: wma handle
- * @bcastFilter: broadcast filter request
+ * @req: hardware filter request
  *
- * Return: QDF Status
+ * Return: QDF_STATUS
  */
-QDF_STATUS wma_configure_non_arp_broadcast_filter(tp_wma_handle wma,
-				struct broadcast_filter_request *bcast_filter);
+QDF_STATUS wma_conf_hw_filter_mode(tp_wma_handle wma,
+				   struct hw_filter_request *req);
 
 QDF_STATUS wma_process_cesium_enable_ind(tp_wma_handle wma);
 

@@ -115,6 +115,7 @@
 #else
 #define WLAN_WAIT_TIME_DISCONNECT  5000
 #endif
+#define WLAN_WAIT_TIME_STOP_ROAM  4000
 #define WLAN_WAIT_TIME_STATS       800
 #define WLAN_WAIT_TIME_POWER       800
 #define WLAN_WAIT_TIME_COUNTRY     1000
@@ -1020,6 +1021,8 @@ struct hdd_adapter_s {
 	/** completion variable for disconnect callback */
 	struct completion disconnect_comp_var;
 
+	struct completion roaming_comp_var;
+
 	/** Completion of change country code */
 	struct completion change_country_code;
 
@@ -1198,30 +1201,15 @@ struct hdd_adapter_s {
 	/* rcpi information */
 	struct rcpi_info rcpi;
 	/*
-	 * defer disconnect is used as a flag by roaming to check
-	 * if any disconnect has been deferred because of roaming
-	 * and handle it. It stores the source of the disconnect.
-	 * Based on the source, it will appropriately handle the
-	 * disconnect.
+	 * Indicate if HO fails during disconnect so that
+	 * disconnect is not initiated by HDD as its already
+	 * initiated by CSR
 	 */
-	uint8_t defer_disconnect;
-	/*
-	 * cfg80211 issues a reason for disconnect. Store this reason if the
-	 * disconnect is being deferred.
-	 */
-	uint8_t cfg80211_disconnect_reason;
+	bool roam_ho_fail;
 	struct lfr_firmware_status lfr_fw_status;
 	bool con_status;
 	bool dad;
 };
-
-/*
- * Below two definitions are useful to distinguish the
- * source of the disconnect when a disconnect is
- * deferred.
- */
-#define DEFER_DISCONNECT_TRY_DISCONNECT      1
-#define DEFER_DISCONNECT_CFG80211_DISCONNECT 2
 
 #define WLAN_HDD_GET_STATION_CTX_PTR(pAdapter) (&(pAdapter)->sessionCtx.station)
 #define WLAN_HDD_GET_AP_CTX_PTR(pAdapter) (&(pAdapter)->sessionCtx.ap)
@@ -2248,5 +2236,17 @@ void hdd_unregister_notifiers(hdd_context_t *hdd_ctx);
 void hdd_chip_pwr_save_fail_detected_cb(void *hdd_ctx,
 				struct chip_pwr_save_fail_detected_params
 				*data);
+
+/**
+ * hdd_get_rssi_snr_by_bssid() - gets the rssi and snr by bssid from scan cache
+ * @adapter: adapter handle
+ * @bssid: bssid to look for in scan cache
+ * @rssi: rssi value found
+ * @snr: snr value found
+ *
+ * Return: QDF_STATUS
+ */
+int hdd_get_rssi_snr_by_bssid(hdd_adapter_t *adapter, const uint8_t *bssid,
+			      int8_t *rssi, int8_t *snr);
 
 #endif /* end #if !defined(WLAN_HDD_MAIN_H) */

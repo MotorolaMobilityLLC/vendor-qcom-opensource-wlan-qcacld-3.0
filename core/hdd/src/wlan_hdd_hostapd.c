@@ -7100,14 +7100,23 @@ static int wlan_hdd_setup_driver_overrides(hdd_adapter_t *ap_adapter)
 		if (sap_cfg->SapHw_mode == eCSR_DOT11_MODE_11n)
 			sap_cfg->SapHw_mode = eCSR_DOT11_MODE_11ac;
 
-		if (sap_cfg->channel >= 36)
+		if (sap_cfg->channel >= 36) {
 			sap_cfg->ch_width_orig =
 					hdd_ctx->config->vhtChannelWidth;
-		else
-			sap_cfg->ch_width_orig =
-				hdd_ctx->config->nChannelBondingMode24GHz ?
-				eHT_CHANNEL_WIDTH_40MHZ :
-				eHT_CHANNEL_WIDTH_20MHZ;
+		} else {
+			/*
+			 * Allow 40 Mhz in 2.4 Ghz only if indicated by
+			 * supplicant after OBSS scan and if 2.4 Ghz channel
+			 * bonding is set in INI
+			 */
+			if (sap_cfg->ch_width_orig >= eHT_CHANNEL_WIDTH_40MHZ &&
+			   hdd_ctx->config->nChannelBondingMode24GHz)
+				sap_cfg->ch_width_orig =
+					eHT_CHANNEL_WIDTH_40MHZ;
+			else
+				sap_cfg->ch_width_orig =
+					eHT_CHANNEL_WIDTH_20MHZ;
+		}
 	}
 	sap_cfg->ch_params.ch_width = sap_cfg->ch_width_orig;
 	cds_set_channel_params(sap_cfg->channel,
@@ -7917,6 +7926,7 @@ static int __wlan_hdd_cfg80211_stop_ap(struct wiphy *wiphy,
 	unsigned long rc;
 	hdd_adapter_list_node_t *pAdapterNode = NULL;
 	hdd_adapter_list_node_t *pNext = NULL;
+	tsap_Config_t *pConfig;
 
 	ENTER();
 
@@ -8006,10 +8016,17 @@ static int __wlan_hdd_cfg80211_stop_ap(struct wiphy *wiphy,
 		pHddCtx->is_sap_restart_required = false;
 		qdf_spin_unlock(&pHddCtx->sap_update_info_lock);
 	}
-	pAdapter->sessionCtx.ap.sapConfig.acs_cfg.acs_mode = false;
+
+	pConfig = &pAdapter->sessionCtx.ap.sapConfig;
+	pConfig->acs_cfg.acs_mode = false;
 	wlan_hdd_undo_acs(pAdapter);
-	qdf_mem_zero(&pAdapter->sessionCtx.ap.sapConfig.acs_cfg,
-						sizeof(struct sap_acs_cfg));
+	qdf_mem_zero(&pConfig->acs_cfg, sizeof(struct sap_acs_cfg));
+
+	/* Remove the channel no from sap mandatory list if it is a
+	 * 5GHz channel */
+	if (CDS_IS_CHANNEL_5GHZ(pConfig->channel))
+		cds_remove_sap_mandatory_chan(pConfig->channel);
+
 	/* Stop all tx queues */
 	hdd_notice("Disabling queues");
 	wlan_hdd_netif_queue_control(pAdapter,
@@ -8218,6 +8235,17 @@ static int __wlan_hdd_cfg80211_start_ap(struct wiphy *wiphy,
 	channel_width = wlan_hdd_get_channel_bw(params->chandef.width);
 	channel = ieee80211_frequency_to_channel(
 				params->chandef.chan->center_freq);
+
+	if (cds_is_sap_mandatory_chan_list_enabled()) {
+		if (!cds_get_sap_mandatory_chan_list_len())
+			cds_init_sap_mandatory_2g_chan();
+
+		if (CDS_IS_CHANNEL_5GHZ(channel)) {
+			hdd_debug("channel %hu, sap mandatory chan list enabled",
+					channel);
+			cds_add_sap_mandatory_chan(channel);
+		}
+	}
 
 	if (cds_is_sub_20_mhz_enabled()) {
 		enum channel_state ch_state;

@@ -64,8 +64,8 @@
 
 #define CSR_NUM_IBSS_START_CHANNELS_50      4
 #define CSR_NUM_IBSS_START_CHANNELS_24      3
-/* 5 seconds, for WPA, WPA2, CCKM */
-#define CSR_WAIT_FOR_KEY_TIMEOUT_PERIOD     (15 * QDF_MC_TIMER_TO_SEC_UNIT)
+/* 75 seconds, for WPA, WPA2, CCKM */
+#define CSR_WAIT_FOR_KEY_TIMEOUT_PERIOD     (75 * QDF_MC_TIMER_TO_SEC_UNIT)
 /* 120 seconds, for WPS */
 #define CSR_WAIT_FOR_WPS_KEY_TIMEOUT_PERIOD (120 * QDF_MC_TIMER_TO_SEC_UNIT)
 
@@ -14760,8 +14760,9 @@ QDF_STATUS csr_send_mb_disassoc_req_msg(tpAniSirGlobal pMac, uint32_t sessionId,
 	 * handoff. Here we should not send the disassoc over the air
 	 * to the AP
 	 */
-	if (CSR_IS_ROAM_SUBSTATE_DISASSOC_HO(pMac, sessionId)
-	    && csr_roam_is11r_assoc(pMac, sessionId)) {
+	if ((CSR_IS_ROAM_SUBSTATE_DISASSOC_HO(pMac, sessionId)
+			&& csr_roam_is11r_assoc(pMac, sessionId)) ||
+						pMsg->process_ho_fail) {
 		/* Set DoNotSendOverTheAir flag to 1 only for handoff case */
 		pMsg->doNotSendOverTheAir = CSR_DONT_SEND_DISASSOC_OVER_THE_AIR;
 	}
@@ -19266,7 +19267,7 @@ void csr_process_ho_fail_ind(tpAniSirGlobal pMac, void *pMsgBuf)
 	csr_roam_roaming_offload_timer_action(pMac, 0, sessionId,
 			ROAMING_OFFLOAD_TIMER_STOP);
 	csr_roam_call_callback(pMac, sessionId, NULL, 0,
-			eCSR_ROAM_NAPI_OFF, eSIR_SME_SUCCESS);
+			eCSR_ROAM_NAPI_OFF, eCSR_ROAM_RESULT_FAILURE);
 	csr_roam_synch_clean_up(pMac, sessionId);
 	csr_roaming_report_diag_event(pMac, NULL,
 			eCSR_REASON_ROAM_HO_FAIL);

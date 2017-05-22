@@ -2704,12 +2704,12 @@ typedef struct sSirNsOffloadReq {
 #endif /* WLAN_NS_OFFLOAD */
 
 /**
- * struct broadcast_filter_request - For enable/disable HW Broadcast Filter
- * @enable: value to enable disable feature
- * @bss_id: bss_id for get session.
+ * struct hw_filter_request - For enable/disable HW Filter
+ * @mode_bitmap: the hardware filter mode to configure
+ * @bssid: bss_id for get session.
  */
-struct broadcast_filter_request {
-	bool enable;
+struct hw_filter_request {
+	uint8_t mode_bitmap;
 	struct qdf_mac_addr bssid;
 };
 
@@ -7049,5 +7049,25 @@ struct sir_del_all_tdls_peers {
 	uint16_t msg_type;
 	uint16_t msg_len;
 	struct qdf_mac_addr bssid;
+};
+
+/**
+ * struct ani_ipa_stat_req - IPA stats request
+ * @msg_type: Message type
+ * @msg_len: Message Length
+ * @vdev_id: Vdev Id
+ * @param_id: param id
+ * @param_val: param value
+ * @req_type: request type
+ *
+ * IPA stats request message structure
+ */
+struct ani_ipa_stat_req {
+	uint16_t msg_type;
+	uint16_t msg_len;
+	uint16_t vdev_id;
+	uint32_t param_id;
+	uint32_t param_val;
+	uint32_t req_type;
 };
 #endif /* __SIR_API_H */
