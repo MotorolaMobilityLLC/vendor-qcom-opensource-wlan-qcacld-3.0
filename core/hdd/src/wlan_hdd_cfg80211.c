@@ -15696,8 +15696,10 @@ static int __wlan_hdd_cfg80211_testmode(struct wiphy *wiphy,
 	ENTER();
 
 	err = wlan_hdd_validate_context(pHddCtx);
-	if (err)
+	if (err) {
+		hdd_err("driver not ready");
 		return err;
+	}
 
 	err = nla_parse(tb, WLAN_HDD_TM_ATTR_MAX, data,
 			len, wlan_hdd_tm_policy);
@@ -15771,6 +15773,12 @@ static int __wlan_hdd_cfg80211_testmode(struct wiphy *wiphy,
 		int buf_len;
 		void *buf;
 		QDF_STATUS status;
+
+		if (hdd_get_conparam() != QDF_GLOBAL_FTM_MODE) {
+			hdd_err("Device is not in FTM mode");
+			return -EINVAL;
+		}
+
 		if (!tb[WLAN_HDD_TM_ATTR_DATA]) {
 			hdd_err("WLAN_HDD_TM_ATTR_DATA attribute is invalid");
 			return -EINVAL;
@@ -15778,8 +15786,8 @@ static int __wlan_hdd_cfg80211_testmode(struct wiphy *wiphy,
 
 		buf = nla_data(tb[WLAN_HDD_TM_ATTR_DATA]);
 		buf_len = nla_len(tb[WLAN_HDD_TM_ATTR_DATA]);
-
-		hdd_info("****FTM Tx cmd len = %d*****", buf_len);
+          
+                hdd_info("****FTM Tx cmd len = %d*****", buf_len);
 
 		status = wlan_hdd_ftm_testmode_cmd(buf, buf_len);
 
