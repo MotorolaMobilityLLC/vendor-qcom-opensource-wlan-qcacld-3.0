@@ -3117,7 +3117,6 @@ lim_check_and_announce_join_success(tpAniSirGlobal mac_ctx,
 	uint32_t *noa2_duration_from_beacon = NULL;
 	uint32_t noa;
 	uint32_t total_num_noa_desc = 0;
-	uint32_t selfStaDot11Mode = 0;
 
 	qdf_mem_copy(current_ssid.ssId,
 		     session_entry->ssId.ssId, session_entry->ssId.length);
@@ -3254,9 +3253,7 @@ lim_check_and_announce_join_success(tpAniSirGlobal mac_ctx,
 	lim_post_sme_message(mac_ctx, LIM_MLM_JOIN_CNF,
 			     (uint32_t *) &mlm_join_cnf);
 
-	wlan_cfg_get_int(mac_ctx, WNI_CFG_DOT11_MODE, &selfStaDot11Mode);
-
-	if ((IS_DOT11_MODE_VHT(selfStaDot11Mode)) &&
+	if ((IS_DOT11_MODE_VHT(session_entry->dot11mode)) &&
 		beacon_probe_rsp->vendor_vht_ie.VHTCaps.present) {
 		session_entry->is_vendor_specific_vhtcaps = true;
 		session_entry->vendor_specific_vht_ie_type =
@@ -4250,6 +4247,7 @@ tSirRetStatus lim_sta_send_add_bss_pre_assoc(tpAniSirGlobal pMac, uint8_t update
 	pAddBssParams->currentOperChannel = bssDescription->channelId;
 	lim_log(pMac, LOG2, FL("currentOperChannel %d"),
 		pAddBssParams->currentOperChannel);
+
 	if (psessionEntry->vhtCapability &&
 		(IS_BSS_VHT_CAPABLE(pBeaconStruct->VHTCaps) ||
 		 IS_BSS_VHT_CAPABLE(pBeaconStruct->vendor_vht_ie.VHTCaps))) {
