@@ -1921,11 +1921,11 @@ static int32_t _csr_calculate_bss_score(tSirBssDescription *bss_info,
  * @bss: BSSID
  * @pcl_chan_weight: pcl weight for bss channel
  *
- * Return: int
+ * Return: void
  *
  * Calculate candidate AP score for Best candidate selection for connection.
  */
-static int32_t csr_calculate_bss_score(tpAniSirGlobal pMac,
+static void csr_calculate_bss_score(tpAniSirGlobal pMac,
 		tCsrScanResult *pBss,
 		int pcl_chan_weight)
 {
@@ -1935,14 +1935,16 @@ static int32_t csr_calculate_bss_score(tpAniSirGlobal pMac,
 
 	channel_id = cds_get_channel_enum(pBss->Result.BssDescriptor.channelId);
 
-	score = _csr_calculate_bss_score(bss_info,
+
+	if (channel_id < NUM_CHANNELS)
+		score = _csr_calculate_bss_score(bss_info,
 			pMac->candidate_channel_info[channel_id].
 			max_rssi_on_channel,
 			pMac->candidate_channel_info[channel_id].
 			other_ap_count, pcl_chan_weight);
 
 	pBss->bss_score = score;
-	return 0;
+	return;
 }
 
 static QDF_STATUS
@@ -2066,8 +2068,10 @@ csr_save_scan_entry(tpAniSirGlobal pMac,
  * with candidate profile. If some scan result doesn't match
  * with candidate profile, this function calculates no of
  * those AP and best RSSI on that candidate's channel.
+ *
+ * Return : void
  */
-static QDF_STATUS csr_calculate_other_ap_count_n_rssi(tpAniSirGlobal pMac,
+static void csr_calculate_other_ap_count_n_rssi(tpAniSirGlobal pMac,
 		tCsrScanResultFilter *pFilter)
 {
 	QDF_STATUS status = QDF_STATUS_SUCCESS;
@@ -2101,6 +2105,10 @@ static QDF_STATUS csr_calculate_other_ap_count_n_rssi(tpAniSirGlobal pMac,
 		if (!match) {
 			channel_id = cds_get_channel_enum(
 					bss->Result.BssDescriptor.channelId);
+			if (channel_id >= NUM_CHANNELS) {
+				sms_log(pMac, LOGE, FL("Invalid channel"));
+				return;
+			}
 			QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_DEBUG,
 			FL("channel_id %d ssid %s rssi %d mac address "MAC_ADDRESS_STR),
 					bss->Result.BssDescriptor.channelId,
@@ -2126,7 +2134,7 @@ static QDF_STATUS csr_calculate_other_ap_count_n_rssi(tpAniSirGlobal pMac,
 
 	}
 	csr_ll_unlock(&pMac->scan.scanResultList);
-	return status;
+	return;
 }
 
 
@@ -7621,7 +7629,6 @@ tpSirBssDescription csr_get_fst_bssdescr_ptr(tScanResultHandle result_handle)
 	if (csr_ll_is_list_empty(&bss_list->List, LL_ACCESS_NOLOCK)) {
 		QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_ERROR,
 			FL("bss_list->List is empty"));
-		qdf_mem_free(bss_list);
 		return NULL;
 	}
 	first_element = csr_ll_peek_head(&bss_list->List, LL_ACCESS_NOLOCK);

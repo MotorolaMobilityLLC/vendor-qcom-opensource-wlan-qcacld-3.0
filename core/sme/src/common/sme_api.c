@@ -1679,21 +1679,26 @@ static void sme_process_ready_to_ext_wow(tHalHandle hHal,
    --------------------------------------------------------------------------*/
 QDF_STATUS sme_hdd_ready_ind(tHalHandle hHal)
 {
-	tSirSmeReadyReq Msg;
+	tSirSmeReadyReq *msg;
 	QDF_STATUS status = QDF_STATUS_E_FAILURE;
 	tpAniSirGlobal pMac = PMAC_STRUCT(hHal);
 
 	MTRACE(qdf_trace(QDF_MODULE_ID_SME,
 			 TRACE_CODE_SME_RX_HDD_MSG_HDDREADYIND, NO_SESSION, 0));
 	do {
+		msg = qdf_mem_malloc(sizeof(*msg));
+		if (!msg) {
+			sme_err("Memory allocation failed! for msg");
+			return QDF_STATUS_E_NOMEM;
+		}
+		msg->messageType = eWNI_SME_SYS_READY_IND;
+		msg->length = sizeof(*msg);
+		msg->add_bssdescr_cb = csr_scan_process_single_bssdescr;
+		msg->csr_roam_synch_cb = csr_roam_synch_callback;
+		msg->sme_msg_cb = sme_process_msg_callback;
 
-		Msg.messageType = eWNI_SME_SYS_READY_IND;
-		Msg.length = sizeof(tSirSmeReadyReq);
-		Msg.add_bssdescr_cb = csr_scan_process_single_bssdescr;
-		Msg.csr_roam_synch_cb = csr_roam_synch_callback;
-		Msg.sme_msg_cb = sme_process_msg_callback;
-
-		if (eSIR_FAILURE != u_mac_post_ctrl_msg(hHal, (tSirMbMsg *) &Msg)) {
+		if (eSIR_FAILURE != u_mac_post_ctrl_msg(hHal, (tSirMbMsg *)
+							msg)) {
 			status = QDF_STATUS_SUCCESS;
 		} else {
 			sms_log(pMac, LOGE,
@@ -10303,26 +10308,27 @@ QDF_STATUS sme_send_tdls_link_establish_params(tHalHandle hHal,
 	return status;
 }
 
-/* ---------------------------------------------------------------------------
-    \fn sme_send_tdls_mgmt_frame
-    \brief  API to send TDLS management frames.
-
-    \param  peerMac - peer's Mac Adress.
-    \param frame_type - Type of TDLS mgmt frame to be sent.
-    \param dialog - dialog token used in the frame.
-    \param status - status to be incuded in the frame.
-    \param peerCapability - peer cpabilities
-    \param buf - additional IEs to be included
-    \param len - lenght of additional Ies
-    \param responder - Tdls request type
-   \- return QDF_STATUS_SUCCES
-    -------------------------------------------------------------------------*/
+/**
+ * sme_send_tdls_mgmt_frame() - API to send TDLS management frames.
+ *
+ * @peerMac - peer's Mac Adress.
+ * @frame_type - Type of TDLS mgmt frame to be sent.
+ * @dialog - dialog token used in the frame.
+ * @status - status to be incuded in the frame.
+ * @peerCapability - peer cpabilities
+ * @buf - additional IEs to be included
+ * @len - lenght of additional Ies
+ * @responder - Tdls request type
+ * @ac - access category
+ * Return QDF_STATUS_SUCCES
+ */
 QDF_STATUS sme_send_tdls_mgmt_frame(tHalHandle hHal, uint8_t sessionId,
 				    const tSirMacAddr peerMac,
 				    uint8_t frame_type,
 				    uint8_t dialog, uint16_t statusCode,
 				    uint32_t peerCapability, uint8_t *buf,
-				    uint8_t len, uint8_t responder)
+				    uint8_t len, uint8_t responder,
+				    enum sir_wifi_traffic_ac ac)
 {
 	QDF_STATUS status = QDF_STATUS_SUCCESS;
 	tCsrTdlsSendMgmt sendTdlsReq = { {0} };
@@ -10341,6 +10347,7 @@ QDF_STATUS sme_send_tdls_mgmt_frame(tHalHandle hHal, uint8_t sessionId,
 		sendTdlsReq.statusCode = statusCode;
 		sendTdlsReq.responder = responder;
 		sendTdlsReq.peerCapability = peerCapability;
+		sendTdlsReq.ac = ac;
 
 		status = csr_tdls_send_mgmt_req(hHal, sessionId, &sendTdlsReq);
 
