@@ -3436,8 +3436,10 @@ tSirRetStatus lim_delete_tdls_peers(tpAniSirGlobal mac_ctx,
 	}
 
 	lim_check_aid_and_delete_peer(mac_ctx, session_entry);
+
 	if (lim_is_roam_synch_in_progress(session_entry))
 		return eSIR_SUCCESS;
+
 	lim_send_sme_tdls_delete_all_peer_ind(mac_ctx, session_entry);
 
 	return eSIR_SUCCESS;

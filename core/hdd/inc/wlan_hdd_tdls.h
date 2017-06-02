@@ -867,4 +867,6 @@ void hdd_wlan_tdls_enable_link_event(const uint8_t *peer_mac,
 static inline void hdd_wlan_block_scan_by_tdls_event(void) {}
 #endif /* FEATURE_WLAN_DIAG_SUPPORT */
 
+void wlan_hdd_tdls_timers_stop(tdlsCtx_t *hdd_tdls_ctx);
+
 #endif /* __HDD_TDLS_H */
