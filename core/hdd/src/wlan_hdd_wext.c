@@ -3778,10 +3778,10 @@ int wlan_hdd_get_linkspeed_for_peermac(hdd_adapter_t *pAdapter,
 	status = sme_get_link_speed(WLAN_HDD_GET_HAL_CTX(pAdapter),
 				    linkspeed_req,
 				    &context, hdd_get_link_speed_cb);
+	qdf_mem_free(linkspeed_req);
 	errno = qdf_status_to_os_return(status);
 	if (errno) {
 		hdd_err("Unable to retrieve statistics for link speed");
-		qdf_mem_free(linkspeed_req);
 	} else {
 		rc = wait_for_completion_timeout
 			(&context.completion,
@@ -11521,6 +11521,11 @@ static int __iw_set_packet_filter_params(struct net_device *dev,
 	if (adapter->device_mode != QDF_STA_MODE) {
 		hdd_err("Packet filter not supported for this mode :%d",
 			adapter->device_mode);
+		return -ENOTSUPP;
+	}
+
+	if (!hdd_conn_is_connected(WLAN_HDD_GET_STATION_CTX_PTR(adapter))) {
+		hdd_err("Packet filter not supported in disconnected state");
 		return -ENOTSUPP;
 	}
 

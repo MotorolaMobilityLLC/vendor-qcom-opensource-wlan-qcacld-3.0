@@ -636,8 +636,13 @@ QDF_STATUS wma_vdev_detach(tp_wma_handle wma_handle,
 	if (!iface->handle) {
 		WMA_LOGE("handle of vdev_id %d is NULL vdev is already freed",
 			 vdev_id);
-		qdf_mem_free(pdel_sta_self_req_param);
-		pdel_sta_self_req_param = NULL;
+		pdel_sta_self_req_param->status = status;
+		if (generateRsp) {
+			wma_send_del_sta_self_resp(pdel_sta_self_req_param);
+		} else {
+			qdf_mem_free(pdel_sta_self_req_param);
+			pdel_sta_self_req_param = NULL;
+		}
 		return status;
 	}
 
@@ -734,6 +739,11 @@ static void wma_vdev_start_rsp(tp_wma_handle wma,
 send_fail_resp:
 	if (add_bss->status != QDF_STATUS_SUCCESS) {
 		WMA_LOGE("%s: ADD BSS failure %d", __func__, add_bss->status);
+
+		/* Send vdev stop if vdev start was success*/
+		if (!resp_event->status)
+			if (wma_send_vdev_stop_to_fw(wma, resp_event->vdev_id))
+				WMA_LOGE("%s: %d Failed to send vdev stop", __func__, __LINE__);
 
 		pdev = cds_get_context(QDF_MODULE_ID_TXRX);
 		if (NULL == pdev)
@@ -1445,6 +1455,14 @@ static void wma_cleanup_target_req_param(struct wma_target_req *tgt_req)
 		qdf_mem_free(tgt_req->user_data);
 		tgt_req->user_data = NULL;
 	}
+
+	if (tgt_req->msg_type == WMA_SET_LINK_STATE && tgt_req->user_data) {
+		tpLinkStateParams params =
+			(tpLinkStateParams) tgt_req->user_data;
+		qdf_mem_free(params->callbackArg);
+		qdf_mem_free(tgt_req->user_data);
+		tgt_req->user_data = NULL;
+	}
 }
 
 /**
@@ -1951,7 +1969,7 @@ ol_txrx_vdev_handle wma_vdev_attach(tp_wma_handle wma_handle,
 	    (self_sta_req->type == WMI_VDEV_TYPE_OCB) ||
 	    (self_sta_req->type == WMI_VDEV_TYPE_MONITOR) ||
 	    (self_sta_req->type == WMI_VDEV_TYPE_NDI)) {
-		WMA_LOGA("Creating self peer %pM, vdev_id %hu",
+		WMA_LOGD("Creating self peer %pM, vdev_id %hu",
 			 self_sta_req->self_mac_addr, self_sta_req->session_id);
 		status = wma_create_peer(wma_handle, txrx_pdev,
 					 txrx_vdev_handle,
@@ -2251,16 +2269,13 @@ QDF_STATUS wma_vdev_start(tp_wma_handle wma,
 				return QDF_STATUS_E_FAILURE;
 			}
 
-			qdf_spin_lock_bh(&wma->dfs_ic->chan_lock);
 			if (isRestart)
 				wma->dfs_ic->disable_phy_err_processing = true;
 
 			/* provide the current channel to DFS */
-			wma->dfs_ic->ic_curchan =
-				wma_dfs_configure_channel(wma->dfs_ic,
+			wma_dfs_configure_channel(wma->dfs_ic,
 						params.band_center_freq1,
 						params.band_center_freq2, req);
-			qdf_spin_unlock_bh(&wma->dfs_ic->chan_lock);
 
 			wma_unified_dfs_phyerr_filter_offload_enable(wma);
 			dfs->disable_dfs_ch_switch =
@@ -2580,6 +2595,9 @@ static inline bool wma_crash_on_fw_timeout(bool crash_enabled)
 {
 	/* Discard FW timeouts and dont crash during SSR */
 	if (cds_is_driver_recovering())
+		return false;
+
+	if (cds_is_driver_unloading())
 		return false;
 
 	return crash_enabled;
@@ -3266,7 +3284,7 @@ static void wma_add_bss_ap_mode(tp_wma_handle wma, tpAddBssParams add_bss)
 	if (!QDF_IS_STATUS_SUCCESS(status))
 		WMA_LOGE("wma_get_current_hw_mode failed");
 
-	if ((add_bss->nss == 2) && !hw_mode.dbs_cap) {
+	if (add_bss->nss == 2) {
 		req.preferred_rx_streams = 2;
 		req.preferred_tx_streams = 2;
 	} else {
@@ -3411,7 +3429,7 @@ static void wma_add_bss_ibss_mode(tp_wma_handle wma, tpAddBssParams add_bss)
 	if (!QDF_IS_STATUS_SUCCESS(status))
 		WMA_LOGE("wma_get_current_hw_mode failed");
 
-	if ((add_bss->nss == 2) && !hw_mode.dbs_cap) {
+	if (add_bss->nss == 2) {
 		req.preferred_rx_streams = 2;
 		req.preferred_tx_streams = 2;
 	} else {
@@ -3592,7 +3610,7 @@ static void wma_add_bss_sta_mode(tp_wma_handle wma, tpAddBssParams add_bss)
 			if (!QDF_IS_STATUS_SUCCESS(status))
 				WMA_LOGE("wma_get_current_hw_mode failed");
 
-			if ((add_bss->nss == 2) && !hw_mode.dbs_cap) {
+			if (add_bss->nss == 2) {
 				req.preferred_rx_streams = 2;
 				req.preferred_tx_streams = 2;
 			} else {

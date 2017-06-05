@@ -1679,21 +1679,26 @@ static void sme_process_ready_to_ext_wow(tHalHandle hHal,
    --------------------------------------------------------------------------*/
 QDF_STATUS sme_hdd_ready_ind(tHalHandle hHal)
 {
-	tSirSmeReadyReq Msg;
+	tSirSmeReadyReq *msg;
 	QDF_STATUS status = QDF_STATUS_E_FAILURE;
 	tpAniSirGlobal pMac = PMAC_STRUCT(hHal);
 
 	MTRACE(qdf_trace(QDF_MODULE_ID_SME,
 			 TRACE_CODE_SME_RX_HDD_MSG_HDDREADYIND, NO_SESSION, 0));
 	do {
+		msg = qdf_mem_malloc(sizeof(*msg));
+		if (!msg) {
+			sme_err("Memory allocation failed! for msg");
+			return QDF_STATUS_E_NOMEM;
+		}
+		msg->messageType = eWNI_SME_SYS_READY_IND;
+		msg->length = sizeof(*msg);
+		msg->add_bssdescr_cb = csr_scan_process_single_bssdescr;
+		msg->csr_roam_synch_cb = csr_roam_synch_callback;
+		msg->sme_msg_cb = sme_process_msg_callback;
 
-		Msg.messageType = eWNI_SME_SYS_READY_IND;
-		Msg.length = sizeof(tSirSmeReadyReq);
-		Msg.add_bssdescr_cb = csr_scan_process_single_bssdescr;
-		Msg.csr_roam_synch_cb = csr_roam_synch_callback;
-		Msg.sme_msg_cb = sme_process_msg_callback;
-
-		if (eSIR_FAILURE != u_mac_post_ctrl_msg(hHal, (tSirMbMsg *) &Msg)) {
+		if (eSIR_FAILURE != u_mac_post_ctrl_msg(hHal, (tSirMbMsg *)
+							msg)) {
 			status = QDF_STATUS_SUCCESS;
 		} else {
 			sms_log(pMac, LOGE,
@@ -1752,33 +1757,6 @@ QDF_STATUS sme_start(tHalHandle hHal)
 	} while (0);
 
 	return status;
-}
-
-static QDF_STATUS sme_handle_ipa_uc_stat_request(
-		tpAniSirGlobal mac_ctx, void *msg)
-{
-	wma_cli_set_cmd_t *iwcmd;
-	struct ani_ipa_stat_req *ipa_stat_msg;
-
-	ipa_stat_msg = msg;
-	iwcmd = qdf_mem_malloc(sizeof(*iwcmd));
-	if (!iwcmd) {
-		sms_log(mac_ctx, LOGE, "Failed alloc memory for iwcmd");
-		return QDF_STATUS_E_NOMEM;
-	}
-
-	qdf_mem_zero(iwcmd, sizeof(*iwcmd));
-	iwcmd->param_sec_value = 0;
-	iwcmd->param_vdev_id = ipa_stat_msg->vdev_id;
-	iwcmd->param_id = ipa_stat_msg->param_id;
-	iwcmd->param_vp_dev = ipa_stat_msg->req_type;
-	iwcmd->param_value =  ipa_stat_msg->param_val;
-
-	sms_log(mac_ctx, LOG1, "param_id %d", iwcmd->param_id);
-	wma_ipa_uc_stat_request(iwcmd);
-	qdf_mem_free(iwcmd);
-
-	return QDF_STATUS_SUCCESS;
 }
 
 /**
@@ -2885,13 +2863,6 @@ QDF_STATUS sme_process_msg(tHalHandle hHal, cds_msg_t *pMsg)
 		}
 		break;
 #endif
-	case eWNI_SME_LINK_SPEED_IND:
-		if (pMac->sme.pLinkSpeedIndCb)
-			pMac->sme.pLinkSpeedIndCb(pMsg->bodyptr,
-						pMac->sme.pLinkSpeedCbContext);
-		if (pMsg->bodyptr)
-			qdf_mem_free(pMsg->bodyptr);
-		break;
 	case eWNI_SME_CSA_OFFLOAD_EVENT:
 		if (pMsg->bodyptr) {
 			csr_scan_flush_bss_entry(pMac, pMsg->bodyptr);
@@ -3122,17 +3093,6 @@ QDF_STATUS sme_process_msg(tHalHandle hHal, cds_msg_t *pMsg)
 		if (pMac->sme.rso_cmd_status_cb)
 			pMac->sme.rso_cmd_status_cb(pMac->hHdd, pMsg->bodyptr);
 		qdf_mem_free(pMsg->bodyptr);
-		break;
-
-	case eWNI_SME_IPA_STATS_REQ_CMD:
-		if (pMsg->bodyptr) {
-			status = sme_handle_ipa_uc_stat_request(pMac,
-							 pMsg->bodyptr);
-			qdf_mem_free(pMsg->bodyptr);
-		} else {
-			sms_log(pMac, LOGE, FL("Empty message for %d"),
-					pMsg->type);
-		}
 		break;
 
 	default:
@@ -10348,26 +10308,27 @@ QDF_STATUS sme_send_tdls_link_establish_params(tHalHandle hHal,
 	return status;
 }
 
-/* ---------------------------------------------------------------------------
-    \fn sme_send_tdls_mgmt_frame
-    \brief  API to send TDLS management frames.
-
-    \param  peerMac - peer's Mac Adress.
-    \param frame_type - Type of TDLS mgmt frame to be sent.
-    \param dialog - dialog token used in the frame.
-    \param status - status to be incuded in the frame.
-    \param peerCapability - peer cpabilities
-    \param buf - additional IEs to be included
-    \param len - lenght of additional Ies
-    \param responder - Tdls request type
-   \- return QDF_STATUS_SUCCES
-    -------------------------------------------------------------------------*/
+/**
+ * sme_send_tdls_mgmt_frame() - API to send TDLS management frames.
+ *
+ * @peerMac - peer's Mac Adress.
+ * @frame_type - Type of TDLS mgmt frame to be sent.
+ * @dialog - dialog token used in the frame.
+ * @status - status to be incuded in the frame.
+ * @peerCapability - peer cpabilities
+ * @buf - additional IEs to be included
+ * @len - lenght of additional Ies
+ * @responder - Tdls request type
+ * @ac - access category
+ * Return QDF_STATUS_SUCCES
+ */
 QDF_STATUS sme_send_tdls_mgmt_frame(tHalHandle hHal, uint8_t sessionId,
 				    const tSirMacAddr peerMac,
 				    uint8_t frame_type,
 				    uint8_t dialog, uint16_t statusCode,
 				    uint32_t peerCapability, uint8_t *buf,
-				    uint8_t len, uint8_t responder)
+				    uint8_t len, uint8_t responder,
+				    enum sir_wifi_traffic_ac ac)
 {
 	QDF_STATUS status = QDF_STATUS_SUCCESS;
 	tCsrTdlsSendMgmt sendTdlsReq = { {0} };
@@ -10386,6 +10347,7 @@ QDF_STATUS sme_send_tdls_mgmt_frame(tHalHandle hHal, uint8_t sessionId,
 		sendTdlsReq.statusCode = statusCode;
 		sendTdlsReq.responder = responder;
 		sendTdlsReq.peerCapability = peerCapability;
+		sendTdlsReq.ac = ac;
 
 		status = csr_tdls_send_mgmt_req(hHal, sessionId, &sendTdlsReq);
 
@@ -10787,11 +10749,9 @@ QDF_STATUS sme_get_link_speed(tHalHandle hHal, tSirLinkSpeedInfo *lsReq,
 			      void (*pCallbackfn)(tSirLinkSpeedInfo *indParam,
 						  void *pContext))
 {
-
 	QDF_STATUS status = QDF_STATUS_SUCCESS;
-	QDF_STATUS qdf_status = QDF_STATUS_SUCCESS;
 	tpAniSirGlobal pMac = PMAC_STRUCT(hHal);
-	cds_msg_t cds_message;
+	void *wma_handle;
 
 	status = sme_acquire_global_lock(&pMac->sme);
 	if (QDF_STATUS_SUCCESS == status) {
@@ -10806,20 +10766,18 @@ QDF_STATUS sme_get_link_speed(tHalHandle hHal, tSirLinkSpeedInfo *lsReq,
 			pMac->sme.pLinkSpeedCbContext = plsContext;
 			pMac->sme.pLinkSpeedIndCb = pCallbackfn;
 		}
-		/* serialize the req through MC thread */
-		cds_message.bodyptr = lsReq;
-		cds_message.type = WMA_GET_LINK_SPEED;
-		qdf_status = cds_mq_post_message(CDS_MQ_ID_WMA, &cds_message);
-		if (!QDF_IS_STATUS_SUCCESS(qdf_status)) {
+		wma_handle = cds_get_context(QDF_MODULE_ID_WMA);
+		if (!wma_handle) {
 			QDF_TRACE(QDF_MODULE_ID_SME, QDF_TRACE_LEVEL_ERROR,
-				  "%s: Post Link Speed msg fail", __func__);
+					"wma handle is NULL");
 			status = QDF_STATUS_E_FAILURE;
-		}
+		} else
+			status = wma_get_link_speed(wma_handle, lsReq);
 		sme_release_global_lock(&pMac->sme);
 	}
+
 	return status;
 }
-
 
 /*
  * SME API to enable/disable WLAN driver initiated SSR
@@ -15631,6 +15589,8 @@ QDF_STATUS sme_pdev_set_hw_mode(tHalHandle hal,
 	}
 
 	cmd->command = e_sme_command_set_hw_mode;
+	cmd->sessionId = msg.session_id;
+
 	cmd->u.set_hw_mode_cmd.hw_mode_index = msg.hw_mode_index;
 	cmd->u.set_hw_mode_cmd.set_hw_mode_cb = msg.set_hw_mode_cb;
 	cmd->u.set_hw_mode_cmd.reason = msg.reason;
@@ -17787,42 +17747,24 @@ QDF_STATUS sme_congestion_register_callback(tHalHandle hal,
 QDF_STATUS sme_ipa_uc_stat_request(tHalHandle hal, uint32_t vdev_id,
 			uint32_t param_id, uint32_t param_val, uint32_t req_cat)
 {
-	struct ani_ipa_stat_req	*ipa_stat_msg;
-	cds_msg_t msg = {0};
-	tpAniSirGlobal mac_ctx = PMAC_STRUCT(hal);
-	QDF_STATUS status;
+	wma_cli_set_cmd_t *iwcmd;
+	QDF_STATUS status = QDF_STATUS_SUCCESS;
 
-	status = sme_acquire_global_lock(&mac_ctx->sme);
-	if (!QDF_IS_STATUS_SUCCESS(status)) {
-		sms_log(mac_ctx, LOGE, "Unable to acquire lock");
-		return status;
-	}
-
-	ipa_stat_msg = qdf_mem_malloc(sizeof(struct ani_ipa_stat_req));
-	if (NULL == ipa_stat_msg) {
-		sme_release_global_lock(&mac_ctx->sme);
-		sms_log(mac_ctx, LOGE,
-			"Failed to allocate memory for ipa_stat_msg");
+	iwcmd = qdf_mem_malloc(sizeof(*iwcmd));
+	if (!iwcmd) {
+		sme_err("Failed alloc memory for iwcmd");
 		return QDF_STATUS_E_NOMEM;
 	}
-	ipa_stat_msg->msg_type = eWNI_SME_IPA_STATS_REQ_CMD;
-	ipa_stat_msg->msg_len = (uint16_t) sizeof(struct ani_ipa_stat_req);
-	ipa_stat_msg->vdev_id = vdev_id;
-	ipa_stat_msg->param_id = param_id;
-	ipa_stat_msg->param_val = param_val;
-	ipa_stat_msg->req_type = req_cat;
-	msg.type = eWNI_SME_IPA_STATS_REQ_CMD;
-	msg.bodyptr = ipa_stat_msg;
-	msg.reserved = 0;
-	msg.bodyval = 0;
-	if (QDF_STATUS_SUCCESS !=
-		cds_mq_post_message(CDS_MQ_ID_SME, &msg)) {
-		sms_log(mac_ctx, LOGE,
-			"sme_ipa_uc_stat_request failed to post msg");
-		qdf_mem_free(ipa_stat_msg);
-		status = QDF_STATUS_E_FAILURE;
-	}
-	sme_release_global_lock(&mac_ctx->sme);
+
+	qdf_mem_zero(iwcmd, sizeof(*iwcmd));
+	iwcmd->param_sec_value = 0;
+	iwcmd->param_vdev_id = vdev_id;
+	iwcmd->param_id = param_id;
+	iwcmd->param_vp_dev = req_cat;
+	iwcmd->param_value =  param_val;
+
+	wma_ipa_uc_stat_request(iwcmd);
+	qdf_mem_free(iwcmd);
 
 	return status;
 }

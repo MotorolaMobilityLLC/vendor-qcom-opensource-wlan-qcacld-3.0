@@ -193,7 +193,6 @@ enum eWniMsgTypes {
 	eWNI_SME_DFS_CSAIE_TX_COMPLETE_IND,     /* To indicate completion of CSA IE */
 	/* update in beacons/probe rsp */
 	eWNI_SME_STATS_EXT_EVENT,
-	eWNI_SME_LINK_SPEED_IND,        /* Indicate linkspeed response from WMA */
 	eWNI_SME_CSA_OFFLOAD_EVENT,
 	eWNI_SME_UPDATE_ADDITIONAL_IES, /* indicates Additional IE from hdd to PE */
 	eWNI_SME_MODIFY_ADDITIONAL_IES, /* To indicate IE modify from hdd to PE */
@@ -265,7 +264,6 @@ enum eWniMsgTypes {
 	eWNI_SME_LOST_LINK_INFO_IND,
 	eWNI_SME_RSO_CMD_STATUS_IND,
 	eWNI_SME_DEL_ALL_TDLS_PEERS,
-	eWNI_SME_IPA_STATS_REQ_CMD,
 	eWNI_SME_MSG_TYPES_END
 };
 

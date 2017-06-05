@@ -728,6 +728,7 @@ struct hdd_station_ctx {
 #ifdef WLAN_FEATURE_NAN_DATAPATH
 	struct nan_datapath_ctx ndp_ctx;
 #endif
+	bool ap_supports_immediate_power_save;
 };
 
 #define BSS_STOP    0
@@ -1759,6 +1760,7 @@ void hdd_exchange_version_and_caps(hdd_context_t *pHddCtx);
 int wlan_hdd_validate_context(hdd_context_t *pHddCtx);
 bool hdd_is_valid_mac_address(const uint8_t *pMacAddr);
 QDF_STATUS hdd_issta_p2p_clientconnected(hdd_context_t *pHddCtx);
+bool wlan_hdd_modules_are_enabled(hdd_context_t *hdd_ctx);
 
 struct qdf_mac_addr *
 hdd_wlan_get_ibss_mac_addr_from_staid(hdd_adapter_t *pAdapter,

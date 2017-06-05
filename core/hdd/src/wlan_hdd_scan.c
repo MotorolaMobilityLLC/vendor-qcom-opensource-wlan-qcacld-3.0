@@ -1976,8 +1976,10 @@ static int __wlan_hdd_cfg80211_scan(struct wiphy *wiphy,
 	       scan_req.minChnTime, scan_req.maxChnTime,
 	       scan_req.p2pSearch, scan_req.skipDfsChnlInP2pSearch);
 #if (LINUX_VERSION_CODE > KERNEL_VERSION(3, 7, 0))
-	if (request->flags & NL80211_SCAN_FLAG_FLUSH)
+	if (request->flags & NL80211_SCAN_FLAG_FLUSH) {
+		hdd_debug("Kernel scan flush flag enabled");
 		sme_scan_flush_result(WLAN_HDD_GET_HAL_CTX(pAdapter));
+	}
 #endif
 	wlan_hdd_update_scan_rand_attrs((void *)&scan_req, (void *)request,
 					WLAN_HDD_HOST_SCAN);
@@ -2852,7 +2854,6 @@ static int __wlan_hdd_cfg80211_sched_scan_start(struct wiphy *wiphy,
 	 * that the wlan wakelock which was held in the wlan_hdd_cfg80211_scan
 	 * function.
 	 */
-	sme_scan_flush_result(hHal);
 	if (true == pScanInfo->mScanPending) {
 		ret = wlan_hdd_scan_abort(pAdapter);
 		if (ret < 0) {
@@ -3287,6 +3288,8 @@ void hdd_cleanup_scan_queue(hdd_context_t *hdd_ctx)
 		adapter = hdd_scan_req->adapter;
 		if (WLAN_HDD_ADAPTER_MAGIC != adapter->magic) {
 			hdd_err("HDD adapter magic is invalid");
+		} else if (!req) {
+			hdd_debug("pending scan is wext triggered");
 		} else {
 			if (NL_SCAN == source)
 				hdd_cfg80211_scan_done(adapter, req, aborted);
