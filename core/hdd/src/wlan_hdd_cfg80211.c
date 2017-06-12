@@ -4069,6 +4069,7 @@ wlan_hdd_wifi_config_policy[QCA_WLAN_VENDOR_ATTR_CONFIG_MAX + 1] = {
 	[QCA_WLAN_VENDOR_ATTR_CONFIG_CTRL_RETRY] = {.type = NLA_U8 },
 	[QCA_WLAN_VENDOR_ATTR_CONFIG_PROPAGATION_DELAY] = {.type = NLA_U8 },
 	[QCA_WLAN_VENDOR_ATTR_CONFIG_TX_FAIL_COUNT] = {.type = NLA_U32 },
+	[QCA_WLAN_VENDOR_ATTR_CONFIG_LRO] = {.type = NLA_U8 },
 };
 
 /**
@@ -4139,7 +4140,7 @@ __wlan_hdd_cfg80211_wifi_configuration_set(struct wiphy *wiphy,
 	uint8_t *scan_ie;
 	struct sir_set_tx_rx_aggregation_size request;
 	QDF_STATUS qdf_status;
-	uint8_t retry, delay;
+	uint8_t retry, delay, enable_flag;
 	int param_id;
 	uint32_t tx_fail_count;
 
@@ -4184,6 +4185,12 @@ __wlan_hdd_cfg80211_wifi_configuration_set(struct wiphy *wiphy,
 
 		if (QDF_STATUS_SUCCESS != status)
 			ret_val = -EPERM;
+	}
+
+	if (tb[QCA_WLAN_VENDOR_ATTR_CONFIG_LRO]) {
+		enable_flag = nla_get_u8(tb[QCA_WLAN_VENDOR_ATTR_CONFIG_LRO]);
+		ret_val = hdd_lro_set_reset(hdd_ctx, adapter,
+							 enable_flag);
 	}
 
 	if (tb[QCA_WLAN_VENDOR_ATTR_CONFIG_QPOWER]) {
