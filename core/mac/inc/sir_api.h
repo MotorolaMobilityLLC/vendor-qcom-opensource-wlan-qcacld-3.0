@@ -1207,8 +1207,13 @@ typedef struct sSirSmeJoinReq {
 	tAniBool spectrumMgtIndicator;
 	tSirMacPowerCapInfo powerCap;
 	tSirSupChnl supportedChannels;
-	tSirBssDescription bssDescription;
 	bool enable_bcast_probe_rsp;
+	tSirBssDescription bssDescription;
+	/*
+	 * WARNING: Pls make bssDescription as last variable in struct
+	 * tSirSmeJoinReq as it has ieFields followed after this bss
+	 * description. Adding a variable after this corrupts the ieFields
+	 */
 } tSirSmeJoinReq, *tpSirSmeJoinReq;
 
 /* / Definition for reponse message to previously issued join request */
@@ -4360,6 +4365,7 @@ typedef struct sSirSmeRoamOffloadSynchInd {
 	tpSirSmeJoinRsp join_rsp;
 	uint16_t aid;
 	struct sir_hw_mode_trans_ind hw_mode_trans_ind;
+	uint8_t nss;
 } roam_offload_synch_ind;
 
 #ifdef WLAN_FEATURE_ROAM_OFFLOAD

@@ -166,7 +166,9 @@
 /** Mac Address string **/
 #define MAC_ADDRESS_STR "%02x:%02x:%02x:%02x:%02x:%02x"
 #define MAC_ADDRESS_STR_LEN 18  /* Including null terminator */
-#define MAX_GENIE_LEN 512
+/* Max and min IEs length in bytes */
+#define MAX_GENIE_LEN (512)
+#define MIN_GENIE_LEN (2)
 
 #define WLAN_CHIP_VERSION   "WCNSS"
 
@@ -338,6 +340,7 @@ struct linkspeedContext {
 };
 
 extern spinlock_t hdd_context_lock;
+extern struct mutex hdd_init_deinit_lock;
 
 #define STATS_CONTEXT_MAGIC 0x53544154  /* STAT */
 #define RSSI_CONTEXT_MAGIC  0x52535349  /* RSSI */

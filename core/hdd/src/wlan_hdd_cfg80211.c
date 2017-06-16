@@ -5440,6 +5440,12 @@ static int wlan_hdd_cfg80211_set_ns_offload(struct wiphy *wiphy,
 	return ret;
 }
 
+static const struct nla_policy get_preferred_freq_list_policy
+		[QCA_WLAN_VENDOR_ATTR_GET_PREFERRED_FREQ_LIST_MAX + 1] = {
+	[QCA_WLAN_VENDOR_ATTR_GET_PREFERRED_FREQ_LIST_IFACE_TYPE] = {
+		.type = NLA_U32},
+};
+
 /** __wlan_hdd_cfg80211_get_preferred_freq_list() - get preferred frequency list
  * @wiphy: Pointer to wireless phy
  * @wdev: Pointer to wireless device
@@ -5473,7 +5479,7 @@ static int __wlan_hdd_cfg80211_get_preferred_freq_list(struct wiphy *wiphy,
 		return -EINVAL;
 
 	if (nla_parse(tb, QCA_WLAN_VENDOR_ATTR_GET_PREFERRED_FREQ_LIST_MAX,
-		      data, data_len, NULL)) {
+		      data, data_len, get_preferred_freq_list_policy)) {
 		hdd_err("Invalid ATTR");
 		return -EINVAL;
 	}
@@ -5564,6 +5570,14 @@ static int wlan_hdd_cfg80211_get_preferred_freq_list(struct wiphy *wiphy,
 	return ret;
 }
 
+static const struct nla_policy set_probable_oper_channel_policy
+		[QCA_WLAN_VENDOR_ATTR_PROBABLE_OPER_CHANNEL_MAX + 1] = {
+	[QCA_WLAN_VENDOR_ATTR_PROBABLE_OPER_CHANNEL_IFACE_TYPE] = {
+		.type = NLA_U32},
+	[QCA_WLAN_VENDOR_ATTR_PROBABLE_OPER_CHANNEL_FREQ] = {
+		.type = NLA_U32},
+};
+
 /**
  * __wlan_hdd_cfg80211_set_probable_oper_channel () - set probable channel
  * @wiphy: Pointer to wireless phy
@@ -5583,7 +5597,7 @@ static int __wlan_hdd_cfg80211_set_probable_oper_channel(struct wiphy *wiphy,
 	hdd_context_t *hdd_ctx = wiphy_priv(wiphy);
 	int ret = 0;
 	enum cds_con_mode intf_mode;
-	struct nlattr *tb[QCA_WLAN_VENDOR_ATTR_GET_PREFERRED_FREQ_LIST_MAX + 1];
+	struct nlattr *tb[QCA_WLAN_VENDOR_ATTR_PROBABLE_OPER_CHANNEL_MAX + 1];
 	uint32_t channel_hint;
 
 	ENTER_DEV(ndev);
@@ -5593,7 +5607,7 @@ static int __wlan_hdd_cfg80211_set_probable_oper_channel(struct wiphy *wiphy,
 		return ret;
 
 	if (nla_parse(tb, QCA_WLAN_VENDOR_ATTR_PROBABLE_OPER_CHANNEL_MAX,
-		      data, data_len, NULL)) {
+		      data, data_len, set_probable_oper_channel_policy)) {
 		hdd_err("Invalid ATTR");
 		return -EINVAL;
 	}
@@ -5992,6 +6006,11 @@ static int wlan_hdd_cfg80211_set_ota_test(struct wiphy *wiphy,
 	return ret;
 }
 
+static const struct nla_policy
+txpower_scale_policy[QCA_WLAN_VENDOR_ATTR_TXPOWER_SCALE_MAX + 1] = {
+	[QCA_WLAN_VENDOR_ATTR_TXPOWER_SCALE] = { .type = NLA_U8 },
+};
+
 /**
  * __wlan_hdd_cfg80211_txpower_scale () - txpower scaling
  * @wiphy: Pointer to wireless phy
@@ -6023,7 +6042,7 @@ static int __wlan_hdd_cfg80211_txpower_scale(struct wiphy *wiphy,
 	adapter = WLAN_HDD_GET_PRIV_PTR(dev);
 
 	if (nla_parse(tb, QCA_WLAN_VENDOR_ATTR_TXPOWER_SCALE_MAX,
-		      data, data_len, NULL)) {
+		      data, data_len, txpower_scale_policy)) {
 		hdd_err("Invalid ATTR");
 		return -EINVAL;
 	}
@@ -6256,6 +6275,32 @@ static int __wlan_hdd_cfg80211_conditional_chan_switch(struct wiphy *wiphy,
 	return 0;
 }
 
+/* P2P listen offload device types parameters length in bytes */
+#define P2P_LO_MAX_REQ_DEV_TYPE_COUNT (10)
+#define P2P_LO_WPS_DEV_TYPE_LEN (8)
+#define P2P_LO_DEV_TYPE_MAX_LEN \
+	(P2P_LO_MAX_REQ_DEV_TYPE_COUNT * P2P_LO_WPS_DEV_TYPE_LEN)
+
+static const struct nla_policy
+p2p_listen_offload_policy[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_MAX + 1] = {
+	[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_CHANNEL] = { .type = NLA_U32 },
+	[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_PERIOD] = { .type = NLA_U32 },
+	[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_INTERVAL] = {
+							.type = NLA_U32 },
+	[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_COUNT] = { .type = NLA_U32 },
+	[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_DEVICE_TYPES] = {
+					.type = NLA_BINARY,
+					.len = P2P_LO_DEV_TYPE_MAX_LEN },
+	[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_VENDOR_IE] = {
+					.type = NLA_BINARY,
+					.len = MAX_GENIE_LEN },
+	[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_CTRL_FLAG] = {
+					.type = NLA_U32 },
+	[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_CHANNEL] = { .type = NLA_U32 },
+	[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_STOP_REASON] = {
+						.type = NLA_U8 },
+};
+
 /**
  * __wlan_hdd_cfg80211_p2p_lo_start () - start P2P Listen Offload
  * @wiphy: Pointer to wireless phy
@@ -6302,7 +6347,7 @@ static int __wlan_hdd_cfg80211_p2p_lo_start(struct wiphy *wiphy,
 	}
 
 	if (nla_parse(tb, QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_MAX,
-		      data, data_len, NULL)) {
+		      data, data_len, p2p_listen_offload_policy)) {
 		hdd_err("Invalid ATTR");
 		return -EINVAL;
 	}
@@ -6364,7 +6409,8 @@ static int __wlan_hdd_cfg80211_p2p_lo_start(struct wiphy *wiphy,
 
 	params.dev_types_len = nla_len(tb
 		[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_DEVICE_TYPES]);
-	if (params.dev_types_len < 8) {
+	/* device type length has to be multiple of P2P_LO_WPS_DEV_TYPE_LEN */
+	if (0 != (params.dev_types_len % P2P_LO_WPS_DEV_TYPE_LEN)) {
 		hdd_err("Invalid device type length: %d", params.dev_types_len);
 		return -EINVAL;
 	}
@@ -6376,9 +6422,13 @@ static int __wlan_hdd_cfg80211_p2p_lo_start(struct wiphy *wiphy,
 		return -EINVAL;
 	}
 
+	/*
+	 * IEs minimum length should be 2 bytes: 1 byte for element id
+	 * and 1 byte for element id length.
+	 */
 	params.probe_resp_len = nla_len(tb
 		[QCA_WLAN_VENDOR_ATTR_P2P_LISTEN_OFFLOAD_VENDOR_IE]);
-	if (params.probe_resp_len == 0) {
+	if (params.probe_resp_len < MIN_GENIE_LEN) {
 		hdd_err("Invalid probe resp template length: %d",
 				params.probe_resp_len);
 		return -EINVAL;
@@ -13061,6 +13111,14 @@ static int wlan_hdd_cfg80211_set_ie(hdd_adapter_t *pAdapter, const uint8_t *ie,
 		eLen = *genie++;
 		remLen -= 2;
 
+		/* Sanity check on eLen */
+		if (eLen > remLen) {
+			hdd_err("%s: Invalid IE length[%d] for IE[0x%X]",
+				__func__, eLen, elementId);
+			QDF_ASSERT(0);
+			return -EINVAL;
+		}
+
 		hdd_notice("IE[0x%X], LEN[%d]", elementId, eLen);
 
 		switch (elementId) {
@@ -13091,6 +13149,12 @@ static int wlan_hdd_cfg80211_set_ie(hdd_adapter_t *pAdapter, const uint8_t *ie,
 				pWextState->roamProfile.nAddIEAssocLength =
 					pWextState->assocAddIE.length;
 			} else if (0 == memcmp(&genie[0], "\x00\x50\xf2", 3)) {
+				if (eLen > (MAX_WPA_RSN_IE_LEN - 2)) {
+					hdd_err("%s: Invalid WPA RSN IE length[%d]",
+						__func__, eLen);
+					QDF_ASSERT(0);
+					return -EINVAL;
+				}
 				hdd_notice("Set WPA IE (len %d)", eLen + 2);
 				memset(pWextState->WPARSNIE, 0,
 				       MAX_WPA_RSN_IE_LEN);
