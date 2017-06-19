@@ -199,6 +199,7 @@ typedef enum {
  * @SIR_ROAMING_START: Firmware started roaming operation
  * @SIR_ROAMING_ABORT: Firmware aborted roaming operation, still connected.
  * @SIR_ROAM_SYNCH_COMPLETE: Roam sync propagation is complete.
+ * @SIR_ROAMING_INVOKE_FAIL: Firmware roaming failed.
  */
 enum sir_roam_op_code {
 	SIR_ROAM_SYNCH_PROPAGATION = 1,
@@ -207,6 +208,7 @@ enum sir_roam_op_code {
 	SIR_ROAMING_ABORT,
 	SIR_ROAM_SYNCH_COMPLETE,
 	SIR_ROAM_SYNCH_NAPI_OFF,
+	SIR_ROAMING_INVOKE_FAIL,
 };
 /**
  * Module ID definitions.
@@ -2563,6 +2565,14 @@ typedef struct sSirUpdateAPWPSIEsReq {
 	uint8_t sessionId;      /* Session ID */
 	tSirAPWPSIEs APWPSIEs;
 } tSirUpdateAPWPSIEsReq, *tpSirUpdateAPWPSIEsReq;
+
+struct update_config {
+	uint16_t messageType;   /* eWNI_SME_UPDATE_CONFIG */
+	uint16_t length;
+	uint8_t sme_session_id;
+	uint16_t capab;
+	uint32_t value;
+};
 
 /*
  * enum sir_update_session_param_type - session param type
