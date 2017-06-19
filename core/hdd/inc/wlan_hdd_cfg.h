@@ -10250,11 +10250,30 @@ enum hw_filter_mode {
  *
  * </ini>
  */
-
 #define CFG_ITO_REPEAT_COUNT_NAME "gItoRepeatCount"
 #define CFG_ITO_REPEAT_COUNT_MIN        (0)
 #define CFG_ITO_REPEAT_COUNT_MAX        (5)
 #define CFG_ITO_REPEAT_COUNT_DEFAULT    (0)
+
+/*
+ * <ini>
+ * gEnableTxOrphan- Enable/Disable orphaning of Tx packets
+ * @Min: 0
+ * @Max: 1
+ * @Default: 0
+ *
+ * This ini is used to enable/disable orphaning of Tx packets.
+ *
+ * Related: None
+ *
+ * Usage: External
+ *
+ * </ini>
+ */
+#define CFG_TX_ORPHAN_ENABLE_NAME    "gEnableTxOrphan"
+#define CFG_TX_ORPHAN_ENABLE_DEFAULT (0)
+#define CFG_TX_ORPHAN_ENABLE_MIN     (0)
+#define CFG_TX_ORPHAN_ENABLE_MAX     (1)
 
 struct hdd_config {
 	/* Bitmap to track what is explicitly configured */
@@ -10987,6 +11006,7 @@ struct hdd_config {
 	/* threshold of packet drops at which FW initiates disconnect */
 	uint16_t pkt_err_disconn_th;
 	bool is_bssid_hint_priority;
+	bool tx_orphan_enable;
 	bool is_force_1x1;
 	uint16_t num_11b_tx_chains;
 	uint16_t num_11ag_tx_chains;
