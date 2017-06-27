@@ -5682,6 +5682,8 @@ static int hdd_wiphy_init(hdd_context_t *hdd_ctx)
 		return ret_val;
 	}
 
+	pld_increment_driver_load_cnt(hdd_ctx->parent_dev);
+
 	hdd_program_country_code(hdd_ctx);
 
 	return ret_val;
@@ -5753,6 +5755,11 @@ static void hdd_pld_request_bus_bandwidth(hdd_context_t *hdd_ctx,
 	temp_rx = (rx_packets + hdd_ctx->prev_rx) / 2;
 
 	hdd_ctx->prev_rx = rx_packets;
+
+	if (temp_rx < hdd_ctx->config->busBandwidthLowThreshold)
+		hdd_disable_lro_for_low_tput(hdd_ctx, true);
+	else
+		hdd_disable_lro_for_low_tput(hdd_ctx, false);
 
 	if (temp_rx > hdd_ctx->config->tcpDelackThresholdHigh) {
 		if ((hdd_ctx->cur_rx_level != WLAN_SVC_TP_HIGH) &&
