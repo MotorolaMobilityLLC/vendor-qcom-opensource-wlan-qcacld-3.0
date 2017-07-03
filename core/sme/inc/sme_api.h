@@ -1563,4 +1563,19 @@ QDF_STATUS sme_process_msg_callback(tHalHandle hal, cds_msg_t *msg);
 QDF_STATUS sme_ipa_uc_stat_request(tHalHandle hal,
 			uint32_t vdev_id, uint32_t param_id,
 			uint32_t param_val, uint32_t req_cat);
+
+/**
+ * sme_cli_set_command() - SME wrapper API over WMA "set" command
+ * processor cmd
+ * @vdev_id: virtual device for the command
+ * @param_id: parameter id
+ * @sval: parameter value
+ * @vpdev: parameter category
+ *
+ * Command handler for set operations
+ *
+ * Return: 0 on success, errno on failure
+ */
+int sme_cli_set_command(int vdev_id, int param_id, int sval, int vpdev);
+
 #endif /* #if !defined( __SME_API_H ) */

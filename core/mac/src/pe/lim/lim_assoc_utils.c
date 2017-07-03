@@ -1811,6 +1811,11 @@ lim_populate_peer_rate_set(tpAniSirGlobal pMac,
 			lim_log(pMac, LOG2, FL("%x "),
 				       pRates->supportedMCSSet[i]);
 
+		if (pRates->supportedMCSSet[0] == 0) {
+			pe_debug("Incorrect MCS 0 - 7. They must be supported");
+			pRates->supportedMCSSet[0] = 0xFF;
+		}
+
 		psessionEntry->supported_nss_1x1 =
 			((pRates->supportedMCSSet[1] != 0) ? false : true);
 		lim_log(pMac, LOG1, FL("HT supported nss 1x1: %d"),
@@ -1818,6 +1823,14 @@ lim_populate_peer_rate_set(tpAniSirGlobal pMac,
 	}
 	lim_populate_vht_mcs_set(pMac, pRates, pVHTCaps,
 			psessionEntry, psessionEntry->nss);
+
+	if (IS_DOT11_MODE_VHT(psessionEntry->dot11mode)) {
+		if ((pRates->vhtRxMCSMap & MCSMAPMASK2x2) == MCSMAPMASK2x2)
+			psessionEntry->nss = NSS_1x1_MODE;
+	} else if (pRates->supportedMCSSet[1] == 0) {
+		psessionEntry->nss = NSS_1x1_MODE;
+	}
+
 	return eSIR_SUCCESS;
 } /*** lim_populate_peer_rate_set() ***/
 

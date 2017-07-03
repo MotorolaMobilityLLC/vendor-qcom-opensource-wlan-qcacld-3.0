@@ -166,7 +166,9 @@
 /** Mac Address string **/
 #define MAC_ADDRESS_STR "%02x:%02x:%02x:%02x:%02x:%02x"
 #define MAC_ADDRESS_STR_LEN 18  /* Including null terminator */
-#define MAX_GENIE_LEN 512
+/* Max and min IEs length in bytes */
+#define MAX_GENIE_LEN (512)
+#define MIN_GENIE_LEN (2)
 
 #define WLAN_CHIP_VERSION   "WCNSS"
 
@@ -338,6 +340,7 @@ struct linkspeedContext {
 };
 
 extern spinlock_t hdd_context_lock;
+extern struct mutex hdd_init_deinit_lock;
 
 #define STATS_CONTEXT_MAGIC 0x53544154  /* STAT */
 #define RSSI_CONTEXT_MAGIC  0x52535349  /* RSSI */
@@ -1669,6 +1672,7 @@ struct hdd_context_s {
 	/* tdls source timer to enable/disable TDLS on p2p listen */
 	qdf_mc_timer_t tdls_source_timer;
 	qdf_atomic_t disable_lro_in_concurrency;
+	qdf_atomic_t disable_lro_in_low_tput;
 	bool fw_mem_dump_enabled;
 	uint8_t last_scan_reject_session_id;
 	scan_reject_states last_scan_reject_reason;
