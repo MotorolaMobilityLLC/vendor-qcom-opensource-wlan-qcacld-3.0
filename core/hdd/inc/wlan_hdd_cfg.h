@@ -810,6 +810,52 @@ typedef enum {
 #define CFG_ACTIVE_MIN_CHANNEL_TIME_MAX        (10000)
 #define CFG_ACTIVE_MIN_CHANNEL_TIME_DEFAULT    (20)
 
+/*
+ * <ini>
+ * gScanNumProbes - Set the number of probes on each channel for active scan
+ * @Min: 0
+ * @Max: 20
+ * @Default: 0
+ *
+ * This ini is used to set number of probes on each channel for
+ * active scan
+ *
+ * Related: None
+ *
+ * Supported Feature: Scan
+ *
+ * Usage: External
+ *
+ * </ini>
+ */
+#define CFG_SCAN_NUM_PROBES_NAME       "gScanNumProbes"
+#define CFG_SCAN_NUM_PROBES_MIN        (0)
+#define CFG_SCAN_NUM_PROBES_MAX        (20)
+#define CFG_SCAN_NUM_PROBES_DEFAULT    (0)
+
+/*
+ * <ini>
+ * gScanProbeRepeatTime - Set probe repeat time on each channel for active scan
+ * @Min: 0
+ * @Max: 30
+ * @Default: 0
+ *
+ * This ini is used to set probe repeat time on each channel for
+ * active scan
+ *
+ * Related: None
+ *
+ * Supported Feature: Scan
+ *
+ * Usage: External
+ *
+ * </ini>
+ */
+#define CFG_SCAN_PROBE_REPEAT_TIME_NAME       "gScanProbeRepeatTime"
+#define CFG_SCAN_PROBE_REPEAT_TIME_MIN        (0)
+#define CFG_SCAN_PROBE_REPEAT_TIME_MAX        (30)
+#define CFG_SCAN_PROBE_REPEAT_TIME_DEFAULT    (0)
+
 #ifdef FEATURE_WLAN_EXTSCAN
 /*
  * <ini>
@@ -10191,6 +10237,44 @@ enum hw_filter_mode {
 #define CFG_AUTO_DETECT_POWER_FAIL_MODE_MAX             (1)
 #define CFG_AUTO_DETECT_POWER_FAIL_MODE_DEFAULT         (0)
 
+/*
+ * <ini>
+ * gItoRepeatCount - sets ito repeated count
+ * @Min: 0
+ * @Max: 5
+ * @Default: 0
+ *
+ * This ini sets the ito count in FW
+ *
+ * Usage: External
+ *
+ * </ini>
+ */
+#define CFG_ITO_REPEAT_COUNT_NAME "gItoRepeatCount"
+#define CFG_ITO_REPEAT_COUNT_MIN        (0)
+#define CFG_ITO_REPEAT_COUNT_MAX        (5)
+#define CFG_ITO_REPEAT_COUNT_DEFAULT    (0)
+
+/*
+ * <ini>
+ * gEnableTxOrphan- Enable/Disable orphaning of Tx packets
+ * @Min: 0
+ * @Max: 1
+ * @Default: 0
+ *
+ * This ini is used to enable/disable orphaning of Tx packets.
+ *
+ * Related: None
+ *
+ * Usage: External
+ *
+ * </ini>
+ */
+#define CFG_TX_ORPHAN_ENABLE_NAME    "gEnableTxOrphan"
+#define CFG_TX_ORPHAN_ENABLE_DEFAULT (0)
+#define CFG_TX_ORPHAN_ENABLE_MIN     (0)
+#define CFG_TX_ORPHAN_ENABLE_MAX     (1)
+
 struct hdd_config {
 	/* Bitmap to track what is explicitly configured */
 	DECLARE_BITMAP(bExplicitCfg, MAX_CFG_INI_ITEMS);
@@ -10278,6 +10362,8 @@ struct hdd_config {
 	uint32_t nPassiveMaxChnTime;    /* in units of milliseconds */
 	uint32_t nActiveMinChnTime;     /* in units of milliseconds */
 	uint32_t nActiveMaxChnTime;     /* in units of milliseconds */
+	uint32_t scan_probe_repeat_time;
+	uint32_t scan_num_probes;
 
 	uint32_t nInitialDwellTime;     /* in units of milliseconds */
 	bool initial_scan_no_dfs_chnl;
@@ -10920,9 +11006,12 @@ struct hdd_config {
 	/* threshold of packet drops at which FW initiates disconnect */
 	uint16_t pkt_err_disconn_th;
 	bool is_bssid_hint_priority;
+	bool tx_orphan_enable;
 	bool is_force_1x1;
 	uint16_t num_11b_tx_chains;
 	uint16_t num_11ag_tx_chains;
+
+	uint8_t ito_repeat_count;
 };
 
 #define VAR_OFFSET(_Struct, _Var) (offsetof(_Struct, _Var))

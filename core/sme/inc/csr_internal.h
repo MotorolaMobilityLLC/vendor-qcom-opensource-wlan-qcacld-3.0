@@ -671,6 +671,8 @@ typedef struct tagCsrConfig {
 	bool is_force_1x1;
 	uint16_t num_11b_tx_chains;
 	uint16_t num_11ag_tx_chains;
+	uint32_t scan_probe_repeat_time;
+	uint32_t scan_num_probes;
 } tCsrConfig;
 
 typedef struct tagCsrChannelPowerInfo {
@@ -1005,6 +1007,7 @@ typedef struct tagCsrRoamSession {
 	uint8_t disconnect_reason;
 	uint8_t uapsd_mask;
 	qdf_mc_timer_t roaming_offload_timer;
+	bool ignore_assoc_disallowed;
 } tCsrRoamSession;
 
 typedef struct tagCsrRoamStruct {

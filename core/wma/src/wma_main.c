@@ -2512,6 +2512,8 @@ QDF_STATUS wma_open(void *cds_context,
 				wma_flush_complete_evt_handler,
 				WMA_RX_WORK_CTX);
 
+	wma_handle->ito_repeat_count = cds_cfg->ito_repeat_count;
+
 	wma_handle->auto_power_save_enabled =
 		cds_cfg->auto_power_save_fail_mode;
 	/* Register PWR_SAVE_FAIL event only in case of recovery(1) */

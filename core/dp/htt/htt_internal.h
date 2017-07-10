@@ -231,8 +231,13 @@ static inline void htt_print_rx_desc_lro(struct htt_host_rx_desc_base *rx_desc)
 static inline void htt_rx_extract_lro_info(qdf_nbuf_t msdu,
 	 struct htt_host_rx_desc_base *rx_desc)
 {
-	QDF_NBUF_CB_RX_LRO_ELIGIBLE(msdu) = rx_desc->msdu_end.lro_eligible;
-	if (rx_desc->msdu_end.lro_eligible) {
+	if (rx_desc->attention.tcp_udp_chksum_fail)
+		QDF_NBUF_CB_RX_LRO_ELIGIBLE(msdu) = 0;
+	else
+		QDF_NBUF_CB_RX_LRO_ELIGIBLE(msdu) =
+			rx_desc->msdu_end.lro_eligible;
+
+	if (QDF_NBUF_CB_RX_LRO_ELIGIBLE(msdu)) {
 		QDF_NBUF_CB_RX_TCP_PURE_ACK(msdu) = rx_desc->msdu_start.tcp_only_ack;
 		QDF_NBUF_CB_RX_TCP_CHKSUM(msdu) = rx_desc->msdu_end.tcp_udp_chksum;
 		QDF_NBUF_CB_RX_TCP_SEQ_NUM(msdu) = rx_desc->msdu_end.tcp_seq_number;
