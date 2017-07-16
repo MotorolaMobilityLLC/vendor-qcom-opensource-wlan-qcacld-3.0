@@ -1249,7 +1249,7 @@ static QDF_STATUS hdd_cfg80211_scan_done_callback(tHalHandle halHandle,
 			 */
 			if (time_elapsed >
 			    MIN_TIME_REQUIRED_FOR_NEXT_BUG_REPORT) {
-				cds_flush_logs(WLAN_LOG_TYPE_NON_FATAL,
+				cds_flush_logs(WLAN_LOG_TYPE_FATAL,
 						WLAN_LOG_INDICATOR_HOST_DRIVER,
 						WLAN_LOG_REASON_NO_SCAN_RESULTS,
 						true, false);
@@ -1698,11 +1698,6 @@ static int __wlan_hdd_cfg80211_scan(struct wiphy *wiphy,
 		return status;
 	}
 #endif
-
-	if (pHddCtx->btCoexModeSet) {
-		cds_info("BTCoex Mode operation in progress");
-		return -EBUSY;
-	}
 
 	/* Check if scan is allowed at this point of time */
 	if (cds_is_connection_in_progress(&curr_session_id, &curr_reason)) {

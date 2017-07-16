@@ -1322,6 +1322,8 @@ typedef struct tagCsrConfigParam {
 	bool is_force_1x1;
 	uint16_t num_11b_tx_chains;
 	uint16_t num_11ag_tx_chains;
+	uint32_t scan_probe_repeat_time;
+	uint32_t scan_num_probes;
 } tCsrConfigParam;
 
 /* Tush */

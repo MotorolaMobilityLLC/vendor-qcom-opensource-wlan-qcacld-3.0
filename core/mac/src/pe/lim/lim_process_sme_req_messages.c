@@ -1294,6 +1294,9 @@ static QDF_STATUS lim_send_hal_start_scan_offload_req(tpAniSirGlobal pMac,
 	pScanOffloadReq->scanType = pScanReq->scanType;
 	pScanOffloadReq->minChannelTime = pScanReq->minChannelTime;
 	pScanOffloadReq->maxChannelTime = pScanReq->maxChannelTime;
+	pScanOffloadReq->scan_num_probes = pScanReq->scan_num_probes;
+	pScanOffloadReq->scan_probe_repeat_time =
+		pScanReq->scan_probe_repeat_time;
 	pScanOffloadReq->restTime = pScanReq->restTime;
 	pScanOffloadReq->min_rest_time = pScanReq->min_rest_time;
 	pScanOffloadReq->idle_time = pScanReq->idle_time;
@@ -1674,6 +1677,9 @@ __lim_process_sme_join_req(tpAniSirGlobal mac_ctx, uint32_t *msg_buf)
 		session->enable_bcast_probe_rsp =
 				sme_join_req->enable_bcast_probe_rsp;
 
+		/* Update supplicant configured ignore assoc disallowed */
+		session->ignore_assoc_disallowed =
+				sme_join_req->ignore_assoc_disallowed;
 		/* Store vendor specfic IE for CISCO AP */
 		ie_len = (bss_desc->length + sizeof(bss_desc->length) -
 			 GET_FIELD_OFFSET(tSirBssDescription, ieFields));

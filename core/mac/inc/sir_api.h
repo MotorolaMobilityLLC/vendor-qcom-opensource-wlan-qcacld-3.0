@@ -848,6 +848,8 @@ typedef struct sSirSmeScanReq {
 	 * WNI_CFG_PASSIVE_MAXIMUM_CHANNEL_TIME) is used.
 	 */
 	uint32_t maxChannelTime;
+	uint32_t scan_probe_repeat_time;
+	uint32_t scan_num_probes;
 	enum wmi_dwelltime_adaptive_mode scan_adaptive_dwell_mode;
 	/**
 	 * returnAfterFirstMatch can take following values:
@@ -1208,6 +1210,7 @@ typedef struct sSirSmeJoinReq {
 	tSirMacPowerCapInfo powerCap;
 	tSirSupChnl supportedChannels;
 	bool enable_bcast_probe_rsp;
+	bool ignore_assoc_disallowed;
 	tSirBssDescription bssDescription;
 	/*
 	 * WARNING: Pls make bssDescription as last variable in struct
@@ -3827,6 +3830,8 @@ typedef struct sSirScanOffloadReq {
 	tSirScanType scanType;
 	uint32_t minChannelTime;
 	uint32_t maxChannelTime;
+	uint32_t scan_probe_repeat_time;
+	uint32_t scan_num_probes;
 	uint32_t scan_id;
 	uint32_t scan_requestor_id;
 	/* in units of milliseconds, ignored when not connected */

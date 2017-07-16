@@ -2855,6 +2855,9 @@ QDF_STATUS hdd_init_station_mode(hdd_adapter_t *adapter)
 	hdd_notice("Set HDD connState to eConnectionState_NotConnected");
 	pHddStaCtx->conn_info.connState = eConnectionState_NotConnected;
 
+	qdf_mem_set(pHddStaCtx->conn_info.staId,
+		sizeof(pHddStaCtx->conn_info.staId), HDD_WLAN_INVALID_STA_ID);
+
 	/* set fast roaming capability in sme session */
 	status = sme_config_fast_roaming(hdd_ctx->hHal, adapter->sessionId,
 					 adapter->fast_roaming_allowed);
@@ -7580,6 +7583,8 @@ static int hdd_update_cds_config(hdd_context_t *hdd_ctx)
 	cds_cfg->active_bpf_mode = hdd_ctx->config->active_bpf_mode;
 	cds_cfg->auto_power_save_fail_mode =
 		hdd_ctx->config->auto_pwr_save_fail_mode;
+
+	cds_cfg->ito_repeat_count = hdd_ctx->config->ito_repeat_count;
 
 	hdd_ra_populate_cds_config(cds_cfg, hdd_ctx);
 	hdd_txrx_populate_cds_config(cds_cfg, hdd_ctx);
