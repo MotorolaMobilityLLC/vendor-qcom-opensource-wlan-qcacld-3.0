@@ -139,6 +139,15 @@ ifneq ($(WLAN_KBUILD_OPTIONS_$(LOCAL_DEV_NAME)),)
 KBUILD_OPTIONS += "$(WLAN_KBUILD_OPTIONS_$(LOCAL_DEV_NAME))"
 endif
 
+##########################################################
+# Copy the unstrip file  to  out symbols folders
+WLAN_SYMBOLS_OUT     := $(TARGET_OUT_UNSTRIPPED)/$(LOCAL_PATH)
+UNSTRIPPED_MODULE    := $(WLAN_CHIPSET)_$(LOCAL_DEV_NAME).ko.unstripped
+UNSTRIPPED_FILE_PATH := $(TARGET_OUT_INTERMEDIATES)/$(LOCAL_PATH)/$(UNSTRIPPED_MODULE)
+
+INSTALL_WLAN_UNSTRIPPED_MODULE := mkdir -p $(WLAN_SYMBOLS_OUT); \
+   cp -rf $(UNSTRIPPED_FILE_PATH) $(WLAN_SYMBOLS_OUT)
+
 include $(CLEAR_VARS)
 LOCAL_MODULE              := $(WLAN_CHIPSET)_$(LOCAL_DEV_NAME).ko
 LOCAL_MODULE_KBUILD_NAME  := $(LOCAL_MOD_NAME).ko
@@ -152,6 +161,9 @@ ifeq ($(PRODUCT_VENDOR_MOVE_ENABLED),true)
 else
     LOCAL_MODULE_PATH := $(TARGET_OUT)/lib/modules/$(WLAN_CHIPSET)
 endif
+
+# Once unstripped file is generated, copy the same to out symbols folder
+LOCAL_POST_INSTALL_CMD := $(INSTALL_WLAN_UNSTRIPPED_MODULE)
 
 include $(DLKM_DIR)/AndroidKernelModule.mk
 ###########################################################
