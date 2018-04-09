@@ -568,13 +568,14 @@ void lim_send_sme_mgmt_tx_completion(
 		uint32_t sme_session_id,
 		uint32_t txCompleteStatus);
 tSirRetStatus lim_delete_tdls_peers(tpAniSirGlobal mac_ctx,
-				    tpPESession session_entry);
+				    tpPESession session_entry, bool csa);
 QDF_STATUS lim_process_tdls_add_sta_rsp(tpAniSirGlobal pMac, void *msg, tpPESession);
 void lim_process_tdls_del_sta_rsp(tpAniSirGlobal mac_ctx, tpSirMsgQ lim_msg,
 						tpPESession session_entry);
 #else
 static inline tSirRetStatus lim_delete_tdls_peers(tpAniSirGlobal mac_ctx,
-						tpPESession session_entry)
+						  tpPESession session_entry,
+						  bool csa)
 {
 	return eSIR_SUCCESS;
 }

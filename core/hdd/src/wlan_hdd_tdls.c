@@ -540,7 +540,7 @@ static void dump_tdls_state_param_setting(tdlsInfo_t *info)
 
 }
 
-void hdd_tdls_notify_set_state_disable(uint32_t session_id)
+void hdd_tdls_notify_set_state_disable(uint32_t session_id, bool csa)
 {
 	hdd_context_t *hdd_ctx;
 	hdd_adapter_t *adapter;
@@ -562,7 +562,10 @@ void hdd_tdls_notify_set_state_disable(uint32_t session_id)
 		hdd_err("adapter has invalid magic");
 		return;
 	}
-	wlan_hdd_tdls_notify_disconnect(adapter, true);
+	if (csa)
+		wlan_hdd_tdls_notify_disconnect(adapter, false);
+	else
+		wlan_hdd_tdls_notify_disconnect(adapter, true);
 }
 
 /**

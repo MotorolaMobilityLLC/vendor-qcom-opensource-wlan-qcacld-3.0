@@ -2180,7 +2180,7 @@ void lim_handle_csa_offload_msg(tpAniSirGlobal mac_ctx, tpSirMsgQ msg)
 	 * on receiving channel switch announcement from AP, delete all
 	 * TDLS peers before leaving BSS and proceed for channel switch
 	 */
-	lim_delete_tdls_peers(mac_ctx, session_entry);
+	lim_delete_tdls_peers(mac_ctx, session_entry, true);
 
 	lim_ch_switch = &session_entry->gLimChannelSwitch;
 	session_entry->gLimChannelSwitch.switchMode =

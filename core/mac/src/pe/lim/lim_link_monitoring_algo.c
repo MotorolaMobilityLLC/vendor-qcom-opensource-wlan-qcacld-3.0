@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2017 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2018 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -176,7 +176,7 @@ static void lim_delete_sta_util(tpAniSirGlobal mac_ctx, tpDeleteStaContext msg,
 
 #ifdef FEATURE_WLAN_TDLS
 		/* Delete all TDLS peers connected before leaving BSS */
-		lim_delete_tdls_peers(mac_ctx, session_entry);
+		lim_delete_tdls_peers(mac_ctx, session_entry, false);
 #endif
 		if (LIM_IS_STA_ROLE(session_entry))
 			lim_post_sme_message(mac_ctx, LIM_MLM_DEAUTH_IND,
@@ -379,7 +379,7 @@ lim_tear_down_link_with_ap(tpAniSirGlobal pMac, uint8_t sessionId,
 
 #ifdef FEATURE_WLAN_TDLS
 		/* Delete all TDLS peers connected before leaving BSS */
-		lim_delete_tdls_peers(pMac, psessionEntry);
+		lim_delete_tdls_peers(pMac, psessionEntry, false);
 #endif
 
 		pStaDs->mlmStaContext.disassocReason = reasonCode;

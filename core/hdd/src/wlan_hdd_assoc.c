@@ -5108,7 +5108,8 @@ hdd_sme_roam_callback(void *pContext, tCsrRoamInfo *pRoamInfo, uint32_t roamId,
 						       pRoamInfo->reasonCode);
 		break;
 	case eCSR_ROAM_TDLS_SET_STATE_DISABLE:
-		hdd_tdls_notify_set_state_disable(pRoamInfo->sessionId);
+		hdd_tdls_notify_set_state_disable(pRoamInfo->sessionId,
+						  pRoamInfo->csa);
 		break;
 #endif
 #ifdef WLAN_FEATURE_11W

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2017 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2018 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -816,7 +816,7 @@ int wlan_hdd_cfg80211_configure_tdls_mode(struct wiphy *wiphy,
  *
  * Return: none
  */
-void hdd_tdls_notify_set_state_disable(uint32_t session_id);
+void hdd_tdls_notify_set_state_disable(uint32_t session_id, bool csa);
 
 /**
  * hdd_tdls_timers_stop() - stop all the tdls timers
@@ -912,7 +912,8 @@ hdd_tdls_notify_p2p_roc(hdd_context_t *hdd_ctx,
 			enum tdls_concerned_external_events event)
 {
 }
-static inline void hdd_tdls_notify_set_state_disable(uint32_t session_id)
+static inline void hdd_tdls_notify_set_state_disable(uint32_t session_id,
+						     bool csa)
 {
 }
 static inline void hdd_tdls_timers_stop(hdd_adapter_t *adapter)

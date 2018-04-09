@@ -3270,12 +3270,14 @@ skip:
  * @mac_ctx - global MAC context
  * @session_entry - PE session entry
  *
+ * @csa - Channel Switch case
+ *
  * Delete all the TDLS peer connected before leaving the BSS
  *
  * Return: eSIR_SUCCESS on success, error code otherwise
  */
 tSirRetStatus lim_delete_tdls_peers(tpAniSirGlobal mac_ctx,
-				    tpPESession session_entry)
+				    tpPESession session_entry, bool csa)
 {
 	cds_msg_t msg;
 	struct sir_tdls_notify_set_state_disable *tdls_state_disable;
@@ -3300,6 +3302,7 @@ tSirRetStatus lim_delete_tdls_peers(tpAniSirGlobal mac_ctx,
 			return eSIR_FAILURE;
 		}
 		tdls_state_disable->session_id = session_entry->smeSessionId;
+		tdls_state_disable->csa = csa;
 		msg.type = eWNI_SME_TDLS_NOTIFY_SET_STATE_DISABLE;
 		msg.bodyptr = tdls_state_disable;
 		msg.bodyval = 0;

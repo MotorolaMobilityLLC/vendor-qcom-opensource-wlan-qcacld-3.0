@@ -2090,7 +2090,7 @@ QDF_STATUS pe_roam_synch_callback(tpAniSirGlobal mac_ctx,
 	roam_sync_ind_ptr->add_bss_params =
 		(tpAddBssParams) ft_session_ptr->ftPEContext.pAddBssReq;
 	add_bss_params = ft_session_ptr->ftPEContext.pAddBssReq;
-	lim_delete_tdls_peers(mac_ctx, session_ptr);
+	lim_delete_tdls_peers(mac_ctx, session_ptr, false);
 	curr_sta_ds = dph_lookup_hash_entry(mac_ctx, session_ptr->bssId,
 			&aid, &session_ptr->dph.dphHashTable);
 	if (curr_sta_ds == NULL) {

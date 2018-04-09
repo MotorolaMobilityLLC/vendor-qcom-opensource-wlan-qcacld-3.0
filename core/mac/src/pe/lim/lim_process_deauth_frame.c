@@ -414,7 +414,9 @@ lim_process_deauth_frame(tpAniSirGlobal pMac, uint8_t *pRxPacketInfo,
 				 * is received from the AP
 				 */
 				if (IS_CURRENT_BSSID(pMac, pHdr->sa, psessionEntry))
-					lim_delete_tdls_peers(pMac, psessionEntry);
+					lim_delete_tdls_peers(pMac,
+                                                              psessionEntry,
+                                                              false);
 #endif
 			/**
 			 * This could be Deauthentication frame from

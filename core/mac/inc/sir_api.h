@@ -4094,9 +4094,11 @@ typedef struct sSirTdlsEventnotify {
 /**
  * struct sir_sme_tdls_notify_set_state_disable - notify set state disable
  * @session_id: session id
+ * @csa: bit to set for csa
  */
 struct sir_tdls_notify_set_state_disable {
 	uint32_t session_id;
+	bool csa;
 };
 
 #endif /* FEATURE_WLAN_TDLS */

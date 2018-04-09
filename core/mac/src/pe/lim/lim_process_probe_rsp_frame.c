@@ -241,7 +241,8 @@ lim_process_probe_rsp_frame(tpAniSirGlobal mac_ctx, uint8_t *rx_Packet_info,
 				 * from AP, delete all TDLS peers before
 				 * leaving BSS and proceed for channel switch
 				 */
-				lim_delete_tdls_peers(mac_ctx, session_entry);
+				lim_delete_tdls_peers(mac_ctx, session_entry,
+						      true);
 
 				lim_update_channel_switch(mac_ctx,
 					probe_rsp,

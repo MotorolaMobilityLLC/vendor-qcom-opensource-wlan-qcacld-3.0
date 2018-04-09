@@ -793,7 +793,7 @@ static void __sch_beacon_process_for_session(tpAniSirGlobal mac_ctx,
 			 * for channel switch
 			 */
 			if (LIM_IS_STA_ROLE(session))
-				lim_delete_tdls_peers(mac_ctx, session);
+				lim_delete_tdls_peers(mac_ctx, session, true);
 
 			lim_update_channel_switch(mac_ctx, bcn, session);
 		} else if (session->gLimSpecMgmt.dot11hChanSwState ==

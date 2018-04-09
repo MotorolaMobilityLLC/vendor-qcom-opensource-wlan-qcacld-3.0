@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2017 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2018 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -696,6 +696,7 @@ QDF_STATUS tdls_msg_processor(tpAniSirGlobal pMac, uint16_t msgType,
 		tdls_state_disable = (
 			(struct sir_tdls_notify_set_state_disable *)pMsgBuf);
 		roamInfo->sessionId = tdls_state_disable->session_id;
+		roamInfo->csa = tdls_state_disable->csa;
 		csr_roam_call_callback(pMac, tdls_state_disable->session_id,
 				       roamInfo, 0,
 				       eCSR_ROAM_TDLS_SET_STATE_DISABLE,
