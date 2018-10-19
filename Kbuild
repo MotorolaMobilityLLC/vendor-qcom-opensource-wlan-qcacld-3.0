@@ -2154,6 +2154,7 @@ cppflags-y += -DQCA_HOST2FW_RXBUF_RING
 cppflags-y += -DHIF_CE_HISTORY_MAX=8192
 #endof dummy flags
 
+cppflags-y += -DMOTO_UTAGS_MAC
 cppflags-$(CONFIG_WLAN_HANG_EVENT) += -DHIF_CE_LOG_INFO
 cppflags-$(CONFIG_WLAN_HANG_EVENT) += -DDP_SUPPORT_RECOVERY_NOTIFY
 
