@@ -2059,6 +2059,8 @@ cppflags-y += -DQCA_HOST2FW_RXBUF_RING
 cppflags-y += -DHIF_CE_HISTORY_MAX=8192
 #endof dummy flags
 
+cppflags-y += -DMOTO_UTAGS_MAC
+
 # Enable lock of serialization component to avoid race condition issues
 cppflags-y += -DWLAN_CMD_SERIALIZATION_LOCKING
 
