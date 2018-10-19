@@ -2654,6 +2654,8 @@ cppflags-y += -DHIF_CE_HISTORY_MAX=8192
 cppflags-y += -DDP_PRINT_NO_CONSOLE
 #endof dummy flags
 
+cppflags-y += -DMOTO_UTAGS_MAC
+
 ccflags-$(CONFIG_ENABLE_SIZE_OPTIMIZE) += -Os
 
 # DFS component
