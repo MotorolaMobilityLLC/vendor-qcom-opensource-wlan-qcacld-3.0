@@ -59,6 +59,8 @@ else ifneq ($(filter sm6150, $(TARGET_BOARD_PLATFORM)),)
     WLAN_ELF_FILE_PATH    := vendor/qcom/nonhlos/WLAN.HL.3.0.1/wlan_proc/build/ms/M6150_WLAN_MERGED.elf
 else ifneq ($(filter trinket, $(TARGET_BOARD_PLATFORM)),)
     WLAN_ELF_FILE_PATH    := vendor/qcom/nonhlos/WLAN.HL.3.0.2/wlan_proc/build/ms/WLAN_MERGED.elf
+else ifneq ($(filter lito, $(TARGET_BOARD_PLATFORM)),)
+    WLAN_ELF_FILE_PATH    := vendor/qcom/nonhlos/wlan.hl.3.2.1/wlan_proc/build/ms/Msaipan_WLAN_MERGED.elf
 endif
 
 INSTALL_WLAN_UNSTRIPPED_MODULE := mkdir -p $(WLAN_SYMBOLS_OUT); \
