@@ -54,6 +54,8 @@
 #define MACSTRLEN 12
 #define MACSTRCOLON 58
 #define MACADDRESSUSED 1
+#define DEVICE_BOOTARG "androidboot.device="
+#define RADIO_BOOTARG "androidboot.radio="
 
 struct sdesc {
    struct shash_desc shash;
@@ -8671,6 +8673,10 @@ QDF_STATUS hdd_parse_config_ini(struct hdd_context *hdd_ctx)
 	char *name, *value;
 	/* cfgIniTable is static to avoid excess stack usage */
 	static struct hdd_cfg_entry cfgIniTable[MAX_CFG_INI_ITEMS];
+        char *device_ptr, *radio_ptr = NULL;
+        const char *cmd_line = NULL;
+        struct device_node *chosen_node = NULL;
+        int len = 0;
 	QDF_STATUS qdf_status = QDF_STATUS_SUCCESS;
 
 	memset(cfgIniTable, 0, sizeof(cfgIniTable));
@@ -8738,6 +8744,42 @@ QDF_STATUS hdd_parse_config_ini(struct hdd_context *hdd_ctx)
 					while (*buffer != '\0')
 						buffer++;
 					*buffer = '\0';
+
+	hdd_debug("name:%.9s,value_priv:%.2s \n", name,value);
+	if(strncmp(name, "BandCapability", 14) == 0 ){
+		hdd_debug("wifi24g modify enter \n");
+		chosen_node = of_find_node_by_name(NULL, "chosen");
+		hdd_err("%s: get chosen node \n", __func__);
+
+		if (!chosen_node){
+			hdd_err("%s: get chosen node read failed \n", __func__);
+			goto config_exit;
+		} else {
+				cmd_line = of_get_property(chosen_node, "bootargs", &len);
+				if (!cmd_line || len <= 0) {
+					hdd_err("%s: get the barcode bootargs failed \n", __func__);
+					qdf_status = QDF_STATUS_E_FAILURE;
+					goto config_exit;
+				} else {
+						device_ptr = strstr(cmd_line, DEVICE_BOOTARG);
+						radio_ptr = strstr(cmd_line, RADIO_BOOTARG);
+						if ((device_ptr == NULL) || (radio_ptr == NULL)) {
+							hdd_err("%s: " DEVICE_SERIALNO_BOOTARG" not present cmd line argc",__func__);
+							qdf_status = QDF_STATUS_E_FAILURE;
+							goto config_exit;
+						} else {
+								device_ptr += strlen(DEVICE_BOOTARG);
+								radio_ptr += strlen(RADIO_BOOTARG);
+								hdd_debug("device:%.9s, radio:%.9s \n", device_ptr, radio_ptr);
+							}
+					}
+			if(((strncmp(device_ptr, "rav", 3) == 0)||(strncmp(device_ptr, "sofiar", 6) == 0)) && (strncmp(radio_ptr, "NA", 2) != 0)){
+				*value='1'; //wifi BandCapability = 2.4G only
+				hdd_debug("value_new1:%.2s\n",value );
+			}
+				hdd_debug("device:%.5s, radio:%.5s, name:%.9s,value_new2:%.2s \n", device_ptr, radio_ptr, name,value);
+		}
+	}
 					cfgIniTable[i].name = name;
 					cfgIniTable[i++].value = value;
 					if (i >= MAX_CFG_INI_ITEMS) {
