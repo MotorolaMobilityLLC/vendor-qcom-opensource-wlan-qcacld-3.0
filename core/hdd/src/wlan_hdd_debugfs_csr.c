@@ -327,7 +327,7 @@ void wlan_hdd_debugfs_csr_init(struct hdd_adapter *adapter)
 						 adapter->debugfs_phy,
 						 csr, &fops_csr_debugfs);
 		if (!csr->entry)
-			hdd_err("Failed to create generic_info debugfs file");
+			hdd_debug("Failed to create generic_info debugfs file"); // MOT IKSWQ-39460 abhkumar Error logs cleanup
 	}
 
 	csr = &adapter->csr_file[HDD_DEBUFS_FILE_ID_ROAM_SCAN_STATS_INFO];
@@ -339,7 +339,7 @@ void wlan_hdd_debugfs_csr_init(struct hdd_adapter *adapter)
 						 adapter->debugfs_phy,
 						 csr, &fops_csr_debugfs);
 		if (!csr->entry)
-			hdd_err("Failed to create generic_info debugfs file");
+			hdd_debug("Failed to create generic_info debugfs file"); // MOT IKSWQ-39460 abhkumar Error logs cleanup
 	}
 }
 
