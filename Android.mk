@@ -51,7 +51,7 @@ WLAN_SYMBOLS_OUT     := $(TARGET_OUT_UNSTRIPPED)/$(LOCAL_PATH)
 UNSTRIPPED_MODULE    := $(WLAN_CHIPSET)_wlan.ko.unstripped
 UNSTRIPPED_FILE_PATH := $(TARGET_OUT_INTERMEDIATES)/$(LOCAL_PATH)/$(UNSTRIPPED_MODULE)
 
-ifneq ($(filter msm8998 sdm845, $(TARGET_BOARD_PLATFORM)),)
+ifneq ($(filter msm8998 sdm845 sdm670 sdm710, $(TARGET_BOARD_PLATFORM)),)
     WLAN_ELF_FILE_PATH    := vendor/qcom/nonhlos/wlan_proc/build/ms/WLAN_MERGED.elf
 else ifneq ($(filter sdm660, $(TARGET_BOARD_PLATFORM)),)
     WLAN_ELF_FILE_PATH    := vendor/qcom/nonhlos/WLAN.HL.1.0.1/wlan_proc/build/ms/WLAN_MERGED.elf
