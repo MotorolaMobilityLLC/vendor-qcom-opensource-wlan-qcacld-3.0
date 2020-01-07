@@ -8788,7 +8788,8 @@ QDF_STATUS hdd_parse_config_ini(struct hdd_context *hdd_ctx)
 								hdd_debug("device:%.9s, radio:%.9s \n", device_ptr, radio_ptr);
 							}
 					}
-			if(((strncmp(device_ptr, "rav", 3) == 0)||(strncmp(device_ptr, "sofiar", 6) == 0)) && (strncmp(radio_ptr, "NA", 2) != 0)){
+			if(((strncmp(device_ptr, "rav", 3) == 0)||(strncmp(device_ptr, "sofiar", 6) == 0)||(strncmp(device_ptr, "astro", 5) == 0))
+			&& (strncmp(radio_ptr, "NA", 2) != 0)){
 				*value='1'; //wifi BandCapability = 2.4G only
 				hdd_debug("value_new1:%.2s\n",value );
 			}
