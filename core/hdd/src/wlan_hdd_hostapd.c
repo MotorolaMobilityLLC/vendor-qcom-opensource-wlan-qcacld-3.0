@@ -118,6 +118,9 @@
 /* Defines the BIT position of 11ax support mode field of stainfo */
 #define HDD_80211_MODE_AX 2
 
+/* for moto SAR features, support tx pwr limit settings on mimo device */
+#define WE_SET_MIMO_TX_POWER 32
+
 /*
  * 11B, 11G Rate table include Basic rate and Extended rate
  * The IDX field is the rate index
@@ -6204,6 +6207,11 @@ static const struct iw_priv_args hostapd_private_args[] = {
 	}
 #endif
 	,
+	/* for moto SAR feature */
+	{WE_SET_MIMO_TX_POWER,
+	 IW_PRIV_TYPE_INT | MAX_VAR_ARGS,
+	 0,
+	 "setTxPowerM"},
 	/* handlers for main ioctl */
 	{
 		QCSAP_IOCTL_MODIFY_ACL,
