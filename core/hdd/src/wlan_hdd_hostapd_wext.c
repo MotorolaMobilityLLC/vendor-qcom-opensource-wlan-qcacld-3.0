@@ -55,6 +55,9 @@
 #define RC_2_RATE_IDX_11AC(_rc)        ((_rc) & 0xf)
 #define HT_RC_2_STREAMS_11AC(_rc)    ((((_rc) & 0x30) >> 4) + 1)
 
+/* for moto SAR features, support tx pwr limit settings on mimo device */
+#define WE_SET_MIMO_TX_POWER 32 //a19110 IKSWQ-82500
+
 static int hdd_sap_get_chan_width(struct hdd_adapter *adapter, int *value)
 {
 	struct sap_context *sap_ctx;
@@ -3187,6 +3190,14 @@ static const struct iw_priv_args hostapd_private_args[] = {
 	}
 	,
 #endif /* FW_THERMAL_THROTTLE_SUPPORT */
+	//BEGIN MOT a19110 IKSWQ-82500
+	/* for moto SAR feature */
+	{WE_SET_MIMO_TX_POWER,
+	 IW_PRIV_TYPE_INT | MAX_VAR_ARGS,
+	 0,
+	 "setTxPowerM"},
+	//END IKSWQ-82500
+
 	/* handlers for main ioctl */
 	{
 		QCSAP_IOCTL_MODIFY_ACL,
