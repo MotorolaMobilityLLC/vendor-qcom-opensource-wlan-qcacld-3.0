@@ -17296,3 +17296,9 @@ error:
 
 	return qdf_status;
 }
+
+QDF_STATUS sme_update_owe_info(tpAniSirGlobal mac,
+			       tSirSmeAssocInd *assoc_ind)
+{
+	return csr_update_owe_info(mac, assoc_ind);
+}
