@@ -62,6 +62,8 @@ else ifneq ($(filter trinket, $(TARGET_BOARD_PLATFORM)),)
 else ifneq ($(filter lito, $(TARGET_BOARD_PLATFORM)),)
     ifeq ($(WLAN_FW_ALT_VER), 5)
     WLAN_ELF_FILE_PATH    := vendor/qcom/nonhlos/WLAN.HL.3.2.5/wlan_proc/build/ms/Msaipan_WLAN_MERGED.elf
+    else ifeq ($(WLAN_FW_ALT_VER), 3)
+    WLAN_ELF_FILE_PATH    := vendor/qcom/nonhlos/WLAN.HL.3.3.1/wlan_proc/build/ms/Mbitra_WLAN_MERGED.elf
     else
     WLAN_ELF_FILE_PATH    := vendor/qcom/nonhlos/WLAN.HL.3.2.1/wlan_proc/build/ms/Msaipan_WLAN_MERGED.elf
     endif
