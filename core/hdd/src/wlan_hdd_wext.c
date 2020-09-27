@@ -113,6 +113,7 @@
 #include "wlan_fwol_ucfg_api.h"
 #include "wlan_hdd_unit_test.h"
 #include "wlan_hdd_thermal.h"
+#include "wlan_hdd_sar_limits.h"
 
 /* Private ioctls and their sub-ioctls */
 #define WLAN_PRIV_SET_INT_GET_NONE    (SIOCIWFIRSTPRIV + 0)
