@@ -165,7 +165,6 @@ QDF_STATUS hdd_generate_random_mac_from_serialno(char *serialNo, int serialnoLen
     }
 
     sdescmd5->shash.tfm = md5;
-    sdescmd5->shash.flags = 0x0;
 
     if (crypto_shash_init(&sdescmd5->shash)) {
         cryptoStatus = QDF_STATUS_E_FAILURE;
