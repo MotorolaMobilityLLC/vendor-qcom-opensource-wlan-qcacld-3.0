@@ -168,7 +168,7 @@ else ifneq ($(filter lito, $(TARGET_BOARD_PLATFORM)),)
 else ifneq ($(filter bengal, $(TARGET_BOARD_PLATFORM)),)
     WLAN_ELF_FILE_PATH    := vendor/qcom/nonhlos/WLAN.HL.3.2.4/wlan_proc/build/ms/WLAN_MERGED.elf
 else ifneq ($(filter holi, $(TARGET_BOARD_PLATFORM)),)
-    XML_PATH := vendor/qcom/nonhlos/Mannar.LA.1.0
+    XML_PATH := vendor/qcom/nonhlos/$(NONHLOS_PLATFORM_COMMON_PATH)
     ELF_PATH := $(shell python3 $(LOCAL_PATH)/get_value_from_xml.py $(XML_PATH)/contents.xml)
     WLAN_ELF_FILE_PATH := $(XML_PATH)/$(ELF_PATH)wlan_proc/build/ms/*.elf
 endif
