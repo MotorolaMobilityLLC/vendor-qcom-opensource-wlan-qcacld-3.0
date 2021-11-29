@@ -1701,7 +1701,6 @@ static int dp_add_nbuf_to_fisa_flow(struct dp_rx_fst *fisa_hdl,
 		      nbuf, qdf_nbuf_next(nbuf), qdf_nbuf_data(nbuf), nbuf->len,
 		      nbuf->data_len);
 
-	 dp_rx_fisa_acquire_ft_lock(fisa_hdl, reo_id);
 	/* Packets of the flow are arriving on a different REO than
 	 * the one configured.
 	 */
@@ -1710,13 +1709,13 @@ static int dp_add_nbuf_to_fisa_flow(struct dp_rx_fst *fisa_hdl,
 			hal_rx_msdu_fse_metadata_get(hal_soc_hdl, rx_tlv_hdr);
 		if (fisa_hdl->del_flow_count &&
 		    fse_metadata != fisa_flow->metadata)
-			goto invalid_fisa_assist;
+			return FISA_AGGR_NOT_ELIGIBLE;
 
 		dp_err("REO id mismatch flow: %pK napi_id: %u nbuf: %pK reo_id: %u",
 		       fisa_flow, fisa_flow->napi_id, nbuf, napi_id);
 		DP_STATS_INC(fisa_hdl, reo_mismatch, 1);
 		QDF_BUG(0);
-		goto invalid_fisa_assist;
+		return FISA_AGGR_NOT_ELIGIBLE;
 	}
 
 	hal_cumulative_ip_len = hal_rx_get_fisa_cumulative_ip_length(
@@ -1726,6 +1725,8 @@ static int dp_add_nbuf_to_fisa_flow(struct dp_rx_fst *fisa_hdl,
 							       rx_tlv_hdr);
 	hal_aggr_count = hal_rx_get_fisa_flow_agg_count(hal_soc_hdl,
 							rx_tlv_hdr);
+
+	dp_rx_fisa_acquire_ft_lock(fisa_hdl, reo_id);
 
 	if (!flow_aggr_cont) {
 		/* Start of new aggregation for the flow
