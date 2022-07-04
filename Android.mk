@@ -210,7 +210,10 @@ LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_FW_PATH)/WCNSS_qcom_cfg.ini
 $(call wlog,"generate soft link because GENERIC_ODM_IMAGE not true")
 endif
 endif
-
+# BEGIN IKSWR-45692, support loading moto specific configurations
+$(call symlink-file,,$(TARGET_CFG_PATH)/WCNSS_mot_cfg.ini,$(TARGET_FW_PATH)/WCNSS_mot_cfg.ini)
+LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_FW_PATH)/WCNSS_mot_cfg.ini
+# END IKSWR-45692
 # Set dependencies so that CNSS family drivers can be compiled ahead.
 ifneq ($(WLAN_PLATFORM_KBUILD_OPTIONS),)
 LOCAL_REQUIRED_MODULES := wlan-platform-module-symvers
