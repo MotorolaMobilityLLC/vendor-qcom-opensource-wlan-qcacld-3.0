@@ -1239,8 +1239,7 @@ EXPORT_SYMBOL(con_mode_ftm);
 #endif
 int con_mode_epping;
 
-//IKSWR-4630 Removed unused code because it will result in compilation error at Kernel 5.4
-//static int pcie_gen_speed;
+static int pcie_gen_speed;
 
 /* Variable to hold connection mode including module parameter con_mode */
 static int curr_con_mode;
@@ -24069,8 +24068,6 @@ static const struct kernel_param_ops fwpath_ops = {
 	.get = param_get_string,
 };
 
-//IKSWR-4630 Removed unused code because it will result in compilation error at Kernel 5.4
-/*
 static int __pcie_set_gen_speed_handler(void)
 {
 	int ret;
@@ -24115,7 +24112,11 @@ out:
 
 	return ret;
 }
-*/
+
+static const struct kernel_param_ops pcie_gen_speed_ops = {
+	.set = pcie_set_gen_speed_handler,
+	.get = param_get_int,
+};
 
 static const struct kernel_param_ops sar_ops = {
 	.set = sar_changed_handler,
@@ -24128,11 +24129,8 @@ module_param_cb(con_mode, &con_mode_ops, &con_mode,
 module_param_cb(con_mode_ftm, &con_mode_ftm_ops, &con_mode_ftm,
 		S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
-//IKSWR-4630 Removed unused code because it will result in compilation error at Kernel 5.4
-/*
 module_param_cb(pcie_gen_speed, &pcie_gen_speed_ops, &pcie_gen_speed,
 		S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-*/
 
 #ifdef WLAN_FEATURE_EPPING
 module_param_cb(con_mode_epping, &con_mode_epping_ops,
