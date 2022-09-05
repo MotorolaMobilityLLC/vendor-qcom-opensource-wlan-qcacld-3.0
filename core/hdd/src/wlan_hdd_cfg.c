@@ -494,7 +494,7 @@ QDF_STATUS hdd_update_mac_config(struct hdd_context *hdd_ctx)
 	char *buffer = NULL;
 
 	struct hdd_cfg_entry macTable[QDF_MAX_CONCURRENCY_PERSONA];
-	tSirMacAddr customMacAddr;
+	struct qdf_mac_addr customMacAddr;
 
 	QDF_STATUS qdf_status = QDF_STATUS_SUCCESS;
 
@@ -568,9 +568,9 @@ QDF_STATUS hdd_update_mac_config(struct hdd_context *hdd_ctx)
     hdd_ctx->num_provisioned_addr = MACADDRESSUSED;
     hdd_populate_random_mac_addr(hdd_ctx, QDF_MAX_CONCURRENCY_PERSONA - MACADDRESSUSED);
     qdf_mem_copy(&customMacAddr,
-             &hdd_ctx->provisioned_mac_addr[0].bytes[0],
-             sizeof(tSirMacAddr));
-	sme_set_custom_mac_addr(customMacAddr);
+             &hdd_ctx->provisioned_mac_addr[0],
+             sizeof(customMacAddr));
+    sme_set_custom_mac_addr(customMacAddr.bytes);
 
 config_exit:
 
