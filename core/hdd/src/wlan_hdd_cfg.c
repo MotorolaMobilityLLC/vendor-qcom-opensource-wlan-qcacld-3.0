@@ -570,7 +570,6 @@ QDF_STATUS hdd_update_mac_config(struct hdd_context *hdd_ctx)
     qdf_mem_copy(customMacAddr.bytes,
              &hdd_ctx->provisioned_mac_addr[0].bytes[0],
              sizeof(customMacAddr));
-    hdd_update_mld_mac_addr(hdd_ctx, customMacAddr);
     sme_set_custom_mac_addr(customMacAddr.bytes);
 
 config_exit:
