@@ -1115,7 +1115,6 @@ static bool hdd_cm_is_roam_auth_required(struct hdd_station_ctx *sta_ctx,
 #endif
 
 #if defined(WLAN_FEATURE_11BE_MLO) && defined(CFG80211_11BE_BASIC)
-static
 struct hdd_adapter *hdd_get_assoc_link_adapter(struct hdd_adapter *ml_adapter)
 {
 	int i;
@@ -1132,13 +1131,6 @@ struct hdd_adapter *hdd_get_assoc_link_adapter(struct hdd_adapter *ml_adapter)
 			return ml_adapter->mlo_adapter_info.link_adapter[i];
 		}
 	}
-	return NULL;
-}
-
-#else
-static
-struct hdd_adapter *hdd_get_assoc_link_adapter(struct hdd_adapter *ml_adapter)
-{
 	return NULL;
 }
 #endif
