@@ -14191,6 +14191,7 @@ static int __wlan_hdd_cfg80211_get_preferred_freq_list(struct wiphy *wiphy,
 {
 	struct hdd_context *hdd_ctx = wiphy_priv(wiphy);
 	int i, ret = 0;
+	bool is_sbs_enabled = true;
 	QDF_STATUS status;
 	uint32_t pcl_len = 0;
 	uint32_t pcl_len_legacy = 0;
@@ -14277,7 +14278,7 @@ static int __wlan_hdd_cfg80211_get_preferred_freq_list(struct wiphy *wiphy,
 	pcl_len = wlan_hdd_populate_weigh_pcl(hdd_ctx->psoc, chan_weights,
 					      w_pcl, intf_mode);
 	qdf_mem_free(chan_weights);
-
+	policy_mgr_get_sbs_cfg(hdd_ctx->psoc, &is_sbs_enabled);
 	for (i = 0; i < pcl_len; i++)
 		freq_list[i] = w_pcl[i].freq;
 
@@ -14308,39 +14309,43 @@ static int __wlan_hdd_cfg80211_get_preferred_freq_list(struct wiphy *wiphy,
 		qdf_mem_free(w_pcl);
 		return -EINVAL;
 	}
+	if(is_sbs_enabled){
+		i = QCA_WLAN_VENDOR_ATTR_GET_PREFERRED_FREQ_LIST_WEIGHED_PCL;
+		nla_attr = nla_nest_start(reply_skb, i);
 
-	i = QCA_WLAN_VENDOR_ATTR_GET_PREFERRED_FREQ_LIST_WEIGHED_PCL;
-	nla_attr = nla_nest_start(reply_skb, i);
-
-	if (!nla_attr) {
-		hdd_err("nla nest start fail");
-		kfree_skb(reply_skb);
-		qdf_mem_free(w_pcl);
-		return -EINVAL;
-	}
-
-	for (i = 0; i < pcl_len; i++) {
-		channel = nla_nest_start(reply_skb, i);
-		if (!channel) {
-			hdd_err("updating pcl list failed");
+		if (!nla_attr) {
+			hdd_err("nla nest start fail");
 			kfree_skb(reply_skb);
 			qdf_mem_free(w_pcl);
 			return -EINVAL;
 		}
-		if (nla_put_u32(reply_skb, QCA_WLAN_VENDOR_ATTR_PCL_FREQ,
-				w_pcl[i].freq) ||
-		    nla_put_u32(reply_skb, QCA_WLAN_VENDOR_ATTR_PCL_WEIGHT,
-				w_pcl[i].weight) ||
-		    nla_put_u32(reply_skb, QCA_WLAN_VENDOR_ATTR_PCL_FLAG,
-				w_pcl[i].flag)) {
-			hdd_err("nla put fail");
-			kfree_skb(reply_skb);
-			qdf_mem_free(w_pcl);
-			return -EINVAL;
+
+		for (i = 0; i < pcl_len; i++) {
+			channel = nla_nest_start(reply_skb, i);
+			if (!channel) {
+				hdd_err("updating pcl list failed");
+				kfree_skb(reply_skb);
+				qdf_mem_free(w_pcl);
+				return -EINVAL;
+			}
+
+			if (nla_put_u32(reply_skb, QCA_WLAN_VENDOR_ATTR_PCL_FREQ,
+					w_pcl[i].freq) ||
+			    nla_put_u32(reply_skb, QCA_WLAN_VENDOR_ATTR_PCL_WEIGHT,
+					w_pcl[i].weight) ||
+			    nla_put_u32(reply_skb, QCA_WLAN_VENDOR_ATTR_PCL_FLAG,
+					w_pcl[i].flag)) {
+				hdd_err("nla put fail");
+				kfree_skb(reply_skb);
+				qdf_mem_free(w_pcl);
+				return -EINVAL;
+			}
+			nla_nest_end(reply_skb, channel);
 		}
-		nla_nest_end(reply_skb, channel);
+         	nla_nest_end(reply_skb, nla_attr);
+	}else{
+		hdd_debug("SBS is disabled and then use PCL without weight");
 	}
-	nla_nest_end(reply_skb, nla_attr);
 	qdf_mem_free(w_pcl);
 
 	return cfg80211_vendor_cmd_reply(reply_skb);
