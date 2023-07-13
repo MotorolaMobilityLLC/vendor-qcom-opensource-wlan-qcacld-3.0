@@ -10983,7 +10983,7 @@ int sme_send_he_om_ctrl_update(mac_handle_t mac_handle, uint8_t session_id,
 	sme_debug("EHT OMI: BW %d rx nss %d tx nss %d", omi_data->eht_ch_bw_ext,
 		  omi_data->eht_rx_nss_ext, omi_data->eht_tx_nss_ext);
 
-	qdf_mem_copy(&param_val, omi_data, sizeof(omi_data));
+	qdf_mem_copy(&param_val, omi_data, sizeof(param_val));
 	wlan_mlme_get_bssid_vdev_id(mac_ctx->pdev, session_id,
 				    &connected_bssid);
 	sme_debug("param val %08X, bssid:"QDF_MAC_ADDR_FMT, param_val,
