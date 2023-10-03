@@ -1009,6 +1009,13 @@ sch_beacon_process(struct mac_context *mac_ctx, uint8_t *rx_pkt_info,
 
 	if (!session)
 		return;
+
+	if (LIM_IS_STA_ROLE(session) &&
+	    !wlan_cm_is_vdev_connected(session->vdev)) {
+		pe_debug_rl("vdev %d, drop beacon", session->vdev_id);
+		return;
+	}
+
 	/* Convert the beacon frame into a structure */
 	if (sir_convert_beacon_frame2_struct(mac_ctx, (uint8_t *) rx_pkt_info,
 		&bcn) != QDF_STATUS_SUCCESS) {

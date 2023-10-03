@@ -4956,8 +4956,10 @@ bool lim_check_vht_op_mode_change(struct mac_context *mac,
 		return true;
 	}
 
-	if (!wlan_cm_is_vdev_connected(pe_session->vdev))
+	if (!wlan_cm_is_vdev_connected(pe_session->vdev)) {
+		pe_debug_rl("vdev not connected, ignore HT IE BW update");
 		return false;
+	}
 
 	/* use vdev start to update STA mode */
 	qdf_mem_zero(&ch_params, sizeof(ch_params));
