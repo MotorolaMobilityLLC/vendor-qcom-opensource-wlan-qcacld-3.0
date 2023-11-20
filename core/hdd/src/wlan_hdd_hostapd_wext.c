@@ -1529,17 +1529,23 @@ static __iw_softap_set_max_tx_power(struct net_device *dev,
 {
 	struct hdd_adapter *adapter = (netdev_priv(dev));
 	struct hdd_context *hdd_ctx;
-	int *value = (int *)extra;
+	uint8_t *mot_value;
 	int set_value;
 	int ret;
 	struct qdf_mac_addr bssid = QDF_MAC_ADDR_BCAST_INIT;
 	struct qdf_mac_addr selfMac = QDF_MAC_ADDR_BCAST_INIT;
 
 	hdd_enter_dev(dev);
-
-	if (!value)
+        mot_value = (uint8_t*)kmalloc(wrqu->data.length+1, GFP_KERNEL);
+	if (NULL == mot_value)
 		return -ENOMEM;
-
+        if(copy_from_user((uint8_t *)mot_value, (uint8_t *)(wrqu->data.pointer), wrqu->data.length)) {
+		hdd_err("%s -- copy from user -- data pointer failed! bailing", __func__);
+		kfree(mot_value);
+		return -EFAULT;
+	}
+	set_value = (int)(*(mot_value + 0));
+	kfree(mot_value);
 	hdd_ctx = WLAN_HDD_GET_CTX(adapter);
 	ret = wlan_hdd_validate_context(hdd_ctx);
 	if (0 != ret)
@@ -1553,7 +1559,7 @@ static __iw_softap_set_max_tx_power(struct net_device *dev,
 	qdf_copy_macaddr(&bssid, &adapter->mac_addr);
 	qdf_copy_macaddr(&selfMac, &adapter->mac_addr);
 
-	set_value = value[0];
+
 	if (QDF_STATUS_SUCCESS !=
 	    sme_set_max_tx_power(hdd_ctx->mac_handle, bssid,
 				 selfMac, set_value)) {
