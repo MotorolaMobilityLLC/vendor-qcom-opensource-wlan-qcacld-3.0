@@ -3021,6 +3021,9 @@
 #define WLAN_BCN_RATECODE_ENABLE (1)
 #endif
 
+/* move utags build flags from kbuild to here */
+#define MOTO_UTAGS_MAC (1)
+
 #ifdef CONFIG_WLAN_SUPPORT_SERVICE_CLASS
 #define WLAN_SUPPORT_SERVICE_CLASS (1)
 #endif
