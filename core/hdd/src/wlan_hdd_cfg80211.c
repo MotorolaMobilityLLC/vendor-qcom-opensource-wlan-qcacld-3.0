@@ -16219,9 +16219,6 @@ static int __wlan_hdd_cfg80211_get_preferred_freq_list(struct wiphy *wiphy,
 		return -EINVAL;
 	}
 
-	i = QCA_WLAN_VENDOR_ATTR_GET_PREFERRED_FREQ_LIST_WEIGHED_PCL;
-	nla_attr = nla_nest_start(reply_skb, i);
-
 	if (is_sbs_enabled) {
 		i = QCA_WLAN_VENDOR_ATTR_GET_PREFERRED_FREQ_LIST_WEIGHED_PCL;
 		nla_attr = nla_nest_start(reply_skb, i);
