@@ -386,7 +386,7 @@
  *
  * </ini>
  */
-#define CFG_DEFAULT_ULTLOW_FLAGS "0x180D83"
+#define CFG_DEFAULT_ULTLOW_FLAGS "0x180c82"	// IKSWU-66655, allow scan request in ULL mode
 #define CFG_LATENCY_FLAGS_ULTLOW \
 		CFG_INI_STRING("wlm_latency_flags_ultralow",\
 			       0, \
