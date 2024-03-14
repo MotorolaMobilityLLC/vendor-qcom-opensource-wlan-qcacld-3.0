@@ -7006,8 +7006,12 @@ int wlan_hdd_cfg80211_dump_survey(struct wiphy *wiphy,
 	struct osif_vdev_sync *vdev_sync;
 
 	errno = osif_vdev_sync_op_start(dev, &vdev_sync);
-	if (errno)
-		return errno;
+	// BEGIN IKSWU-75231, fix the incorrect returned value when dump survey
+	if (errno) {
+		hdd_err("sync vdev failed: %d", errno);
+		return -ENOENT;
+	}
+	// END IKSWU-75231
 
 	errno = __wlan_hdd_cfg80211_dump_survey(wiphy, dev, idx, survey);
 
