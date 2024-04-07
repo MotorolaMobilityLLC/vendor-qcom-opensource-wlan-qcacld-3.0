@@ -16819,6 +16819,7 @@ static int __wlan_hdd_cfg80211_get_usable_channel(struct wiphy *wiphy,
 	struct get_usable_chan_req_params req_msg = {0};
 	struct get_usable_chan_res_params *res_msg;
 	struct nlattr *tb[QCA_WLAN_VENDOR_ATTR_USABLE_CHANNELS_MAX + 1];
+	struct hdd_adapter *adapter = WLAN_HDD_GET_PRIV_PTR(wdev->netdev); //IKSWU-108463,temp patch.
 	int ret = 0;
 	uint32_t count = 0;
 	QDF_STATUS status;
@@ -16827,6 +16828,14 @@ static int __wlan_hdd_cfg80211_get_usable_channel(struct wiphy *wiphy,
 		hdd_err("Command not allowed in FTM mode");
 		return -EPERM;
 	}
+
+	//IKSWU-108463,temp patch, begin.
+	ret = hdd_validate_adapter(adapter);
+ 	if (ret != 0) {
+ 		hdd_err("IKSWU-108463,Invalid adapter");
+  		return ret;
+ 	}
+	//IKSWU-108463,temp patch, end.
 
 	ret = wlan_hdd_validate_context(hdd_ctx);
 	if (0 != ret)
