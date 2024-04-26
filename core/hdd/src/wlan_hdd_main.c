@@ -25,6 +25,10 @@
  */
 
 /* Include Files */
+//BEGIN IKSWU-139231, Add procfs/sysfs to set edca parameters
+#include <linux/proc_fs.h>
+#include <linux/seq_file.h>
+//END IKSWU-139231
 #include <wbuff.h>
 #include "cfg_ucfg_api.h"
 #include <wlan_hdd_includes.h>
@@ -18839,6 +18843,108 @@ int hdd_set_suspend_mode(struct hdd_context *hdd_ctx)
 }
 #endif
 
+//BEGIN IKSWU-139231, Add procfs/sysfs to set edca parameters
+#define FASTWIFI_DIR "fast_wifi"
+#define FASTWIFI_CONFIG "config"
+
+static ssize_t fastwifi_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
+{
+	int vo_cwmin, vo_cwmax, vo_aifs, vi_cwmin, vi_cwmax, vi_aifs;
+	int bk_cwmin, bk_cwmax, bk_aifs, be_cwmin, be_cwmax, be_aifs;
+	struct mac_context *mac = NULL;
+	struct wlan_mlme_cfg *mlme_cfg = NULL;
+	char *buffer = (char *)kzalloc(count, GFP_KERNEL);
+	if (!buffer)
+		return -ENOMEM;
+
+	if (copy_from_user(buffer, buf, count)) {
+		kfree(buffer);
+		return -EFAULT;
+	}
+
+	mac = cds_get_context(QDF_MODULE_ID_PE);
+	if (!mac) {
+		pe_err("mac_context is null");
+		return 0;
+	}
+	mlme_cfg = mac->mlme_cfg;
+	if (!mlme_cfg) {
+		pe_err("mlme_cfg is null");
+		return 0;
+	}
+
+	if (sscanf(buffer, "vo_cwmin=%d,vo_cwmax=%d,vo_aifs=%d,vi_cwmin=%d,vi_cwmax=%d,vi_aifs=%d,"
+		"bk_cwmin=%d,bk_cwmax=%d,bk_aifs=%d,be_cwmin=%d,be_cwmax=%d,be_aifs=%d", &vo_cwmin, &vo_cwmax,
+		&vo_aifs, &vi_cwmin, &vi_cwmax, &vi_aifs, &bk_cwmin, &bk_cwmax, &bk_aifs, &be_cwmin, &be_cwmax,
+		&be_aifs) == 12) {
+		mlme_cfg->edca_params.enable_edca_params = 1;
+
+		mlme_cfg->edca_params.edca_ac_vo.vo_cwmin = vo_cwmin;
+		mlme_cfg->edca_params.edca_ac_vo.vo_cwmax = vo_cwmax;
+		mlme_cfg->edca_params.edca_ac_vo.vo_aifs = vo_aifs;
+
+		mlme_cfg->edca_params.edca_ac_vi.vi_cwmin = vi_cwmin;
+		mlme_cfg->edca_params.edca_ac_vi.vi_cwmax = vi_cwmax;
+		mlme_cfg->edca_params.edca_ac_vi.vi_aifs = vi_aifs;
+
+		mlme_cfg->edca_params.edca_ac_bk.bk_cwmin = bk_cwmin;
+		mlme_cfg->edca_params.edca_ac_bk.bk_cwmax = bk_cwmax;
+		mlme_cfg->edca_params.edca_ac_bk.bk_aifs = bk_aifs;
+
+		mlme_cfg->edca_params.edca_ac_be.be_cwmin = be_cwmin;
+		mlme_cfg->edca_params.edca_ac_be.be_cwmax = be_cwmax;
+		mlme_cfg->edca_params.edca_ac_be.be_aifs = be_aifs;
+	} else {
+		mlme_cfg->edca_params.enable_edca_params = 0;
+		pe_err("Failed to parse the edca parameters, disable edca");
+	}
+
+	return count;
+}
+
+static int fastwifi_show(struct seq_file *m, void *v)
+{
+	struct mac_context *mac = NULL;
+	struct wlan_mlme_cfg *mlme_cfg = NULL;
+	mac = cds_get_context(QDF_MODULE_ID_PE);
+	if (!mac) {
+		pe_err("mac_context is null");
+		return 0;
+	}
+	mlme_cfg = mac->mlme_cfg;
+	if (!mlme_cfg) {
+		pe_err("mlme_cfg is null");
+		return 0;
+	}
+	if (mlme_cfg->edca_params.enable_edca_params) {
+		seq_printf(m, "vo_cwmin=%d,vo_cwmax=%d,vo_aifs=%d,vi_cwmin=%d,vi_cwmax=%d,vi_aifs=%d,"
+			"bk_cwmin=%d,bk_cwmax=%d,bk_aifs=%d,be_cwmin=%d,be_cwmax=%d,be_aifs=%d\n",
+			mlme_cfg->edca_params.edca_ac_vo.vo_cwmin, mlme_cfg->edca_params.edca_ac_vo.vo_cwmax, mlme_cfg->edca_params.edca_ac_vo.vo_aifs,
+			mlme_cfg->edca_params.edca_ac_vi.vi_cwmin, mlme_cfg->edca_params.edca_ac_vi.vi_cwmax, mlme_cfg->edca_params.edca_ac_vi.vi_aifs,
+			mlme_cfg->edca_params.edca_ac_bk.bk_cwmin, mlme_cfg->edca_params.edca_ac_bk.bk_cwmax, mlme_cfg->edca_params.edca_ac_bk.bk_aifs,
+			mlme_cfg->edca_params.edca_ac_be.be_cwmin, mlme_cfg->edca_params.edca_ac_be.be_cwmax, mlme_cfg->edca_params.edca_ac_be.be_aifs);
+	} else {
+		seq_printf(m, "enable_edca_params is not set\n");
+	}
+	return 0;
+}
+
+static int fastwifi_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, fastwifi_show, NULL);
+}
+
+static const struct proc_ops fastwifi_ops = {
+	.proc_open	= fastwifi_open,
+	.proc_write	= fastwifi_write,
+	.proc_read	= seq_read,
+	.proc_lseek	= seq_lseek,
+	.proc_release	= single_release,
+};
+
+struct proc_dir_entry *proc_entry;
+//END IKSWU-139231
+
 int hdd_driver_load(void)
 {
 	struct osif_driver_sync *driver_sync;
@@ -18922,6 +19028,14 @@ int hdd_driver_load(void)
 		goto unregister_driver;
 	}
 
+	//BEGIN IKSWU-139231, Add procfs/sysfs to set edca parameters
+	proc_entry = proc_mkdir(FASTWIFI_DIR, NULL);
+	if (!proc_entry) {
+		pr_err("create fastwifi proc fail\n");
+	} else {
+		proc_create(FASTWIFI_CONFIG, 0666, proc_entry, &fastwifi_ops);
+	}
+	//END IKSWU-139231
 	hdd_debug("%s: driver loaded", WLAN_MODULE_NAME);
 	hdd_place_marker(NULL, "DRIVER LOADED", NULL);
 
@@ -18976,6 +19090,13 @@ void hdd_driver_unload(void)
 	pr_info("%s: Unloading driver v%s\n", WLAN_MODULE_NAME,
 		QWLAN_VERSIONSTR);
 	hdd_place_marker(NULL, "START UNLOADING", NULL);
+
+	//BEGIN IKSWU-139231, Add procfs/sysfs to set edca parameters
+	if (proc_entry) {
+		remove_proc_entry(FASTWIFI_CONFIG, proc_entry);
+		remove_proc_entry(FASTWIFI_DIR, NULL);
+	}
+	//END IKSWU-139231
 
 	/*
 	 * Wait for any trans to complete and then start the driver trans
@@ -20930,4 +21051,90 @@ static const struct kernel_param_ops timer_multiplier_ops = {
 };
 
 module_param_cb(timer_multiplier, &timer_multiplier_ops, NULL, 0644);
+
+//BEGIN IKSWU-139231, Add procfs/sysfs to set edca parameters
+static char edca_buffer[PAGE_SIZE];
+static struct kparam_string edca_params = {
+	.string = edca_buffer,
+	.maxlen = PAGE_SIZE,
+};
+static int edca_get_handler(char *buffer, const struct kernel_param *kp)
+{
+	struct mac_context *mac = NULL;
+	struct wlan_mlme_cfg *mlme_cfg = NULL;
+	mac = cds_get_context(QDF_MODULE_ID_PE);
+	if (!mac) {
+		pe_err("mac_context is null");
+		return 0;
+	}
+	mlme_cfg = mac->mlme_cfg;
+	if (!mlme_cfg) {
+		pe_err("mlme_cfg is null");
+		return 0;
+	}
+	if (mlme_cfg->edca_params.enable_edca_params) {
+		return scnprintf(buffer, PAGE_SIZE, "vo_cwmin=%d,vo_cwmax=%d,vo_aifs=%d,vi_cwmin=%d,vi_cwmax=%d,vi_aifs=%d,"
+			"bk_cwmin=%d,bk_cwmax=%d,bk_aifs=%d,be_cwmin=%d,be_cwmax=%d,be_aifs=%d\n",
+			mlme_cfg->edca_params.edca_ac_vo.vo_cwmin, mlme_cfg->edca_params.edca_ac_vo.vo_cwmax, mlme_cfg->edca_params.edca_ac_vo.vo_aifs,
+			mlme_cfg->edca_params.edca_ac_vi.vi_cwmin, mlme_cfg->edca_params.edca_ac_vi.vi_cwmax, mlme_cfg->edca_params.edca_ac_vi.vi_aifs,
+			mlme_cfg->edca_params.edca_ac_bk.bk_cwmin, mlme_cfg->edca_params.edca_ac_bk.bk_cwmax, mlme_cfg->edca_params.edca_ac_bk.bk_aifs,
+			mlme_cfg->edca_params.edca_ac_be.be_cwmin, mlme_cfg->edca_params.edca_ac_be.be_cwmax, mlme_cfg->edca_params.edca_ac_be.be_aifs);
+	} else {
+		return sprintf(buffer, "enable_edca_params is not set\n");
+	}
+}
+
+static int edca_set_handler(const char *kmessage, const struct kernel_param *kp)
+{
+	int vo_cwmin, vo_cwmax, vo_aifs, vi_cwmin, vi_cwmax, vi_aifs;
+	int bk_cwmin, bk_cwmax, bk_aifs, be_cwmin, be_cwmax, be_aifs;
+	struct mac_context *mac = NULL;
+	struct wlan_mlme_cfg *mlme_cfg = NULL;
+
+	mac = cds_get_context(QDF_MODULE_ID_PE);
+	if (!mac) {
+		pe_err("mac_context is null");
+		return 0;
+	}
+	mlme_cfg = mac->mlme_cfg;
+	if (!mlme_cfg) {
+		pe_err("mlme_cfg is null");
+		return 0;
+	}
+	if (sscanf(kmessage, "vo_cwmin=%d,vo_cwmax=%d,vo_aifs=%d,vi_cwmin=%d,vi_cwmax=%d,vi_aifs=%d,"
+		"bk_cwmin=%d,bk_cwmax=%d,bk_aifs=%d,be_cwmin=%d,be_cwmax=%d,be_aifs=%d", &vo_cwmin, &vo_cwmax,
+		&vo_aifs, &vi_cwmin, &vi_cwmax, &vi_aifs, &bk_cwmin, &bk_cwmax, &bk_aifs, &be_cwmin, &be_cwmax,
+		&be_aifs) == 12) {
+		mlme_cfg->edca_params.enable_edca_params = 1;
+
+		mlme_cfg->edca_params.edca_ac_vo.vo_cwmin = vo_cwmin;
+		mlme_cfg->edca_params.edca_ac_vo.vo_cwmax = vo_cwmax;
+		mlme_cfg->edca_params.edca_ac_vo.vo_aifs = vo_aifs;
+
+		mlme_cfg->edca_params.edca_ac_vi.vi_cwmin = vi_cwmin;
+		mlme_cfg->edca_params.edca_ac_vi.vi_cwmax = vi_cwmax;
+		mlme_cfg->edca_params.edca_ac_vi.vi_aifs = vi_aifs;
+
+		mlme_cfg->edca_params.edca_ac_bk.bk_cwmin = bk_cwmin;
+		mlme_cfg->edca_params.edca_ac_bk.bk_cwmax = bk_cwmax;
+		mlme_cfg->edca_params.edca_ac_bk.bk_aifs = bk_aifs;
+
+		mlme_cfg->edca_params.edca_ac_be.be_cwmin = be_cwmin;
+		mlme_cfg->edca_params.edca_ac_be.be_cwmax = be_cwmax;
+		mlme_cfg->edca_params.edca_ac_be.be_aifs = be_aifs;
+	} else {
+		mlme_cfg->edca_params.enable_edca_params = 0;
+		pe_err("Failed to parse the edca parameters, disable edca");
+	}
+
+	return 0;
+}
+
+static const struct kernel_param_ops edca_params_ops = {
+	.set = edca_set_handler,
+	.get = edca_get_handler,
+};
+
+module_param_cb(edca_params, &edca_params_ops, &edca_params, 0644);
+//END IKSWU-139231
 
