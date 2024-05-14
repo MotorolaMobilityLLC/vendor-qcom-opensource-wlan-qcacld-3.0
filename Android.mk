@@ -304,6 +304,10 @@ endif
 $(call symlink-file,,$(TARGET_MAC_BIN_PATH)/wlan_mac.bin,$(TARGET_FW_PATH)/wlan_mac.bin)
 LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_FW_PATH)/wlan_mac.bin
 
+# BEGIN IKSWU-139136, support loading moto specific configurations
+$(shell ln -sf $(TARGET_CFG_PATH)/WCNSS_mot_cfg.ini $(TARGET_FW_PATH)/WCNSS_mot_cfg.ini)
+# END IKSWU-139136
+
 # Conditionally create module symbolic link
 ifneq ($(findstring $(WLAN_CHIPSET),$(WIFI_DRIVER_DEFAULT)),)
 ifeq ($(PRODUCT_VENDOR_MOVE_ENABLED),true)
