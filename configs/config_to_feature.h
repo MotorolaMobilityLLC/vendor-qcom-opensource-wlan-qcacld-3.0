@@ -2925,4 +2925,7 @@
 #endif
 #endif
 
+/* move utags build flags from kbuild to here */
+#define MOTO_UTAGS_MAC (1)
+
 #endif /* CONFIG_TO_FEATURE_H */
