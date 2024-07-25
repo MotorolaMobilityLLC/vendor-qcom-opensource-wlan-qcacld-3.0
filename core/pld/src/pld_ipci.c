@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -397,6 +397,34 @@ out:
 }
 #endif
 
+#ifdef WLAN_FEATURE_SSR_DRIVER_DUMP
+static int
+pld_ipci_collect_driver_dump(struct device *dev,
+			     struct cnss_ssr_driver_dump_entry *input_array,
+			     size_t *num_entries)
+{
+	struct pld_context *pld_context;
+	struct pld_driver_ops *ops;
+	int ret = -EINVAL;
+
+	if (!dev)
+		return ret;
+
+	pld_context = pld_get_global_context();
+
+	if (!pld_context)
+		return ret;
+
+	ops = pld_context->ops;
+	if (ops && ops->collect_driver_dump)
+		ret =  ops->collect_driver_dump(dev,
+						PLD_BUS_TYPE_IPCI,
+						input_array,
+						num_entries);
+	return ret;
+}
+#endif
+
 /**
  * pld_ipci_idle_restart_cb() - Perform idle restart
  * @dev: platform device
@@ -511,6 +539,9 @@ struct icnss_driver_ops pld_ipci_ops = {
 	.uevent = pld_ipci_uevent,
 	.idle_restart = pld_ipci_idle_restart_cb,
 	.idle_shutdown = pld_ipci_idle_shutdown_cb,
+#ifdef WLAN_FEATURE_SSR_DRIVER_DUMP
+	.collect_driver_dump = pld_ipci_collect_driver_dump,
+#endif
 	.set_therm_cdev_state = pld_ipci_set_thermal_state,
 };
 
