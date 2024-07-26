@@ -19591,14 +19591,14 @@ hdd_get_usable_channel_len(uint32_t count)
 {
 	uint32_t len = 0;
 	struct get_usable_chan_res_params res_msg;
-
-	len = nla_total_size(sizeof(res_msg.freq)) +
+	len = nla_total_size(count * nla_total_size(
+		nla_total_size(sizeof(res_msg.freq)) +
 		nla_total_size(sizeof(res_msg.seg0_freq)) +
 		nla_total_size(sizeof(res_msg.seg1_freq)) +
 		nla_total_size(sizeof(res_msg.bw)) +
-		nla_total_size(sizeof(res_msg.iface_mode_mask));
+		nla_total_size(sizeof(res_msg.iface_mode_mask))));
 
-	return len * count;
+	return len;
 }
 
 /**
