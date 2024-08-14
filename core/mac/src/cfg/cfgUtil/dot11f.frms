@@ -4572,7 +4572,7 @@ FRAME RadioMeasurementReport
    FF   Action;
    FF   DialogToken;
    //Measurement Report elements.
-   MANDIE MeasurementReport[1];
+   MANDIE MeasurementReport[1..8];
 }
 
 FRAME LinkMeasurementRequest
