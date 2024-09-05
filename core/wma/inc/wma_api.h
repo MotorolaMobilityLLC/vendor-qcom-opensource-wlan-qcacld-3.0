@@ -539,18 +539,15 @@ QDF_STATUS wma_enable_active_apf_mode(WMA_HANDLE handle, tAniDHCPInd *ta_dhcp_in
  */
 QDF_STATUS wma_disable_active_apf_mode(WMA_HANDLE handle, tAniDHCPInd *ta_dhcp_ind);
 #else
-static inline
-QDF_STATUS wma_enable_active_apf_mode(WMA_HANDLE handle,
-				      tAniDHCPInd *ta_dhcp_ind)
+
+QDF_STATUS wma_enable_active_apf_mode(WMA_HANDLE handle, tAniDHCPInd *ta_dhcp_ind)
 {
-	return QDF_STATUS_E_NOSUPPORT;
+	return QDF_STATUS_SUCCESS;
 }
 
-static inline
-QDF_STATUS wma_disable_active_apf_mode(WMA_HANDLE handle,
-				       tAniDHCPInd *ta_dhcp_ind)
+QDF_STATUS wma_disable_active_apf_mode(WMA_HANDLE handle, tAniDHCPInd *ta_dhcp_ind)
 {
-	return QDF_STATUS_E_NOSUPPORT;
+	return QDF_STATUS_SUCCESS;
 }
 #endif
 
