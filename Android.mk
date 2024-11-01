@@ -30,7 +30,7 @@ endif
 
 ifeq ($(TARGET_BOARD_PLATFORM), parrot)
 ifeq ($(TARGET_BOARD_SUFFIX),66)
-# LOCAL_MODULE_DDK_BUILD := true
+LOCAL_MODULE_DDK_BUILD := true
 LOCAL_MODULE_DDK_ALLOW_UNSAFE_HEADERS := true
 endif
 endif
