@@ -58,7 +58,7 @@
 #include <crypto/md5.h>
 #include <crypto/hash.h>
 
-#define WIFI_MAC_BOOTARG "wifimacaddr="
+#define WIFI_MAC_BOOTARG "androidboot.wifimacaddr="
 #define DEVICE_SERIALNO_BOOTARG "androidboot.serialno="
 #define MACSTRLEN 12
 
