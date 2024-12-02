@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2012-2015, 2020-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -747,6 +747,8 @@ void cm_connect_info(struct wlan_objmgr_vdev *vdev, bool connect_success,
 	struct wlan_objmgr_psoc *psoc;
 	struct wlan_mlme_psoc_ext_obj *mlme_obj;
 	enum phy_ch_width ch_width = CH_WIDTH_20MHZ;
+	enum wlan_phymode phy_mode = WLAN_PHYMODE_AUTO;
+
 	WLAN_HOST_DIAG_EVENT_DEF(conn_stats,
 				 struct host_event_wlan_connection_stats);
 
@@ -777,10 +779,12 @@ void cm_connect_info(struct wlan_objmgr_vdev *vdev, bool connect_success,
 
 	des_chan = wlan_vdev_mlme_get_des_chan(vdev);
 
-	wlan_mlme_get_sta_ch_width(vdev, &ch_width);
+	wlan_mlme_get_sta_ch_width(vdev, &ch_width, &phy_mode);
 	conn_stats.chnl_bw = cm_get_diag_ch_width(ch_width);
-	conn_stats.dot11mode =
-		cm_diag_dot11_mode_from_phy_mode(des_chan->ch_phymode);
+
+	if (phy_mode == WLAN_PHYMODE_AUTO)
+		phy_mode = des_chan->ch_phymode;
+	conn_stats.dot11mode = cm_diag_dot11_mode_from_phy_mode(phy_mode);
 
 	opmode = wlan_vdev_mlme_get_opmode(vdev);
 	conn_stats.bss_type = cm_get_diag_persona(opmode);
@@ -1714,7 +1718,7 @@ cm_cp_stats_cstats_log_connect_event(struct wlan_objmgr_vdev *vdev,
 			WLAN_CHIPSET_STATS_STA_CONNECT_FAIL_EVENT_ID;
 	}
 
-	wlan_mlme_get_sta_ch_width(vdev, &ch_width);
+	wlan_mlme_get_sta_ch_width(vdev, &ch_width, NULL);
 	des_chan = wlan_vdev_mlme_get_des_chan(vdev);
 	vdev_mlme = wlan_vdev_mlme_get_cmpt_obj(vdev);
 	if (!vdev_mlme) {

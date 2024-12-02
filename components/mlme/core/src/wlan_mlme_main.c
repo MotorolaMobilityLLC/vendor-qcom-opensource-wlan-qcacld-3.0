@@ -4820,7 +4820,7 @@ wlan_get_op_chan_freq_info_vdev_id(struct wlan_objmgr_pdev *pdev,
 	 * If there is a failure or operating mode is not STA / P2P-CLI
 	 * then get channel width from wlan_channel.
 	 */
-	status = wlan_mlme_get_sta_ch_width(vdev, ch_width);
+	status = wlan_mlme_get_sta_ch_width(vdev, ch_width, NULL);
 	if (QDF_IS_STATUS_ERROR(status))
 		*ch_width = chan->ch_width;
 

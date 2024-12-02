@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2012-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -1567,6 +1567,14 @@ void lim_update_stads_he_capable(tpDphHashNode sta_ds, tpSirAssocReq assoc_req);
  */
 void lim_update_session_he_capable(struct mac_context *mac, struct pe_session *session);
 
+/*
+ * lim_reset_session_he_capable(): Reset he_capable flag in PE session
+ * @pe_session: pointer to PE session
+ *
+ * Return: None
+ */
+void lim_reset_session_he_capable(struct pe_session *session);
+
 /**
  * lim_update_session_he_capable_chan_switch(): Update he_capable in PE session
  * @mac: pointer to MAC context
@@ -1812,6 +1820,10 @@ static inline void lim_update_bss_he_capable(struct mac_context *mac,
 {
 }
 
+static inline void lim_reset_session_he_capable(struct pe_session *session)
+{
+}
+
 static inline void lim_update_stads_he_capable(tpDphHashNode sta_ds,
 		tpSirAssocReq assoc_req)
 {
@@ -2043,13 +2055,12 @@ void lim_intersect_sta_eht_caps(struct mac_context *mac_ctx,
 
 /**
  * lim_update_session_eht_capable(): Update eht_capable in PE session
- * @mac: pointer to MAC context
  * @session: pointer to PE session
+ * @val: EHT capability
  *
  * Return: None
  */
-void lim_update_session_eht_capable(struct mac_context *mac,
-				    struct pe_session *session);
+void lim_update_session_eht_capable(struct pe_session *session, bool val);
 
 /**
  * lim_add_bss_eht_cfg() - Set EHT config to BSS params
@@ -2205,14 +2216,12 @@ void lim_log_eht_op(struct mac_context *mac, tDot11fIEeht_op *eht_ops,
  * @sta_ds: pointer to sta dph hash table entry
  * @assoc_rsp: pointer to assoc response
  * @session_entry: pointer to PE session
- * @beacon: pointer to beacon
  *
  * Return: None
  */
 void lim_update_stads_eht_caps(struct mac_context *mac_ctx,
 			       tpDphHashNode sta_ds, tpSirAssocRsp assoc_rsp,
-			       struct pe_session *session_entry,
-			       tSchBeaconStruct *beacon);
+			       struct pe_session *session_entry);
 
 /**
  * lim_update_stads_eht_bw_320mhz() - Set ch_width to 320MHz for sta_ds
@@ -2371,8 +2380,7 @@ void lim_intersect_sta_eht_caps(struct mac_context *mac_ctx,
 }
 
 static inline
-void lim_update_session_eht_capable(struct mac_context *mac,
-				    struct pe_session *session)
+void lim_update_session_eht_capable(struct pe_session *session, bool val)
 {
 }
 
@@ -2440,8 +2448,7 @@ lim_log_eht_op(struct mac_context *mac, tDot11fIEeht_op *eht_ops,
 static inline void
 lim_update_stads_eht_caps(struct mac_context *mac_ctx,
 			  tpDphHashNode sta_ds, tpSirAssocRsp assoc_rsp,
-			  struct pe_session *session_entry,
-			  tSchBeaconStruct *beacon)
+			  struct pe_session *session_entry)
 {
 }
 

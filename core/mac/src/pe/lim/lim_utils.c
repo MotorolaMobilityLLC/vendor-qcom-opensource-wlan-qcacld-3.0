@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2011-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -7177,16 +7177,11 @@ void lim_update_stads_he_caps(struct mac_context *mac_ctx,
 	if (!IS_DOT11_MODE_HE(session_entry->dot11mode))
 		goto out;
 
-	if (!assoc_rsp->he_cap.present && beacon && beacon->he_cap.present) {
-		/* Use beacon HE caps if assoc resp doesn't have he caps */
-		pe_debug("he_caps missing in assoc rsp");
-		qdf_mem_copy(&assoc_rsp->he_cap, &beacon->he_cap,
-			     sizeof(tDot11fIEhe_cap));
-	}
-
 	/* assoc resp and beacon doesn't have he caps */
-	if (!assoc_rsp->he_cap.present)
+	if (!assoc_rsp->he_cap.present) {
+		pe_err("HE cap IE is missing in assoc response");
 		goto out;
+	}
 
 	sta_ds->mlmStaContext.he_capable = assoc_rsp->he_cap.present;
 
@@ -7753,6 +7748,11 @@ void lim_update_session_he_capable(struct mac_context *mac, struct pe_session *s
 		session->he_config.rx_pream_puncturing =
 					mac->he_cap_5g.rx_pream_puncturing;
 	}
+}
+
+void lim_reset_session_he_capable(struct pe_session *session)
+{
+	session->he_capable = false;
 }
 
 void lim_update_session_he_capable_chan_switch(struct mac_context *mac,
@@ -8849,10 +8849,9 @@ void lim_intersect_sta_eht_caps(struct mac_context *mac_ctx,
 	lim_intersect_eht_caps(rcvd_eht, peer_eht, session);
 }
 
-void lim_update_session_eht_capable(struct mac_context *mac,
-				    struct pe_session *session)
+void lim_update_session_eht_capable(struct pe_session *session, bool val)
 {
-	session->eht_capable = true;
+	session->eht_capable = val;
 }
 
 void lim_add_bss_eht_cfg(struct bss_params *add_bss, struct pe_session *session)
@@ -9332,23 +9331,17 @@ QDF_STATUS lim_send_eht_caps_ie(struct mac_context *mac_ctx,
 
 void lim_update_stads_eht_caps(struct mac_context *mac_ctx,
 			       tpDphHashNode sta_ds, tpSirAssocRsp assoc_rsp,
-			       struct pe_session *session_entry,
-			       tSchBeaconStruct *beacon)
+			       struct pe_session *session_entry)
 {
 	/* If EHT is not supported, do not fill sta_ds and return */
 	if (!IS_DOT11_MODE_EHT(session_entry->dot11mode))
 		return;
 
-	if (!assoc_rsp->eht_cap.present && beacon && beacon->eht_cap.present) {
-		/* Use beacon EHT caps if assoc resp doesn't have he caps */
-		pe_debug("eht_caps missing in assoc rsp");
-		qdf_mem_copy(&assoc_rsp->eht_cap, &beacon->eht_cap,
-			     sizeof(tDot11fIEeht_cap));
-	}
-
 	/* assoc resp and beacon doesn't have eht caps */
-	if (!assoc_rsp->eht_cap.present)
+	if (!assoc_rsp->eht_cap.present) {
+		pe_err("EHT cap IE is missing in assoc response");
 		return;
+	}
 
 	sta_ds->mlmStaContext.eht_capable = assoc_rsp->eht_cap.present;
 

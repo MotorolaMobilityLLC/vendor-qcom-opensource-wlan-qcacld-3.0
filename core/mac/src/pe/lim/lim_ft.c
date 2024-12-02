@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2012-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -701,7 +701,7 @@ lim_fill_ft_session(struct mac_context *mac,
 	}
 	if (IS_DOT11_MODE_EHT(ft_session->dot11mode) &&
 	    pBeaconStruct->eht_cap.present) {
-		lim_update_session_eht_capable(mac, ft_session);
+		lim_update_session_eht_capable(ft_session, true);
 		lim_copy_join_req_eht_cap(ft_session);
 	}
 	/* Assign default configured nss value in the new session */

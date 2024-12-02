@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2012-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2024, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2025, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -1623,7 +1623,7 @@ hdd_cm_mlme_send_standby_link_chn_width(struct hdd_adapter *adapter,
 	sta_ctx = WLAN_HDD_GET_STATION_CTX_PTR(link_info);
 	ch_width = sta_ctx->user_cfg_chn_width;
 
-	wlan_mlme_get_sta_ch_width(vdev, &connection_ch_width);
+	wlan_mlme_get_sta_ch_width(vdev, &connection_ch_width, NULL);
 
 	if (ch_width == CH_WIDTH_INVALID) {
 		hdd_debug("no cached bandwidth for the link %u", link_id);
