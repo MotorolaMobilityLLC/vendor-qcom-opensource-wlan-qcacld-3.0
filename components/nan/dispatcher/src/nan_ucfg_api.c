@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -1645,9 +1645,21 @@ QDF_STATUS ucfg_nan_send_pasn_peer_create_cmd(struct wlan_objmgr_psoc *psoc,
 
 	if (nan_is_peer_exist_for_opmode(psoc, &peer_mac_addr,
 					 QDF_NAN_DISC_MODE)) {
+		struct wlan_objmgr_peer *peer;
+
 		nan_debug("NAN peer exist with same mac address" QDF_MAC_ADDR_FMT,
 			  QDF_MAC_ADDR_REF(peer_mac_addr.bytes));
-		return QDF_STATUS_SUCCESS;
+
+		peer = wlan_objmgr_get_peer_by_mac(psoc, peer_mac_addr.bytes,
+						   WLAN_NAN_ID);
+		if (!peer) {
+			nan_err("peer is null");
+			return QDF_STATUS_E_NULL_VALUE;
+		}
+
+		status = wlan_mlme_clear_peer_private_object_data(peer);
+		wlan_objmgr_peer_release_ref(peer, WLAN_NAN_ID);
+		return status;
 	}
 
 	len = sizeof(params);
@@ -1780,7 +1792,6 @@ QDF_STATUS ucfg_nan_send_delete_pasn_peer(struct wlan_objmgr_psoc *psoc,
 	status = osif_request_wait_for_response(request);
 	if (QDF_IS_STATUS_ERROR(status)) {
 		nan_err("NAN PASN peer delete request fails");
-		nan_pasn_flush_callback(&msg);
 		goto end;
 	}
 

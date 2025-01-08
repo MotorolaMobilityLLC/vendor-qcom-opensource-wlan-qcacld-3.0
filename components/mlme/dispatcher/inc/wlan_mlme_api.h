@@ -5305,4 +5305,14 @@ wlan_mlme_set_p2p_device_mac_addr(struct wlan_objmgr_vdev *vdev,
 QDF_STATUS
 wlan_mlme_get_p2p_device_mac_addr(struct wlan_objmgr_vdev *vdev,
 				  struct qdf_mac_addr *mac_addr);
+
+/**
+ * wlan_mlme_clear_peer_private_object_data(): This API is wrapper for
+ * function "mlme_clear_peer_private_object_data"
+ * @peer: peer object
+ *
+ * Return: QDF_STATUS
+ */
+QDF_STATUS
+wlan_mlme_clear_peer_private_object_data(struct wlan_objmgr_peer *peer);
 #endif /* _WLAN_MLME_API_H_ */

@@ -6100,3 +6100,25 @@ uint8_t wlan_get_wfd_mode_from_vdev_id(struct wlan_objmgr_psoc *psoc,
 	return wfd_mode;
 }
 #endif
+
+QDF_STATUS mlme_clear_peer_private_object_data(struct wlan_objmgr_peer *peer)
+{
+	struct peer_mlme_priv_obj *peer_priv;
+
+	peer_priv = wlan_objmgr_peer_get_comp_private_obj(peer,
+							  WLAN_UMAC_COMP_MLME);
+	if (!peer_priv) {
+		mlme_legacy_err("peer MLME component object is NULL");
+		return QDF_STATUS_E_FAILURE;
+	}
+
+	/*
+	 * To allow NAN follow frames with new keys,
+	 * peer PN value need to be reset.
+	 */
+	peer_priv->last_pn_valid = 0;
+	peer_priv->last_pn = 0;
+	peer_priv->rmf_pn_replays = 0;
+
+	return QDF_STATUS_SUCCESS;
+}

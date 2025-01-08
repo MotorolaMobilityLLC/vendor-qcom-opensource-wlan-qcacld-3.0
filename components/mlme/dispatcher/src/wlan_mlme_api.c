@@ -8866,3 +8866,9 @@ wlan_mlme_get_p2p_device_mac_addr(struct wlan_objmgr_vdev *vdev,
 {
 	return mlme_get_p2p_device_mac_addr(vdev, mac_addr);
 }
+
+QDF_STATUS
+wlan_mlme_clear_peer_private_object_data(struct wlan_objmgr_peer *peer)
+{
+	return mlme_clear_peer_private_object_data(peer);
+}

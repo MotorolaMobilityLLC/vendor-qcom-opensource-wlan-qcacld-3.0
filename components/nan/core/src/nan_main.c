@@ -2415,7 +2415,7 @@ void nan_pasn_peer_handle_del_rsp(struct wlan_objmgr_psoc *psoc,
 	wlan_objmgr_vdev_release_ref(nan_vdev, WLAN_NAN_ID);
 
 	if (psoc_nan_obj->cb_obj.ucfg_nan_request_process_cb) {
-		cookie = (uint8_t *)psoc_nan_obj->nan_pairing_create_ctx;
+		cookie = (uint8_t *)psoc_nan_obj->nan_pairing_delete_ctx;
 		psoc_nan_obj->cb_obj.ucfg_nan_request_process_cb(cookie);
 	}
 
