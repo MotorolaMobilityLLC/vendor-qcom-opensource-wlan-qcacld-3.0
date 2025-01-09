@@ -67,6 +67,7 @@
 #define OCI_IE_OUI_SIZE 1
 #define OCI_IE_OP_CLS_OFFSET 3
 #define ELE_ID_EXT_LEN 1
+#define SIR_MAC_IE_LEN_OFFSET 1
 
 static last_processed_msg rrm_link_action_frm;
 
