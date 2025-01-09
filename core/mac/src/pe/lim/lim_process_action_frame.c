@@ -61,6 +61,9 @@
 (DOT11F_FF_CATEGORY_LEN + DOT11F_FF_ACTION_LEN + DOT11F_FF_TRANSACTIONID_LEN)
 #define SA_QUERY_IE_OFFSET (4)
 
+#define MIN_OCI_IE_LEN 6
+#define SIR_MAC_IE_LEN_OFFSET 1
+
 static last_processed_msg rrm_link_action_frm;
 
 /**-----------------------------------------------------------------
