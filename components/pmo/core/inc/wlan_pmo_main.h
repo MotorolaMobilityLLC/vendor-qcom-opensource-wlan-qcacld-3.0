@@ -370,6 +370,20 @@ static inline bool pmo_intersect_apf(struct pmo_psoc_priv_obj *psoc_ctx)
 }
 
 /**
+ * pmo_get_apfv6_offload_bitmap() - API to get Offload bitmap in APFv6 mode
+ * @psoc: PSOC object manager pointer.
+ *
+ * Return: Offload bitmap in APFv6 mode
+ */
+static inline uint32_t
+pmo_get_apfv6_offload_bitmap(struct wlan_objmgr_psoc *psoc)
+{
+	struct pmo_psoc_priv_obj *pmo_psoc_ctx = pmo_psoc_get_priv(psoc);
+
+	return pmo_psoc_ctx->psoc_cfg.apfv6_disable_offload_bitmap;
+}
+
+/**
  * pmo_intersect_packet_filter() - intersect config and firmware capability for
  *	the APF feature
  * @psoc_ctx: A PMO psoc context

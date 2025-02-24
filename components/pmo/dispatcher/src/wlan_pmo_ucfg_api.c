@@ -729,6 +729,11 @@ bool ucfg_pmo_is_apf_enabled(struct wlan_objmgr_psoc *psoc)
 
 	return pmo_intersect_apf(pmo_psoc_ctx);
 }
+
+uint32_t ucfg_pmo_get_apfv6_offload_bitmap(struct wlan_objmgr_psoc *psoc)
+{
+	return pmo_get_apfv6_offload_bitmap(psoc);
+}
 #endif
 
 bool
