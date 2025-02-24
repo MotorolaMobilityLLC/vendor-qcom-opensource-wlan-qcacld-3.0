@@ -428,6 +428,7 @@ enum pmo_page_fault_action {
  * on max pagefault
  * @is_apf_configure_per_screen_state: Configure APF mode enable/disable
  * per screen off/on state
+ * @apfv6_disable_offload_bitmap: Offload bitmap in APFv6
  */
 struct pmo_psoc_cfg {
 	bool ptrn_match_enable_all_vdev;
@@ -514,6 +515,7 @@ struct pmo_psoc_cfg {
 	uint32_t interval_for_pagefault_wakeup_counts;
 	uint32_t ssr_frequency_on_pagefault;
 	bool is_apf_configure_per_screen_state;
+	uint32_t apfv6_disable_offload_bitmap;
 };
 
 /**

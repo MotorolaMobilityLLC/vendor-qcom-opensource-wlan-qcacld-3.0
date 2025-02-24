@@ -1319,6 +1319,14 @@ bool ucfg_pmo_is_apf_enabled(struct wlan_objmgr_psoc *psoc);
  */
 bool ucfg_pmo_is_configure_apf_per_screen_state(
 					struct wlan_objmgr_psoc *psoc);
+
+/**
+ * ucfg_pmo_get_apfv6_offload_bitmap() - to get APFv6 offload bitmap
+ * @psoc: objmgr psoc handle
+ *
+ * Return: Offload bitmap in APFv6 mode
+ */
+uint32_t ucfg_pmo_get_apfv6_offload_bitmap(struct wlan_objmgr_psoc *psoc);
 #else
 static inline bool ucfg_pmo_is_apf_enabled(struct wlan_objmgr_psoc *psoc)
 {
@@ -1329,6 +1337,12 @@ static inline bool ucfg_pmo_is_configure_apf_per_screen_state(
 					struct wlan_objmgr_psoc *psoc)
 {
 	return false;
+}
+
+static inline uint32_t ucfg_pmo_get_apfv6_offload_bitmap(
+					struct wlan_objmgr_psoc *psoc)
+{
+	return 0;
 }
 #endif
 
