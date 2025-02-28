@@ -17284,7 +17284,11 @@ static int hdd_initialize_mac_address(struct hdd_context *hdd_ctx)
 
 	status = hdd_update_mac_config(hdd_ctx);
 	if (QDF_IS_STATUS_SUCCESS(status)) {
+#ifdef MOTO_UTAGS_MAC
+		hdd_info("using MAC address from UTAG");
+#else
 		hdd_info("using MAC address from wlan_mac.bin");
+#endif
 		return 0;
 	}
 
