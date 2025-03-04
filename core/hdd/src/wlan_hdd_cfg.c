@@ -488,6 +488,7 @@ QDF_STATUS hdd_get_bootconfig_by_key(struct device_node *chosen_node,
 {
 	const char *bootconfig = NULL;
 	char *buffer = NULL;
+	char *ptr = NULL;
 	char *token = NULL;
 	QDF_STATUS qdf_status = QDF_STATUS_SUCCESS;
 
@@ -514,13 +515,15 @@ QDF_STATUS hdd_get_bootconfig_by_key(struct device_node *chosen_node,
 			}
 			qdf_mem_set(buffer, sizeof(buffer), 0);
 			qdf_mem_copy(buffer, token, strlen(token) + 1);
-			buffer += strlen(key);
+			ptr = buffer;
 			/* parameters is seperated by the newline escape sequence "\n"*/
-			token = strsep(&buffer, "\n");
+			token = strsep(&ptr, "\n");
 			if (value != NULL) {
+				token += strlen(key);
 				qdf_mem_copy(value, token, strlen(token));
-				hdd_err("%s:%s", key, value);
+				hdd_err("%s[%s]", key, value);
 			}
+			qdf_mem_free(buffer);
 		}
 	}
 
