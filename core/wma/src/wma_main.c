@@ -6665,6 +6665,11 @@ static void wma_set_pmo_caps(struct wlan_objmgr_psoc *psoc)
 		wmi_service_enabled(wma->wmi_handle,
 				    wmi_service_listen_interval_offload_support
 				    );
+	caps.apf_offload_enabled =
+		wmi_service_enabled(wma->wmi_handle,
+				    wmi_service_apf_data_offload_support_enabled
+				    );
+
 
 	status = ucfg_pmo_psoc_set_caps(psoc, &caps);
 	if (QDF_IS_STATUS_ERROR(status))
