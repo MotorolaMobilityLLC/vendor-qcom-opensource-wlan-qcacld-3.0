@@ -557,15 +557,14 @@ QDF_STATUS hdd_update_mac_config(struct hdd_context *hdd_ctx)
 	chosen_node = of_find_node_by_name(NULL, "chosen");
 	if (!chosen_node)
 	{
-		hdd_err("%s: get chosen node read failed \n", __func__);
+		hdd_err("get chosen node failed");
 		goto config_exit;
 	} else {
 		status = hdd_get_bootconfig_by_key(chosen_node, WIFI_MAC_BOOTCONFIG, value);
 		if (QDF_IS_STATUS_ERROR(status)) {
-			hdd_err("%s: get macaddr from bootargs");
 			cmd_line = of_get_property(chosen_node, "bootargs", &len);
 			if (!cmd_line || len <= 0) {
-				hdd_err("get wlan MACs bootargs failed \n");
+				hdd_err("get wlan MACs bootargs failed");
 				qdf_status = QDF_STATUS_E_FAILURE;
 				goto config_exit;
 			} else {
