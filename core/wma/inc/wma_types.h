@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2012-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2023, 2025 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -440,6 +440,10 @@ enum wmamsgtype {
 	WMA_TWT_NUDGE_DIALOG_REQUEST = SIR_HAL_TWT_NUDGE_DIALOG_REQUEST,
 	WMA_PASN_PEER_DELETE_REQUEST = SIR_HAL_PASN_PEER_DELETE_REQUEST,
 	WMA_UPDATE_EDCA_PIFS_PARAM_IND = SIR_HAL_UPDATE_EDCA_PIFS_PARAM_IND,
+#ifdef FEATURE_WLAN_APF
+	WMA_ENABLE_ACTIVE_APF_MODE_IND = SIR_HAL_ENABLE_ACTIVE_APF_MODE_IND,
+	WMA_DISABLE_ACTIVE_APF_MODE_IND = SIR_HAL_DISABLE_ACTIVE_APF_MODE_IND,
+#endif
 };
 
 /* Bit 6 will be used to control BD rate for Management frames */

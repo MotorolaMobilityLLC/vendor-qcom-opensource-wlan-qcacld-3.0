@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2013-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, 2025 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -551,6 +551,10 @@ uint8_t *mac_trace_get_wma_msg_string(uint16_t wma_msg)
 		CASE_RETURN_STRING(WMA_SET_THERMAL_MGMT);
 #endif /* FW_THERMAL_THROTTLE_SUPPORT */
 		CASE_RETURN_STRING(WMA_UPDATE_EDCA_PIFS_PARAM_IND);
+#ifdef FEATURE_WLAN_APF
+		CASE_RETURN_STRING(WMA_ENABLE_ACTIVE_APF_MODE_IND);
+		CASE_RETURN_STRING(WMA_DISABLE_ACTIVE_APF_MODE_IND);
+#endif
 	default:
 		return (uint8_t *) "UNKNOWN";
 		break;
