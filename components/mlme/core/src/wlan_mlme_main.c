@@ -1630,6 +1630,8 @@ mlme_init_qos_edca_params(struct wlan_objmgr_psoc *psoc,
 
 	edca_params->edca_param_type =
 			cfg_get(psoc, CFG_EDCA_PIFS_PARAM_TYPE);
+	edca_params->edca_ac_be.be_txoplimit =
+			cfg_get(psoc, CFG_EDCA_BE_TXOP_LIMIT);
 }
 
 static void mlme_init_edca_params(struct wlan_objmgr_psoc *psoc,
