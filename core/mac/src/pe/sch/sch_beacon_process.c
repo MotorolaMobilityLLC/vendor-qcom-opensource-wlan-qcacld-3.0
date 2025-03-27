@@ -1089,6 +1089,9 @@ sch_beacon_edca_process(struct mac_context *mac, tSirMacEdcaParamSetIE *edca,
 			mac->mlme_cfg->edca_params.edca_ac_bk.bk_cwmax;
 		session->gLimEdcaParams[QCA_WLAN_AC_BE].cw.max =
 			mac->mlme_cfg->edca_params.edca_ac_be.be_cwmax;
+
+		session->gLimEdcaParams[QCA_WLAN_AC_BE].txoplimit =
+			mac->mlme_cfg->edca_params.edca_ac_be.be_txoplimit;
 	}
 #ifdef FEATURE_WLAN_DIAG_SUPPORT
 	WLAN_HOST_DIAG_LOG_ALLOC(log_ptr, host_log_qos_edca_pkt_type,

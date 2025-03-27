@@ -785,6 +785,8 @@ mlme_init_qos_edca_params(struct wlan_objmgr_psoc *psoc,
 			cfg_get(psoc, CFG_EDCA_BE_CWMAX);
 	edca_params->edca_ac_be.be_aifs =
 			cfg_get(psoc, CFG_EDCA_BE_AIFS);
+	edca_params->edca_ac_be.be_txoplimit =
+			cfg_get(psoc, CFG_EDCA_BE_TXOP_LIMIT);
 }
 
 static void mlme_init_edca_params(struct wlan_objmgr_psoc *psoc,
