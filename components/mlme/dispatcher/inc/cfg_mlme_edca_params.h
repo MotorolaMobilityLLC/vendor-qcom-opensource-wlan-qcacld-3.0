@@ -826,6 +826,31 @@
 
 /*
  * <ini>
+ * gEdcaBeTxopLimit - Set TXOP limit value for QCA_WLAN_AC_BE
+ * @Min: 0
+ * @Max: 1000
+ * @Default: 0
+ *
+ * This ini is used to set default TXOP value for QCA_WLAN_AC_BE
+ * Related: If gEnableEdcaParams is set to 1, params gEdcaBeCwmin
+ * etc are aplicable
+ *
+ * Supported Feature: STA
+ *
+ * Usage: Internal/External
+ *
+ * </ini>
+ */
+#define CFG_EDCA_BE_TXOP_LIMIT CFG_INI_UINT( \
+		"gEdcaBeTxopLimit", \
+		0x0, \
+		1000, \
+		0, \
+		CFG_VALUE_OR_DEFAULT, \
+		"default TXOP limit value for QCA_WLAN_AC_BE")
+
+/*
+ * <ini>
  * edca_param_type - Edca param type
  * @Min: 0
  * @Max: 1
@@ -890,6 +915,7 @@
 	CFG(CFG_EDCA_BK_AIFS) \
 	CFG(CFG_EDCA_BE_CWMIN) \
 	CFG(CFG_EDCA_BE_CWMAX) \
+	CFG(CFG_EDCA_BE_TXOP_LIMIT)\
 	CFG(CFG_ENABLE_WMM_TXOP) \
 	CFG(CFG_EDCA_BE_AIFS) \
 	CFG(CFG_EDCA_PIFS_PARAM_TYPE)
