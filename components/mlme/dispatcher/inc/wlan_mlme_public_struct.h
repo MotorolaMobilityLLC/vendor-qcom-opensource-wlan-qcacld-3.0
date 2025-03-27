@@ -306,11 +306,13 @@ struct mlme_edca_ac_bk {
  * @be_cwmin: cwmin value for best effort
  * @be_cwmax: cwmax value for best effort
  * @be_aifs: aifs value for best effort
+ * @be_txop_limit: txop limit value for best effort
  */
 struct mlme_edca_ac_be {
 	uint32_t be_cwmin;
 	uint32_t be_cwmax;
 	uint32_t be_aifs;
+	uint32_t be_txoplimit;
 };
 
 /**
