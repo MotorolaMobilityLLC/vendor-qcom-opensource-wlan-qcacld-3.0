@@ -484,6 +484,10 @@ ifeq ($(CONFIG_WLAN_SYSFS_RF_TEST_MODE), y)
 HDD_OBJS += $(HDD_SRC_DIR)/wlan_hdd_sysfs_rf_test_mode.o
 endif
 
+ifeq ($(CONFIG_QCACLD_FEATURE_APF), y)
+HDD_OBJS += $(HDD_SRC_DIR)/wlan_hdd_sysfs_apfmode.o
+endif
+
 endif # CONFIG_WLAN_SYSFS
 
 ifeq ($(CONFIG_QCACLD_FEATURE_FW_STATE), y)

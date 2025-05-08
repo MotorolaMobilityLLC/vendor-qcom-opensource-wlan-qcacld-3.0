@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -99,6 +99,7 @@
 #include <wlan_hdd_sysfs_rf_test_mode.h>
 #include "wlan_module_ids.h"
 #include <wlan_coex_ucfg_api.h>
+#include <wlan_hdd_sysfs_apfmode.h>
 
 #define MAX_PSOC_ID_SIZE 10
 
@@ -946,6 +947,16 @@ void hdd_destroy_rtpm_interface_sysfs_file(void)
 	hdd_sysfs_destroy_rtpm_interface(wifi_kobject);
 }
 
+void hdd_create_apfmode_interface_sysfs_file(void)
+{
+	hdd_sysfs_create_apfmode_interface(wifi_kobject);
+}
+
+void hdd_destroy_apfmode_interface_sysfs_file(void)
+{
+	hdd_sysfs_destroy_apfmode_interface(wifi_kobject);
+}
+
 int hdd_sysfs_print(void *ctx, const char *fmt, ...)
 {
 	va_list args;
@@ -1364,6 +1375,7 @@ void hdd_create_sysfs_files(struct hdd_context *hdd_ctx)
 		hdd_sysfs_create_logging_config_interface(driver_kobject);
 		hdd_sysfs_ipa_opt_dp_ctrl_create(driver_kobject);
 		hdd_sysfs_ipa_opt_dp_ctrl_rm_create(driver_kobject);
+		hdd_sysfs_apfmode_create(driver_kobject);
 	}
 }
 
@@ -1404,6 +1416,8 @@ void hdd_destroy_sysfs_files(void)
 								  wifi_kobject);
 		hdd_sysfs_destroy_max_chipset_log_size_interface(wifi_kobject);
 		hdd_sysfs_destroy_powerstats_interface();
+		hdd_sysfs_apfmode_destroy(driver_kobject);
+
 	}
 	hdd_sysfs_mem_stats_destroy(wlan_kobject);
 	hdd_sysfs_destroy_version_interface();
