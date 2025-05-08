@@ -20283,6 +20283,7 @@ static void hdd_create_wifi_feature_interface(void)
 {
 	hdd_sysfs_create_wifi_root_obj();
 	hdd_create_wifi_feature_interface_sysfs_file();
+	hdd_create_apfmode_interface_sysfs_file();
 }
 
 int hdd_driver_load(void)
@@ -20433,6 +20434,7 @@ EXPORT_SYMBOL(hdd_driver_load);
  */
 static void hdd_distroy_wifi_feature_interface(void)
 {
+	hdd_destroy_apfmode_interface_sysfs_file();
 	hdd_destroy_wifi_feature_interface_sysfs_file();
 	hdd_sysfs_destroy_wifi_root_obj();
 }
