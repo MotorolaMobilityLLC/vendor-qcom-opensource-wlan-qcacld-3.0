@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2023, 2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -92,6 +92,20 @@ QDF_STATUS pmo_tgt_enable_arp_offload_req(struct wlan_objmgr_vdev *vdev,
  */
 QDF_STATUS pmo_tgt_disable_arp_offload_req(struct wlan_objmgr_vdev *vdev,
 		uint8_t vdev_id);
+
+/**
+ * pmo_tgt_set_apf_mode_req() - Set APF mode
+ * @psoc: pointer to psoc object
+ * @apf_mode: apf mode
+ * @vdev_id: vdev id
+ *
+ * API to set APF mode
+ *
+ * Return: QDF_STATUS_SUCCESS in case of success else return error
+ */
+QDF_STATUS pmo_tgt_set_apf_mode_req(struct wlan_objmgr_psoc *psoc,
+				    uint32_t apf_mode,
+				    uint32_t vdev_id);
 
 #ifdef WLAN_NS_OFFLOAD
 /**

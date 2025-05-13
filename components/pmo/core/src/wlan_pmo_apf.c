@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 The Linux Foundation. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -24,6 +25,8 @@
 #include "wlan_objmgr_psoc_obj.h"
 #include "wlan_pmo_apf.h"
 #include "wlan_pmo_main.h"
+#include "wlan_pmo_tgt_api.h"
+
 
 #define PMO_APF_SIZE_AUTO	0
 #define PMO_APF_SIZE_DISABLE	0xffffffff
@@ -40,3 +43,27 @@ uint32_t pmo_get_apf_instruction_size(struct wlan_objmgr_psoc *psoc)
 	return apf ? PMO_APF_SIZE_AUTO : PMO_APF_SIZE_DISABLE;
 }
 
+uint32_t pmo_get_apf_mode(struct wlan_objmgr_psoc *psoc)
+{
+	uint32_t apf_mode = 0;
+	struct pmo_psoc_priv_obj *psoc_ctx;
+
+	pmo_psoc_with_ctx(psoc, psoc_ctx) {
+		apf_mode = psoc_ctx->psoc_cfg.apf_mode;
+	}
+
+	return apf_mode;
+}
+
+QDF_STATUS pmo_set_apf_mode(struct wlan_objmgr_psoc *psoc,
+			    uint32_t apf_mode,
+			    uint32_t vdev_id)
+{
+	struct pmo_psoc_priv_obj *psoc_ctx;
+
+	pmo_psoc_with_ctx(psoc, psoc_ctx) {
+		psoc_ctx->psoc_cfg.apf_mode = apf_mode;
+	}
+
+	return pmo_tgt_set_apf_mode_req(psoc, apf_mode, vdev_id);
+}

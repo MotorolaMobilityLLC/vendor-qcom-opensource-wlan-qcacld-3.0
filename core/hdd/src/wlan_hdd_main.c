@@ -8520,6 +8520,7 @@ static char *net_dev_ref_debug_string_from_id(wlan_net_dev_ref_dbgid dbgid)
 		"NET_DEV_HOLD_ALLOW_NEW_INTF",
 		"NET_DEV_HOLD_GET_STA_CONNECTIONS",
 		"NET_DEV_HOLD_LOCAL_PKT_CAPTURE",
+		"NET_DEV_HOLD_SYSFS_APFMODE_STORE",
 		"NET_DEV_HOLD_ID_MAX"};
 	int32_t num_dbg_strings = QDF_ARRAY_SIZE(strings);
 

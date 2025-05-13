@@ -56,6 +56,24 @@ uint32_t ucfg_pmo_get_apf_instruction_size(struct wlan_objmgr_psoc *psoc)
 	return pmo_get_apf_instruction_size(psoc);
 }
 
+uint32_t ucfg_pmo_get_apf_mode(struct wlan_objmgr_psoc *psoc)
+{
+	if (!psoc)
+		return 0;
+
+	return pmo_get_apf_mode(psoc);
+}
+
+QDF_STATUS ucfg_pmo_set_apf_mode(struct wlan_objmgr_psoc *psoc,
+				 uint32_t apf_mode,
+				 uint32_t vdev_id)
+{
+	if (!psoc)
+		return QDF_STATUS_E_INVAL;
+
+	return pmo_set_apf_mode(psoc, apf_mode, vdev_id);
+}
+
 uint8_t ucfg_pmo_get_num_wow_filters(struct wlan_objmgr_psoc *psoc)
 {
 	QDF_BUG(psoc);
@@ -733,6 +751,11 @@ bool ucfg_pmo_is_apf_enabled(struct wlan_objmgr_psoc *psoc)
 uint32_t ucfg_pmo_get_apfv6_offload_bitmap(struct wlan_objmgr_psoc *psoc)
 {
 	return pmo_get_apfv6_offload_bitmap(psoc);
+}
+
+bool ucfg_pmo_is_apf_mode_enabled(struct wlan_objmgr_psoc *psoc)
+{
+	return pmo_is_apf_mode_enabled(psoc);
 }
 #endif
 

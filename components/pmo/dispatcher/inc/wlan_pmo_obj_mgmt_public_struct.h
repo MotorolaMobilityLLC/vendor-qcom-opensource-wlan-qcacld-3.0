@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -163,6 +163,7 @@ typedef int (*pmo_pld_auto_resume_cb)(void);
  * idle roam  trigger to firmware.
  * @send_icmp_offload_req: fp to send icmp offload request
  * @psoc_set_wow_enable_ack_failed: fp to set wow enable ack failure status
+ * @send_apf_mode_req: fp to send apf mode
  */
 struct wlan_pmo_tx_ops {
 	QDF_STATUS (*send_arp_offload_req)(struct wlan_objmgr_vdev *vdev,
@@ -279,6 +280,9 @@ struct wlan_pmo_tx_ops {
 			struct pmo_icmp_offload *pmo_icmp_req);
 #endif
 	void (*psoc_set_wow_enable_ack_failed)(struct wlan_objmgr_psoc *psoc);
+	QDF_STATUS (*send_apf_mode_req)(struct wlan_objmgr_psoc *psoc,
+					uint32_t apf_mode,
+					uint32_t vdev_id);
 };
 
 #endif /* end  of _WLAN_PMO_OBJ_MGMT_PUBLIC_STRUCT_H_ */
