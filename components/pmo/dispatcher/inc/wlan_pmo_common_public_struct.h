@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
  * Copyright (c) 2021-2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -389,6 +390,7 @@ struct pmo_icmp_offload {
  *	mode for uc packets
  * @active_mc_bc_apf_mode: Setting that determines how APF is applied in
  *	active mode for MC/BC packets
+ * @apf_mode: Indicates the apf mode
  * @ito_repeat_count: Indicates ito repeated count
  * @is_mod_dtim_on_sys_suspend_enabled: true when mod dtim is enabled for
  * system suspend wow else false
@@ -412,6 +414,7 @@ struct pmo_icmp_offload {
  * @is_apf_configure_per_screen_state: Configure APF mode enable/disable
  * per screen off/on state
  * @apfv6_disable_offload_bitmap: Offload bitmap in APFv6
+ * @is_ap_mode_enable: apf mode configuration enable/disable
  */
 struct pmo_psoc_cfg {
 	bool ptrn_match_enable_all_vdev;
@@ -476,6 +479,7 @@ struct pmo_psoc_cfg {
 	uint8_t wow_spec_wake_interval;
 	enum active_apf_mode active_uc_apf_mode;
 	enum active_apf_mode active_mc_bc_apf_mode;
+	uint32_t apf_mode;
 	uint8_t ito_repeat_count;
 	bool is_mod_dtim_on_sys_suspend_enabled;
 	bool is_bus_suspend_enabled_in_sap_mode;
@@ -499,6 +503,7 @@ struct pmo_psoc_cfg {
 	uint32_t ssr_frequency_on_pagefault;
 	bool is_apf_configure_per_screen_state;
 	uint32_t apfv6_disable_offload_bitmap;
+	bool is_ap_mode_enable;
 };
 
 /**

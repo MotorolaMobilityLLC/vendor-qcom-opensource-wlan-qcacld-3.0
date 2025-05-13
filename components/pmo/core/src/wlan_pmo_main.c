@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
  * Copyright (c) 2021,2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -291,6 +292,8 @@ static void wlan_pmo_init_cfg(struct wlan_objmgr_psoc *psoc,
 			cfg_get(psoc, CFG_CONFIGURE_APF_PER_SCREEN_STATE);
 	psoc_cfg->apfv6_disable_offload_bitmap =
 			cfg_get(psoc, CFG_OFFLOAD_APFV6_MODE);
+	psoc_cfg->is_ap_mode_enable =
+			cfg_get(psoc, CFG_ENABLE_APF_MODE);
 	psoc_cfg->ito_repeat_count = cfg_get(psoc, CFG_ITO_REPEAT_COUNT);
 	wlan_pmo_ra_filtering_init_cfg(psoc, psoc_cfg);
 	wlan_pmo_gpio_wakeup_init_cfg(psoc, psoc_cfg);
@@ -597,4 +600,23 @@ QDF_STATUS pmo_core_get_listen_interval(struct wlan_objmgr_vdev *vdev,
 	qdf_spin_unlock_bh(&vdev_ctx->pmo_vdev_lock);
 
 	return QDF_STATUS_SUCCESS;
+}
+
+bool pmo_is_apf_mode_enabled(struct wlan_objmgr_psoc *psoc)
+{
+	struct pmo_psoc_priv_obj *pmo_psoc_ctx;
+
+	if (!psoc) {
+		pmo_err("null psoc");
+		return false;
+	}
+
+	pmo_psoc_ctx = pmo_psoc_get_priv(psoc);
+
+	if (!pmo_psoc_ctx) {
+		pmo_err("null psoc ctx");
+		return false;
+	}
+
+	return pmo_psoc_ctx->psoc_cfg.is_ap_mode_enable;
 }

@@ -65,6 +65,26 @@ QDF_STATUS ucfg_pmo_psoc_close(struct wlan_objmgr_psoc *psoc);
 uint32_t ucfg_pmo_get_apf_instruction_size(struct wlan_objmgr_psoc *psoc);
 
 /**
+ * ucfg_pmo_set_apf_mode() - set the APF mode
+ * @psoc: pointer to psoc object
+ * @apf_mode: apf mode
+ * @vdev_id: vdev id
+ *
+ * Return: QDF_STATUS
+ */
+QDF_STATUS ucfg_pmo_set_apf_mode(struct wlan_objmgr_psoc *psoc,
+				 uint32_t apf_mode,
+				 uint32_t vdev_id);
+
+/**
+ * ucfg_pmo_get_apf_mode() - get the APF mode
+ * @psoc: pointer to psoc object
+ *
+ * Return: QDF_STATUS
+ */
+uint32_t ucfg_pmo_get_apf_mode(struct wlan_objmgr_psoc *psoc);
+
+/**
  * ucfg_pmo_get_num_wow_filters() - get the supported number of WoW filters
  * @psoc: the psoc to query
  *
@@ -1327,6 +1347,14 @@ bool ucfg_pmo_is_configure_apf_per_screen_state(
  * Return: Offload bitmap in APFv6 mode
  */
 uint32_t ucfg_pmo_get_apfv6_offload_bitmap(struct wlan_objmgr_psoc *psoc);
+
+/**
+ * ucfg_pmo_is_apf_mode_enabled() - to get apf mode configuration
+ * @psoc: objmgr psoc handle
+ *
+ * Return: true if enabled in ini
+ */
+bool ucfg_pmo_is_apf_mode_enabled(struct wlan_objmgr_psoc *psoc);
 #else
 static inline bool ucfg_pmo_is_apf_enabled(struct wlan_objmgr_psoc *psoc)
 {
@@ -1343,6 +1371,11 @@ static inline uint32_t ucfg_pmo_get_apfv6_offload_bitmap(
 					struct wlan_objmgr_psoc *psoc)
 {
 	return 0;
+}
+
+static inline bool ucfg_pmo_is_apf_mode_enabled(struct wlan_objmgr_psoc *psoc)
+{
+	return false;
 }
 #endif
 
@@ -1506,6 +1539,20 @@ static inline uint32_t
 ucfg_pmo_get_apf_instruction_size(struct wlan_objmgr_psoc *psoc)
 {
 	return 0;
+}
+
+static inline uint32_t
+ucfg_pmo_get_apf_mode(struct wlan_objmgr_psoc *psoc)
+{
+	return 0;
+}
+
+static inline QDF_STATUS
+ucfg_pmo_set_apf_mode(struct wlan_objmgr_psoc *psoc,
+		      uint32_t apf_mode,
+		      uint32_t vdev_id)
+{
+	return QDF_STATUS_SUCCESS;
 }
 
 static inline uint8_t
