@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017-2019 The Linux Foundation. All rights reserved.
- * Copyright (c) 2023-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -502,5 +502,13 @@ pmo_core_is_configure_apf_per_screen_state(struct wlan_objmgr_psoc *psoc)
 
 	return pmo_psoc_ctx->psoc_cfg.is_apf_configure_per_screen_state;
 }
+
+/**
+ * pmo_is_apf_mode_enabled() - API to get config of APF mode
+ * @psoc: PSOC object manager pointer.
+ *
+ * Return: True if apf mode can be configured
+ */
+bool pmo_is_apf_mode_enabled(struct wlan_objmgr_psoc *psoc);
 #endif
 #endif /* end  of _WLAN_PMO_MAIN_H_ */
