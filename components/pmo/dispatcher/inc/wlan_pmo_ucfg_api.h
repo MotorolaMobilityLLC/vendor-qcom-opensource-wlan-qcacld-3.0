@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2017-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2021-2023,2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -2475,4 +2475,26 @@ QDF_STATUS ucfg_pmo_set_vdev_bridge_addr(struct wlan_objmgr_vdev *vdev,
  */
 QDF_STATUS ucfg_pmo_get_vdev_bridge_addr(struct wlan_objmgr_vdev *vdev,
 					 struct qdf_mac_addr *bridgeaddr);
+
+/**
+ * ucfg_pmo_get_ns_offload_enable_dynamic() - get NS offload dynamic enable
+ * @vdev: vdev objmgr handle
+ *
+ * Return: true is NS offload is dynamically disabled else false
+ */
+bool
+ucfg_pmo_get_ns_offload_enable_dynamic(struct wlan_objmgr_vdev *vdev);
+
+/**
+ * ucfg_pmo_set_ns_offload_enable_dynamic() - Set NS offload dynamic enable
+ * @vdev: vdev objmgr handle
+ * @trigger: pmo trigger
+ * @ns_offload_enable_dyn: NS offload enable dynamic
+ *
+ * Return: None
+ */
+void
+ucfg_pmo_set_ns_offload_enable_dynamic(struct wlan_objmgr_vdev *vdev,
+				       enum pmo_offload_trigger trigger,
+				       bool ns_offload_enable_dyn);
 #endif /* end  of _WLAN_PMO_UCFG_API_H_ */
