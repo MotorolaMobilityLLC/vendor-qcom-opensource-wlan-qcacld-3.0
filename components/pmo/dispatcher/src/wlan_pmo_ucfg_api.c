@@ -1186,3 +1186,18 @@ bool ucfg_pmo_is_fw_debug_enable(struct wlan_objmgr_psoc *psoc)
 {
 	return cfg_get(psoc, CFG_PMO_FW_DEBUG_ENABLE);
 }
+
+bool
+ucfg_pmo_get_ns_offload_enable_dynamic(struct wlan_objmgr_vdev *vdev)
+{
+	return pmo_core_get_ns_offload_enable_dynamic(vdev);
+}
+
+void
+ucfg_pmo_set_ns_offload_enable_dynamic(struct wlan_objmgr_vdev *vdev,
+				       enum pmo_offload_trigger trigger,
+				       bool ns_offload_enable_dyn)
+{
+	return pmo_core_set_ns_offload_enable_dynamic(vdev, trigger,
+						      ns_offload_enable_dyn);
+}
