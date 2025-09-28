@@ -14749,6 +14749,34 @@ static int get_moto_radio(void)
 }
 /*End Add moto PRC special ini overlay*/
 
+static bool is_moto_marvel_evt(void)
+{
+	// for marvel EVT HW only
+	int ret = 0;
+	char *revision = NULL;
+	char *device = NULL;
+
+	ret = wlan_get_bootarg_dt("androidboot.device=", &device, "mmi,bootconfig", "\n");
+	if (ret || !device) {
+		return false;
+	}
+	ret = strncmp(device, "marvel", 6);
+	if (0 != ret) {
+		return false;
+	}
+
+	ret = wlan_get_bootarg_dt("androidboot.revision=", &revision, "mmi,bootconfig", "\n");
+	if (ret || !revision) {
+		return false;
+	}
+	ret = strncmp(revision, "evt", 3);
+	if (0 == ret) {
+		return true;
+	}
+
+	return false;
+}
+
 struct hdd_context *hdd_context_create(struct device *dev)
 {
 	QDF_STATUS status;
@@ -14818,6 +14846,18 @@ struct hdd_context *hdd_context_create(struct device *dev)
 	if (QDF_IS_STATUS_SUCCESS(status))
 		ucfg_mlme_set_connection_roaming_ini_present(hdd_ctx->psoc,
 							     true);
+
+	// BEGIN IKSWW-54810, support loading moto specific configurations
+	if (is_moto_marvel_evt()) {
+		hdd_info("start loading cfg for marvel EVT HW");
+		status = cfg_psoc_parse(hdd_ctx->psoc, WLAN_MARVEL_EVT_INI_FILE);
+		if (QDF_IS_STATUS_ERROR(status)) {
+			hdd_err("Failed to parse cfg %s, skip!",
+				WLAN_MARVEL_EVT_INI_FILE);
+		}
+		hdd_info("done loading cfg for marvel EVT HW");
+	}
+	// END   IKSWW-54810
 
 	hdd_cfg_params_init(hdd_ctx);
 

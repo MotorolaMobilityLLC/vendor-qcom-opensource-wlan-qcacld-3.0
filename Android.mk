@@ -180,6 +180,9 @@ $(call symlink-file,,$(TARGET_CFG_PATH)/WCNSS_prc_cfg.ini,$(TARGET_FW_PATH)/WCNS
 LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_FW_PATH)/WCNSS_prc_cfg.ini
 # End,IKSWU-42693,hurui1
 
+$(call symlink-file,,$(TARGET_CFG_PATH)/WCNSS_evt_cfg.ini,$(TARGET_FW_PATH)/WCNSS_evt_cfg.ini)
+LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_FW_PATH)/WCNSS_evt_cfg.ini
+
 # Set dependencies so that CNSS family drivers can be compiled ahead.
 ifneq ($(WLAN_PLATFORM_KBUILD_OPTIONS),)
 LOCAL_REQUIRED_MODULES := wlan-platform-module-symvers

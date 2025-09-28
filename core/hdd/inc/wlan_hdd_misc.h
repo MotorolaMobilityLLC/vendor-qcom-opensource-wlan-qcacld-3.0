@@ -48,6 +48,9 @@
 /*Begin,IKSWU-42693,hurui1, Add moto PRC special ini overlay*/
 #define WLAN_PRC_INI_FILE          "wlan/qca_cld/" PREFIX "WCNSS_prc_cfg.ini"
 /*End, hurui1,IKSWU-42693*/
+// BEGIN IKSWW-54810, support loading moto specific configurations
+#define WLAN_MARVEL_EVT_INI_FILE   "wlan/qca_cld/" PREFIX "WCNSS_evt_cfg.ini"
+// END   IKSWW-54810
 #else
 #define WLAN_INI_FILE              "wlan/" PREFIX "qcom_cfg.ini"
 #define WLAN_MAC_FILE              "wlan/" PREFIX "wlan_mac.bin"
