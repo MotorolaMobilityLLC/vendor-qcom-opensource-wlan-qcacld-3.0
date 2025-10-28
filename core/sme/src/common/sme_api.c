@@ -16082,7 +16082,7 @@ void sme_set_eht_testbed_def(mac_handle_t mac_handle, uint8_t vdev_id)
 	mac_ctx->roam.configParam.channelBondingMode24GHz = 0;
 	wlan_mlme_set_sta_mlo_conn_max_num(mac_ctx->psoc, 1);
 	ucfg_mlme_set_bss_color_collision_det_sta(mac_ctx->psoc, false);
-	wlan_mlme_set_exclude_ext_mld_cap(mac_ctx->psoc, true);
+        wlan_mlme_set_exclude_ext_mld_cap(mac_ctx->psoc, false);
 	sme_send_ext_mld_cap_wfatest_cmd(mac_handle, vdev_id, false);
 }
 
