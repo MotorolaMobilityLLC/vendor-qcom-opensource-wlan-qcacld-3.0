@@ -14163,10 +14163,10 @@ QDF_STATUS populate_dot11f_assoc_req_mlo_ie(struct mac_context *mac_ctx,
 	 * in case of MTK AP. If above conditions aren't met, then do not
 	 * include Ext MLD caps in assoc request.
 	 */
-	if (wlan_mlme_get_exclude_ext_mld_cap(psoc)) {
-		pe_debug("exclude ext mld cap support is set");
-		goto no_ext_mld_cap;
-	}
+	//if (wlan_mlme_get_exclude_ext_mld_cap(psoc)) {
+	pe_debug("exclude ext mld cap support is set");
+	goto no_ext_mld_cap;
+	//}
 	if (wlan_mlme_get_ext_mld_cap_supp(psoc)) {
 		pe_debug("ext mld capability support is set");
 		set_ext_mld_cap = true;
