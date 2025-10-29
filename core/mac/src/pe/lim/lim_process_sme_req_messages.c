@@ -4463,6 +4463,7 @@ lim_fill_rsn_ie(struct mac_context *mac_ctx, struct pe_session *session,
 	uint8_t rsn_ie_len = 0;
 	struct wlan_crypto_pmksa pmksa, *pmksa_peer;
 	struct bss_description *bss_desc;
+	int32_t akm;
 
 	rsn_ie = qdf_mem_malloc(WLAN_MAX_IE_LEN + 2);
 	if (!rsn_ie)
@@ -4512,6 +4513,14 @@ lim_fill_rsn_ie(struct mac_context *mac_ctx, struct pe_session *session,
 	pmksa_peer = wlan_crypto_get_peer_pmksa(session->vdev, &pmksa);
 	if (pmksa_peer)
 		pe_debug("PMKSA found");
+
+	akm = wlan_crypto_get_param(session->vdev,
+				    WLAN_CRYPTO_PARAM_KEY_MGMT);
+	if (pmksa_peer && WLAN_CRYPTO_IS_WPA2(akm)) {
+		pe_debug("vdev:%d WPA2 does not support PMKID",
+			 session->vdev_id);
+		qdf_mem_zero(pmksa_peer->pmkid, sizeof(pmksa_peer->pmkid));
+	}
 
 	lim_update_connect_rsn_ie(session, rsn_ie, pmksa_peer);
 	qdf_mem_free(rsn_ie);
