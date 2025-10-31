@@ -59,7 +59,6 @@
 #include <crypto/hash.h>
 
 #define WIFI_MAC_BOOTARG "wifimacaddr="
-#define WIFI_MAC_BOOTCONFIG "androidboot.wifimacaddr="
 #define DEVICE_SERIALNO_BOOTARG "androidboot.serialno="
 #define MACSTRLEN 12
 
