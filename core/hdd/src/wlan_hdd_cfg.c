@@ -59,8 +59,10 @@
 #include <crypto/hash.h>
 
 #define WIFI_MAC_BOOTARG "wifimacaddr="
+#define WIFI_MAC_BOOTCONFIG "androidboot.wifimacaddr="
 #define DEVICE_SERIALNO_BOOTARG "androidboot.serialno="
 #define MACSTRLEN 12
+#define BOOTCONFIG_MAX_LEN	64
 
 struct sdesc {
    struct shash_desc shash;
@@ -476,6 +478,54 @@ config_exit:
 	return qdf_status;
 }
 #else
+/*
+ * Get parameter value from bootconfig through device-tree chosen node
+ */
+QDF_STATUS hdd_get_bootconfig_by_key(struct device_node *chosen_node,
+									char const *key, char *value)
+{
+	const char *bootconfig = NULL;
+	char *buffer = NULL;
+	char *ptr = NULL;
+	char *token = NULL;
+	QDF_STATUS qdf_status = QDF_STATUS_SUCCESS;
+
+	hdd_enter();
+	if (!chosen_node || !key || !value) {
+		qdf_status = QDF_STATUS_E_INVAL;
+		return qdf_status;
+	}
+	if (of_property_read_string(chosen_node, "mmi,bootconfig", &bootconfig))
+	{
+		hdd_err("bootconfig is null");
+		qdf_status = QDF_STATUS_E_EXISTS;
+		return qdf_status;
+	} else {
+		token = strstr(bootconfig, key);
+		if (token == NULL) {
+			hdd_err("%s is not found in bootconfig", key);
+			qdf_status = QDF_STATUS_E_EXISTS;
+			return qdf_status;
+		} else {
+			if ((buffer = qdf_mem_malloc(strlen(token) + 1)) == NULL) {
+				qdf_status = QDF_STATUS_E_NOMEM;
+			    return qdf_status;
+			}
+			qdf_mem_set(buffer, sizeof(buffer), 0);
+			qdf_mem_copy(buffer, token, strlen(token) + 1);
+			ptr = buffer;
+
+			/* parameters is seperated by the newline escape sequence "\n"*/
+			token = strsep(&ptr, "\n");
+			token += strlen(key);
+			qdf_mem_copy(value, token, strlen(token));
+			hdd_info("%s[%s]", key, value);
+			qdf_mem_free(buffer);
+		}
+	}
+
+	return qdf_status;
+}
 QDF_STATUS hdd_update_mac_config(struct hdd_context *hdd_ctx)
 {
 	int len = 0;
@@ -487,11 +537,13 @@ QDF_STATUS hdd_update_mac_config(struct hdd_context *hdd_ctx)
 	const char *cmd_line = NULL;
 	struct device_node *chosen_node = NULL;
 	char *buffer = NULL;
+	char value[BOOTCONFIG_MAX_LEN] = {0};
 
 	struct hdd_cfg_entry macTable[QDF_MAX_CONCURRENCY_PERSONA];
 	struct qdf_mac_addr customMacAddr;
 
 	QDF_STATUS qdf_status = QDF_STATUS_SUCCESS;
+	QDF_STATUS status = QDF_STATUS_SUCCESS;
 
 	memset(macTable, 0, sizeof(macTable));
 
@@ -499,28 +551,32 @@ QDF_STATUS hdd_update_mac_config(struct hdd_context *hdd_ctx)
 	/*location where WLAN MMAC File have the MAC Address                  */
 	/* Read MACs from bootparams. */
 	chosen_node = of_find_node_by_name(NULL, "chosen");
-	hdd_err("%s: get chosen node \n", __func__);
 	if (!chosen_node)
 	{
-		hdd_err("%s: get chosen node read failed \n", __func__);
+		hdd_err("get chosen node failed");
 		goto config_exit;
 	} else {
-		cmd_line = of_get_property(chosen_node, "bootargs", &len);
-
-		if (!cmd_line || len <= 0) {
-			hdd_err("%s: get wlan MACs bootargs failed \n", __func__);
-			qdf_status = QDF_STATUS_E_FAILURE;
-			goto config_exit;
-		} else {
-			buffer = strstr(cmd_line, WIFI_MAC_BOOTARG);
-			if (buffer == NULL) {
-				hdd_err("%s: " WIFI_MAC_BOOTARG " bootarg cmd line is null", __func__);
+		status = hdd_get_bootconfig_by_key(chosen_node, WIFI_MAC_BOOTCONFIG, value);
+		if (QDF_IS_STATUS_ERROR(status)) {
+			hdd_info("get macaddr from bootargs");
+			cmd_line = of_get_property(chosen_node, "bootargs", &len);
+			if (!cmd_line || len <= 0) {
+				hdd_err("get wlan MACs bootargs failed");
 				qdf_status = QDF_STATUS_E_FAILURE;
 				goto config_exit;
 			} else {
-				buffer += strlen(WIFI_MAC_BOOTARG);
-				bufferPtr = buffer;
+				buffer = strstr(cmd_line, WIFI_MAC_BOOTARG);
+				if (buffer == NULL) {
+					hdd_err(WIFI_MAC_BOOTARG " bootarg cmd line is null");
+					qdf_status = QDF_STATUS_E_FAILURE;
+					goto config_exit;
+				} else {
+					buffer += strlen(WIFI_MAC_BOOTARG);
+					bufferPtr = buffer;
+				}
 			}
+		} else {
+			bufferPtr = &value[0];
 		}
 	}
 	/* Mac address data format used by qcom:
@@ -551,7 +607,7 @@ QDF_STATUS hdd_update_mac_config(struct hdd_context *hdd_ctx)
 	}
 
 	for (i = 0; i < intf; i++)
-		hdd_err("Mac address table from utag: [%s][%s]", macTable[i].name, macTable[i].value);
+		hdd_info("Mac address table from utag: [%s][%s]", macTable[i].name, macTable[i].value);
 
 	update_mac_from_string(hdd_ctx, &macTable[0], intf);
 	hdd_populate_random_mac_addr(hdd_ctx, QDF_MAX_CONCURRENCY_PERSONA - intf);
@@ -561,7 +617,6 @@ QDF_STATUS hdd_update_mac_config(struct hdd_context *hdd_ctx)
 	sme_set_custom_mac_addr(customMacAddr.bytes);
 
 config_exit:
-
 	return qdf_status;
 }
 
