@@ -7982,11 +7982,11 @@ hdd_vdev_configure_rtt_params(struct wlan_objmgr_vdev *vdev)
 		responder_bits |= BIT(RESPONDER_RTT_11MC_SUPPORTED);
 
 	if (rsta_11az_support & CFG_RESPONDER_11AZ_NTB_SUPPORT)
-		responder_bits |= RESPONDER_RTT_11AZ_NTB_RANGING_SUPPORTED;
+		responder_bits |= BIT(RESPONDER_RTT_11AZ_NTB_RANGING_SUPPORTED);
 
 	if (rsta_11az_support & CFG_RESPONDER_11AZ_TB_SUPPORT)
 		responder_bits |=
-			RESPONDER_RTT_11AZ_TB_RANGING_SUPPORTED;
+			BIT(RESPONDER_RTT_11AZ_TB_RANGING_SUPPORTED);
 
 	status = mlme_check_index_setparam(
 			vdevsetparam,
@@ -8007,8 +8007,9 @@ hdd_vdev_configure_rtt_params(struct wlan_objmgr_vdev *vdev)
 	if (QDF_IS_STATUS_ERROR(status))
 		return status;
 
-	hdd_debug("vdev: %d initiator: %d responder: %d",
-		  wlan_vdev_get_id(vdev), initiator_bits, responder_bits);
+	hdd_debug("vdev: %d FTM ini config: 0x%x initiator: 0x%x responder: 0x%x",
+		  wlan_vdev_get_id(vdev), fine_time_meas_cap,
+		  initiator_bits, responder_bits);
 
 	ucfg_mlme_is_rtt_bw_downgrade_enabled(psoc, &enable_rtt_bw_downgrade);
 	hdd_debug("vdev: %d enable dynamic downgrade RTT packet bandwidth: %d",
