@@ -16004,65 +16004,52 @@ static inline QDF_STATUS hdd_cfg_parse_connection_roaming_cfg(void)
 #endif
 
 /*Begin Add moto PRC special ini overlay*/
-#define MOTO_STRING_LEN 32
-static char *bootargs_str;
-static char radio_ptr[MOTO_STRING_LEN] = {0};
+#define MOTO_DEVICE_INFO_LENGTH				32
+#define MOTO_BUILD_COUNTRY_PRC				"cn"
+#define MOTO_BUILD_COUNTRY_ROW			"g"
+#define MOTO_BUILD_PROD_NAME_PARAM		"mmi,build_product_name"
 
-static int wlan_get_bootarg_dt(char *key, char **value, char *prop, char *spl_flag)
+/*
+ * Product name include device name and build variable, for example:
+ * vantage_cn -- device:vantage, build_variable:cn
+ * vantage_g -- device:vantage, build_variable:g
+ */
+struct moto_product_info{
+	char device[MOTO_DEVICE_INFO_LENGTH];
+	char variable[MOTO_DEVICE_INFO_LENGTH];
+};
+
+static QDF_STATUS wlan_get_moto_product_info(struct moto_product_info* product_info)
 {
-	const char *bootargs_tmp = NULL;
-	char *idx = NULL;
-	char *kvpair = NULL;
-	int err = 1;
-	struct device_node *n = of_find_node_by_path("/chosen");
-	size_t bootargs_tmp_len = 0;
+	int ret = 0;
+	const char *p_boot_param = NULL;
+	QDF_STATUS status = QDF_STATUS_SUCCESS;
+	char *ptr = NULL;
+	struct device_node *chosen_node = of_find_node_by_path("/chosen");
 
-	if (n == NULL)
+	if (chosen_node == NULL)
+		return QDF_STATUS_E_FAILURE;
+	ret = of_property_read_string(chosen_node, MOTO_BUILD_PROD_NAME_PARAM, &p_boot_param);
+	if (ret) {
+		hdd_err("read %s fail!", MOTO_BUILD_PROD_NAME_PARAM);
+		status = QDF_STATUS_E_NOENT;
 		goto err;
-
-	if (of_property_read_string(n, prop, &bootargs_tmp) != 0)
-		goto putnode;
-
-	bootargs_tmp_len = strlen(bootargs_tmp);
-	if (!bootargs_str) {
-		/* The following operations need a non-const
-		 * version of bootargs
-		*/
-		bootargs_str = kzalloc(bootargs_tmp_len + 1, GFP_KERNEL);
-		if (!bootargs_str)
-			goto putnode;
-	}
-	strscpy(bootargs_str, bootargs_tmp, bootargs_tmp_len + 1);
-
-	idx = strnstr(bootargs_str, key, strlen(bootargs_str));
-	if (idx) {
-		kvpair = strsep(&idx, " ");
-		if (kvpair)
-			if (strsep(&kvpair, "=")) {
-				*value = strsep(&kvpair, spl_flag);
-				if (*value)
-					err = 0;
-			}
 	}
 
-putnode:
-	of_node_put(n);
+	ptr = strchr(p_boot_param,  '_');
+	if (!ptr) {
+		status = QDF_STATUS_E_NULL_VALUE;
+		goto err;
+	}
+	qdf_mem_copy(product_info->device, p_boot_param, (ptr - p_boot_param));
+	qdf_mem_set(product_info->device + (ptr - p_boot_param), 0, 1);
+	qdf_mem_copy(product_info->variable, ptr + 1, strlen(ptr + 1) + 1);
+	hdd_debug("device:%s, variable:%s", product_info->device, product_info->variable);
+
 err:
-	return err;
-}
+	of_node_put(chosen_node);
 
-static int get_moto_radio(void)
-{
-	char *radiodevice = NULL;
-	int rc = 0;
-	rc = wlan_get_bootarg_dt("androidboot.radio=", &radiodevice, "mmi,bootconfig", "\n");
-	if (rc || !radiodevice){
-		hdd_err("radio string is error");
-		return -ENOMEM;
-	}else{
-		strscpy(radio_ptr, radiodevice, MOTO_STRING_LEN);
-		return 0;
-	}
+	return status;
 }
 /*End Add moto PRC special ini overlay*/
 
@@ -16071,6 +16058,7 @@ struct hdd_context *hdd_context_create(struct device *dev)
 	QDF_STATUS status;
 	int ret = 0;
 	struct hdd_context *hdd_ctx;
+	struct moto_product_info product_info;
 
 	hdd_enter();
 
@@ -16109,12 +16097,11 @@ struct hdd_context *hdd_context_create(struct device *dev)
 		goto err_free_config;
 	}
 
-	/*Begin,IKSWU-42693,hurui1,Add moto PRC special ini overlay*/
-	if(get_moto_radio() != 0) {
-		hdd_err("radio not present");
+	/*start, Add moto PRC special ini overlay*/
+	if(QDF_IS_STATUS_ERROR(wlan_get_moto_product_info(&product_info))) {
+		hdd_err("product info does not present");
 	} else {
-		hdd_debug("radio %s",radio_ptr);
-		if (strcmp(radio_ptr, "PRC") == 0) {
+		if (!strcasecmp(product_info.variable, MOTO_BUILD_COUNTRY_PRC)) {
 			status = cfg_parse(WLAN_PRC_INI_FILE);
 			if (QDF_IS_STATUS_ERROR(status)) {
 				hdd_err("Failed to parse cfg %s, skip!",
@@ -16122,7 +16109,7 @@ struct hdd_context *hdd_context_create(struct device *dev)
 			}
 		}
 	}
-	/*End,hurui1,IKSWU-42693*/
+	/*End, moto PRC special ini overlay*/
 
 	status = hdd_cfg_parse_connection_roaming_cfg();
 
