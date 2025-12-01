@@ -189,7 +189,8 @@ static const int beacon_filter_table[] = {
 	WLAN_ELEMID_QUIET_CHANNEL,
 	WLAN_ELEMID_TWT,
 	WLAN_ELEMID_VHT_TX_PWR_ENVLP,
-	WLAN_ELEMID_VENDOR,
+	//IKSWW-75012, don't monitor WMM vendor IE changes in the beacon
+	//WLAN_ELEMID_VENDOR,
 };
 
 /*
@@ -198,7 +199,8 @@ static const int beacon_filter_table[] = {
 static const int beacon_filter_extn_table[] = {
 	WLAN_EXTN_ELEMID_HEOP,
 	WLAN_EXTN_ELEMID_UORA,
-	WLAN_EXTN_ELEMID_MUEDCA,
+	//IKSWW-75012, don't monitor MUEDCA changes in the beacon
+	//WLAN_EXTN_ELEMID_MUEDCA,
 #ifdef WLAN_FEATURE_11BE
 	WLAN_EXTN_ELEMID_EHTOP,
 #endif
