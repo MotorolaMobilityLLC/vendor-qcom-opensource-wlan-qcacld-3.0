@@ -214,11 +214,18 @@ ifneq ($(GENERIC_ODM_IMAGE),true)
 $(call symlink-file,,$(TARGET_CFG_PATH)/WCNSS_qcom_cfg.ini,$(TARGET_FW_PATH)/WCNSS_qcom_cfg.ini)
 LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_FW_PATH)/WCNSS_qcom_cfg.ini
 $(call wlog,"generate soft link because GENERIC_ODM_IMAGE not true")
+
+# Add moto overlay config
+$(call symlink-file,,$(TARGET_CFG_PATH)/WCNSS_cfg_moto_overlay.ini,$(TARGET_FW_PATH)/WCNSS_cfg_moto_overlay.ini)
+LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_FW_PATH)/WCNSS_cfg_moto_overlay.ini
+$(call wlog,"generate soft link because GENERIC_ODM_IMAGE not true")
 endif
 endif
 # Begin,IKSWU-42693,hurui1,Add moto PRC special ini overlay
-$(call symlink-file,,$(TARGET_CFG_PATH)/WCNSS_prc_cfg.ini,$(TARGET_FW_PATH)/WCNSS_prc_cfg.ini)
-LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_FW_PATH)/WCNSS_prc_cfg.ini
+ifeq ($(PRODUCT_IS_PRC), true)
+$(call symlink-file,,$(TARGET_CFG_PATH)/WCNSS_cfg_prc_moto_overlay.ini,$(TARGET_FW_PATH)/WCNSS_cfg_prc_moto_overlay.ini)
+LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_FW_PATH)/WCNSS_cfg_prc_moto_overlay.ini
+endif
 # End,IKSWU-42693,hurui1
 
 # Set dependencies so that CNSS family drivers can be compiled ahead.

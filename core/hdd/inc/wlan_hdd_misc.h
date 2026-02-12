@@ -42,11 +42,12 @@
 #endif
 
 #ifdef MSM_PLATFORM
-#define WLAN_INI_FILE              "wlan/qca_cld/" PREFIX "WCNSS_qcom_cfg.ini"
-#define WLAN_MAC_FILE              "wlan/qca_cld/" PREFIX "wlan_mac.bin"
+#define WLAN_INI_FILE			"wlan/qca_cld/" PREFIX "WCNSS_qcom_cfg.ini"
+#define WLAN_MAC_FILE			"wlan/qca_cld/" PREFIX "wlan_mac.bin"
+#define WLAN_INI_OVERLAY		"wlan/qca_cld/" PREFIX "WCNSS_cfg_moto_overlay.ini"
 
 /*Begin,IKSWU-42693,hurui1, Add moto PRC special ini overlay*/
-#define WLAN_PRC_INI_FILE          "wlan/qca_cld/" PREFIX "WCNSS_prc_cfg.ini"
+#define WLAN_PRC_INI_OVERLAY      "wlan/qca_cld/" PREFIX "WCNSS_cfg_prc_moto_overlay.ini"
 /*End, hurui1,IKSWU-42693*/
 #else
 #define WLAN_INI_FILE              "wlan/" PREFIX "qcom_cfg.ini"

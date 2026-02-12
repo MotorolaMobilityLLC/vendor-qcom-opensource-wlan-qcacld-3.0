@@ -16059,7 +16059,21 @@ err:
 
 	return status;
 }
-/*End Add moto PRC special ini overlay*/
+
+static QDF_STATUS hdd_cfg_parse_moto_overlay_cfg(const char *path)
+{
+	QDF_STATUS status = QDF_STATUS_E_INVAL;
+	bool is_valid;
+
+	is_valid = cfg_valid_ini_check(path);
+
+	if (is_valid) {
+		status = cfg_parse(path);
+	}
+
+	return status;
+}
+/*End Add moto customized ini */
 
 struct hdd_context *hdd_context_create(struct device *dev)
 {
@@ -16105,19 +16119,26 @@ struct hdd_context *hdd_context_create(struct device *dev)
 		goto err_free_config;
 	}
 
-	/*start, Add moto PRC special ini overlay*/
+	/*start, Add moto overlay ini overlay*/
+	status = hdd_cfg_parse_moto_overlay_cfg(WLAN_INI_OVERLAY);
+	if (QDF_IS_STATUS_ERROR(status)) {
+		hdd_err("Failed to parse cfg %s; status:%d\n",
+			WLAN_INI_OVERLAY, status);
+	}
+
 	if(QDF_IS_STATUS_ERROR(wlan_get_moto_product_info(&product_info))) {
 		hdd_err("product info does not present");
 	} else {
 		if (!strcasecmp(product_info.variable, MOTO_BUILD_COUNTRY_PRC)) {
-			status = cfg_parse(WLAN_PRC_INI_FILE);
+			hdd_info("%s:%s", __func__, WLAN_PRC_INI_OVERLAY);
+			status = hdd_cfg_parse_moto_overlay_cfg(WLAN_PRC_INI_OVERLAY);
 			if (QDF_IS_STATUS_ERROR(status)) {
 				hdd_err("Failed to parse cfg %s, skip!",
-				WLAN_PRC_INI_FILE);
+				WLAN_PRC_INI_OVERLAY);
 			}
 		}
 	}
-	/*End, moto PRC special ini overlay*/
+	/*End, moto ini overlay*/
 
 	status = hdd_cfg_parse_connection_roaming_cfg();
 
