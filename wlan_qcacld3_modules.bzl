@@ -2522,7 +2522,7 @@ _conditional_srcs = {
     },
 }
 
-def _define_module_for_target_variant_chipset(target, variant, chipset):
+def _define_module_for_target_variant_chipset(target, variant, chipset, wonder_enabled = False):
     tvc = "{}_{}_{}".format(target, variant, chipset)
     tv = "{}_{}".format(target, variant)
     name = "{}_qca_cld_{}".format(tv, chipset)
@@ -2766,21 +2766,18 @@ def _define_module_for_target_variant_chipset(target, variant, chipset):
             "//build_dir/{}/linux-{}/dataipa-{}:{}_{}_ipam".format(tgt, board, ipa_ver, target, variant),
         ]
 
-    deps = deps + select({
-        ":wonder_enabled": [
-	    # Add dependency of wonder here
-        ],
-        "//conditions:default": [],
+    # Determine wonder support
+    deps += select({
+        ":wonder_enabled": ["//motorola/kernel/modules/drivers/wonder:wonder_headers"],
+        "//conditions:default": ["//motorola/kernel/modules/drivers/wonder:wonder_headers"] if wonder_enabled else [],
     })
 
     wonder_srcs = "wonder_srcs_{}".format(tvc)
     native.filegroup(
         name = wonder_srcs,
         srcs = select({
-            ":wonder_enabled": [
-                "core/hdd/src/wlan_hdd_wondertap.c",
-            ],
-            "//conditions:default": ["core/hdd/inc/wlan_hdd_wondertap.h"],
+            ":wonder_enabled": ["core/hdd/src/wlan_hdd_wondertap.c"],
+            "//conditions:default": ["core/hdd/src/wlan_hdd_wondertap.c"] if wonder_enabled else ["core/hdd/inc/wlan_hdd_wondertap.h"],
         }),
         visibility = ["//visibility:private"],
     )
@@ -2849,10 +2846,10 @@ def define_dist(target, variant, chipsets):
             log = "info",
         )
 
-def define_modules():
+def define_modules(wonder_enabled = False):
     for (t, v) in get_all_variants():
         chipsets = _target_chipset_map.get(t)
         if chipsets:
             for c in chipsets:
-                _define_module_for_target_variant_chipset(t, v, c)
+                _define_module_for_target_variant_chipset(t, v, c, wonder_enabled = wonder_enabled)
             define_dist(t, v, chipsets)
