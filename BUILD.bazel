@@ -1,4 +1,8 @@
 load("//build/kernel/kleaf:kernel.bzl", "ddk_headers")
+load("//soc-repo:configs/ext_config/moto_consolidate_config.bzl", "moto_consolidate_config")
+
+_wonder_enabled = moto_consolidate_config.get("CONFIG_WONDER_SUPPORT") == "y"
+
 ddk_headers(
     name = "wlan_uapi_headers",
     hdrs = glob([
@@ -22,4 +26,4 @@ package(
     ],
 )
 
-define_modules()
+define_modules(wonder_enabled = _wonder_enabled)
