@@ -5251,6 +5251,20 @@ void policy_mgr_check_scc_channel(struct wlan_objmgr_psoc *psoc,
 		return;
 	}
 
+	// BEGIN IKSWA17-4036
+	if(*intf_ch_freq && pm_ctx->hdd_cbacks.wlan_p2p_go_freq_allowed) {
+		bool allowed = true;
+
+		status = pm_ctx->hdd_cbacks.wlan_p2p_go_freq_allowed(
+			psoc, vdev_id, *intf_ch_freq, &allowed);
+		if (QDF_IS_STATUS_SUCCESS(status) && !allowed) {
+			policy_mgr_debug("P2P GO reject freq %d (granular validation), keep %d",
+					*intf_ch_freq, sap_ch_freq);
+			*intf_ch_freq = 0;
+		}
+	}
+	// END IKSWA17-4036
+
 	sta_count = policy_mgr_mode_specific_connection_count(psoc, PM_STA_MODE,
 							      NULL);
 

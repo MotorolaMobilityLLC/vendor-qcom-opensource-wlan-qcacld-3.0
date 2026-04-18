@@ -2441,8 +2441,16 @@ struct policy_mgr_hdd_cbacks {
 	QDF_STATUS (*wlan_set_tx_rx_nss_cb)(struct wlan_objmgr_psoc *psoc,
 					    uint8_t vdev_id, uint8_t tx_nss,
 					    uint8_t rx_nss);
+	// BEGIN IKSWA17-4036
+	QDF_STATUS (*wlan_p2p_go_freq_allowed)(struct wlan_objmgr_psoc *psoc,
+					       uint8_t vdev_id,
+					       uint32_t freq,
+					       bool *allowed);
+	QDF_STATUS (*wlan_p2p_go_common_list_ready)(struct wlan_objmgr_psoc *psoc,
+						    uint8_t vdev_id,
+						    bool *ready);
+	// END IKSWA17-4036
 };
-
 /**
  * struct policy_mgr_conc_cbacks - lim Callbacks to be invoked
  * from policy manager
@@ -4396,6 +4404,17 @@ enum phy_ch_width policy_mgr_get_ch_width(enum hw_mode_bandwidth bw);
  * Return: True if SCC to be mandated, false otherwise
  */
 bool policy_mgr_is_force_scc(struct wlan_objmgr_psoc *psoc);
+
+// BEGIN IKSWA17-4036
+/**
+ * policy_mgr_is_p2p_go_common_list_ready() - check common list availability
+ * @psoc: PSOC object information
+ * @vdev_id: GO vdev id
+ *
+ * Return: True if common list is ready, false otherwise
+ */
+bool policy_mgr_is_p2p_go_common_list_ready(struct wlan_objmgr_psoc *psoc, uint8_t vdev_id);
+// END IKSWA17-4036
 
 /**
  * policy_mgr_go_scc_enforced() - Get GO force SCC enabled or not

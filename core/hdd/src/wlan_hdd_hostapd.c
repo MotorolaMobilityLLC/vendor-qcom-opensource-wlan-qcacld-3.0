@@ -4082,15 +4082,41 @@ int hdd_softap_set_channel_change(struct wlan_hdd_link_info *link_info,
 	 * cannot do CSA as it won't be able to send CSA frames during NOA
 	 * period
 	 */
+	// BEGIN IKSWA17-4036
 	if (hdd_is_sta_connect_or_link_switch_in_prog(hdd_ctx,
 						      adapter->device_mode) ||
 	    (adapter->device_mode == QDF_P2P_GO_MODE &&
 	     ucfg_p2p_is_p2p_go_noa_in_progress(hdd_ctx->pdev,
 						link_info->vdev_id))) {
-		hdd_err("vdev %d Do not allow CSA, STA connect/link switch/eapol/noa is in progress",
-			link_info->vdev_id);
-		return -EBUSY;
+		qdf_sleep(200);
+		if (hdd_is_sta_connect_or_link_switch_in_prog(hdd_ctx,
+							      adapter->device_mode) ||
+		    (adapter->device_mode == QDF_P2P_GO_MODE &&
+		     ucfg_p2p_is_p2p_go_noa_in_progress(hdd_ctx->pdev,
+							link_info->vdev_id))) {
+			qdf_sleep(400);
+		}
+
+		if (hdd_is_sta_connect_or_link_switch_in_prog(hdd_ctx,
+							      adapter->device_mode) ||
+		    (adapter->device_mode == QDF_P2P_GO_MODE &&
+		     ucfg_p2p_is_p2p_go_noa_in_progress(hdd_ctx->pdev,
+							link_info->vdev_id))) {
+			hdd_err("vdev %d Do not allow CSA, STA connect/link switch/eapol/noa is in progress",
+				link_info->vdev_id);
+			return -EBUSY;
+		}
+		hdd_info("CSA: vdev %d Retry busy cleared after wait, continue CSA",
+			 link_info->vdev_id);
 	}
+
+	if (adapter->device_mode == QDF_P2P_GO_MODE &&
+	    !hdd_p2p_go_common_freq_validate(adapter, target_chan_freq)) {
+		hdd_err("CSA: vdev %d freq %d rejected by granular validation",
+			link_info->vdev_id, target_chan_freq);
+		return -EINVAL;
+	}
+	// END IKSWA17-4036
 
 	/*
 	 * Trigger acs followed by csa if csa reason is non dcs and current
@@ -4563,6 +4589,177 @@ QDF_STATUS wlan_hdd_check_cc_intf_cb(struct wlan_objmgr_psoc *psoc,
 
 	return QDF_STATUS_SUCCESS;
 }
+
+
+// BEGIN IKSWA17-4036
+/**
+ * hdd_is_freq_supported_by_ies() - Check if frequency is supported in IEs
+ * @ies: raw IEs from association request
+ * @ies_len: length of IEs
+ * @freq: target frequency
+ *
+ * This function parses Supported Channels (IE 36) and Supported Operating
+ * Classes (IE 59) to check if the target frequency is supported.
+ *
+ * Return: true if supported or IEs missing, false if explicitly not supported.
+ */
+static bool hdd_is_freq_supported_by_ies(struct wlan_objmgr_pdev *pdev,
+					uint8_t *ies, uint32_t ies_len,
+					qdf_freq_t freq)
+{
+	uint32_t rem_len = ies_len;
+	uint8_t *pos = ies;
+	uint8_t chan = wlan_reg_freq_to_chan(pdev, freq);
+	bool supp_chan_ie_found = false;
+	bool supp_opclass_ie_found = false;
+	uint8_t target_opclass;
+	uint8_t country[3];
+
+	wlan_reg_get_cc_and_src(wlan_pdev_get_psoc(pdev), country);
+	/* P2P must use Global Operating Classes to match with IEs.
+	 * wlan_reg_dmn_get_opclass_from_channel with NULL country ensures
+	 * we lookup the IEEE standard 'global_op_class' table.
+	 */
+	target_opclass = wlan_reg_dmn_get_opclass_from_channel(NULL, chan, BW20);
+
+	hdd_debug("P2P GO: [Debug] TargetFreq:%u Chan:%u OpClass:%u Country:%c%c%c",
+		  freq, chan, target_opclass, country[0], country[1], country[2]);
+
+	while (rem_len >= 2) {
+		uint8_t eid = pos[0];
+		uint8_t elen = pos[1];
+
+		if (elen + 2 > rem_len)
+			break;
+
+		if (eid == 36) { /* EID_SUPPORTED_CHANNELS */
+			uint8_t i;
+			supp_chan_ie_found = true;
+			for (i = 0; i < elen; i += 2) {
+				uint8_t first_ch = pos[2 + i];
+				uint8_t num_ch = pos[2 + i + 1];
+				if (chan >= first_ch && chan < (first_ch + num_ch)) {
+					hdd_debug("P2P GO: [Match] Freq %u supported via Supported Channels IE (36)", freq);
+					return true;
+				}
+			}
+		} else if (eid == 59) { /* EID_SUPP_OPERATING_CLASSES */
+			uint8_t i;
+			supp_opclass_ie_found = true;
+			/* IE 59 format: [EID][Len][CurOpClass][SuppOpClasses...]
+			 * pos[2] is CurOpClass, list starts from pos[3]
+			 */
+			for (i = 1; i < elen; i++) {
+				if (pos[2 + i] == target_opclass) {
+					hdd_debug("P2P GO: [Match] Freq %u supported via Supported Operating Classes IE (59)", freq);
+					return true;
+				}
+			}
+		}
+
+		pos += (elen + 2);
+		rem_len -= (elen + 2);
+	}
+
+	/* If either IE was present and we didn't find a match, it's not supported */
+	if (supp_chan_ie_found || (supp_opclass_ie_found && target_opclass != 0)) {
+		hdd_debug("P2P GO: Freq %u (OpClass %u) not supported by peer IEs (ChanIE:%d OpClassIE:%d)",
+			  freq, target_opclass, supp_chan_ie_found, supp_opclass_ie_found);
+		return false;
+	}
+
+	/* Fallback: if no explicit capability IEs, assume supported based on band */
+	return true;
+}
+
+/**
+ * hdd_p2p_go_common_freq_validate() - validate target frequency for P2P GO
+ * @adapter: hdd adapter
+ * @freq: target frequency
+ *
+ * This function iterates through all connected P2P clients and checks if
+ * they support the target frequency.
+ *
+ * Return: true if all connected clients support the target freq, false otherwise.
+ */
+bool hdd_p2p_go_common_freq_validate(struct hdd_adapter *adapter,
+					    qdf_freq_t freq)
+{
+	struct hdd_station_info *sta_info;
+	struct hdd_context *hdd_ctx;
+	struct hdd_ap_ctx *ap_ctx;
+	enum reg_wifi_band target_band;
+	uint16_t conn_peers = 0;
+
+	if (!adapter || adapter->device_mode != QDF_P2P_GO_MODE)
+		return true;
+
+	hdd_ctx = WLAN_HDD_GET_CTX(adapter);
+	if (!hdd_ctx)
+		return true;
+
+	ap_ctx = WLAN_HDD_GET_AP_CTX_PTR(adapter->deflink);
+	if (!ap_ctx)
+		return true;
+
+	target_band = wlan_reg_freq_to_band(freq);
+
+	qdf_spin_lock_bh(&adapter->sta_info_list.sta_obj_lock);
+	qdf_list_for_each(&adapter->sta_info_list.sta_obj, sta_info, sta_node) {
+		hdd_debug("P2P GO: [Debug] Checking peer "QDF_MAC_ADDR_FMT" | peer_state=%d | is_attached=%d",
+			  QDF_MAC_ADDR_REF(sta_info->sta_mac.bytes),
+			  sta_info->peer_state,
+			  sta_info->is_attached);
+
+		if (sta_info->peer_state != OL_TXRX_PEER_STATE_AUTH)
+			continue;
+
+		if (qdf_is_macaddr_broadcast(&sta_info->sta_mac)) {
+			hdd_debug("P2P GO: [Skip] Skipping broadcast pseudo-peer");
+			continue;
+		}
+
+		conn_peers++;
+
+		hdd_debug("P2P GO: Peer "QDF_MAC_ADDR_FMT" supported_band_bitmap=0x%x, checking target_freq=%u",
+			  QDF_MAC_ADDR_REF(sta_info->sta_mac.bytes),
+			  sta_info->supported_band, freq);
+
+		/* Check band support first (fast check) */
+		if (!(sta_info->supported_band & BIT(target_band))) {
+			hdd_err("P2P GO: Peer "QDF_MAC_ADDR_FMT" doesn't support band %d, reject CSA to %u",
+				QDF_MAC_ADDR_REF(sta_info->sta_mac.bytes),
+				target_band, freq);
+			qdf_spin_unlock_bh(&adapter->sta_info_list.sta_obj_lock);
+			return false;
+		}
+
+		/* Granular frequency check using IEs */
+		if (sta_info->assoc_req_ies.ptr && sta_info->assoc_req_ies.len) {
+			if (!hdd_is_freq_supported_by_ies(hdd_ctx->pdev,
+							  sta_info->assoc_req_ies.ptr,
+							  sta_info->assoc_req_ies.len,
+							  freq)) {
+				hdd_err("P2P GO: Peer "QDF_MAC_ADDR_FMT" doesn't support freq %u per IEs, reject CSA",
+					QDF_MAC_ADDR_REF(sta_info->sta_mac.bytes),
+					freq);
+				qdf_spin_unlock_bh(&adapter->sta_info_list.sta_obj_lock);
+				return false;
+			}
+		}
+	}
+	qdf_spin_unlock_bh(&adapter->sta_info_list.sta_obj_lock);
+
+	if (conn_peers == 0) {
+		hdd_debug("P2P GO: No peers connected, allow CSA to %u", freq);
+	} else {
+		hdd_debug("P2P GO: All %u peers support freq %u, allow CSA",
+			  conn_peers, freq);
+	}
+
+	return true;
+}
+// END IKSWA17-4036
 
 void wlan_hdd_set_sap_csa_reason(struct wlan_objmgr_psoc *psoc, uint8_t vdev_id,
 				 uint8_t reason)

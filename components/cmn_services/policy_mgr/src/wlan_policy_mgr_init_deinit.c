@@ -1047,6 +1047,12 @@ QDF_STATUS policy_mgr_register_hdd_cb(struct wlan_objmgr_psoc *psoc,
 		hdd_cbacks->wlan_set_tx_rx_nss_cb;
 	pm_ctx->hdd_cbacks.wlan_hdd_set_sap_csa_reason =
 		hdd_cbacks->wlan_hdd_set_sap_csa_reason;
+	// BEGIN IKSWA17-4036
+	pm_ctx->hdd_cbacks.wlan_p2p_go_freq_allowed =
+		hdd_cbacks->wlan_p2p_go_freq_allowed;
+	pm_ctx->hdd_cbacks.wlan_p2p_go_common_list_ready =
+		hdd_cbacks->wlan_p2p_go_common_list_ready;
+	// END IKSWA17-4036
 
 	return QDF_STATUS_SUCCESS;
 }
@@ -1071,6 +1077,10 @@ QDF_STATUS policy_mgr_deregister_hdd_cb(struct wlan_objmgr_psoc *psoc)
 	pm_ctx->hdd_cbacks.wlan_get_ap_prefer_conc_ch_params = NULL;
 	pm_ctx->hdd_cbacks.wlan_get_sap_acs_band = NULL;
 	pm_ctx->hdd_cbacks.wlan_set_tx_rx_nss_cb = NULL;
+	// BEGIN IKSWA17-4036
+	pm_ctx->hdd_cbacks.wlan_p2p_go_freq_allowed = NULL;
+	pm_ctx->hdd_cbacks.wlan_p2p_go_common_list_ready = NULL;
+	// END IKSWA17-4036
 
 	return QDF_STATUS_SUCCESS;
 }

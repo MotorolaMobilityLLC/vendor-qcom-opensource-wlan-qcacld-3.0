@@ -12698,6 +12698,34 @@ bool policy_mgr_is_force_scc(struct wlan_objmgr_psoc *psoc)
 		QDF_MCC_TO_SCC_WITH_SAME_LOWER_BAND_MCC_WITH_HIGHER_BAND));
 }
 
+// BEGIN IKSWA17-4036
+bool policy_mgr_is_p2p_go_common_list_ready(struct wlan_objmgr_psoc *psoc, uint8_t vdev_id)
+{
+	struct policy_mgr_psoc_priv_obj *pm_ctx;
+	QDF_STATUS status;
+	bool ready = false;
+
+	pm_ctx = policy_mgr_get_context(psoc);
+	if (!pm_ctx) {
+		policy_mgr_err("Invalid Context");
+		return false;
+	}
+
+	if(!pm_ctx->hdd_cbacks.wlan_p2p_go_common_list_ready)
+		return false;
+
+	status = pm_ctx->hdd_cbacks.wlan_p2p_go_common_list_ready(
+					psoc, vdev_id, &ready);
+	if (QDF_IS_STATUS_ERROR(status)) {
+		policy_mgr_err("Failed to get p2p common list ready");
+		return false;
+	}
+
+	policy_mgr_debug("p2p go common list ready %d", ready);
+	return ready;
+}
+// END IKSWA17-4036
+
 bool policy_mgr_is_sap_allowed_on_dfs_freq(struct wlan_objmgr_pdev *pdev,
 					   uint8_t vdev_id, qdf_freq_t ch_freq)
 {

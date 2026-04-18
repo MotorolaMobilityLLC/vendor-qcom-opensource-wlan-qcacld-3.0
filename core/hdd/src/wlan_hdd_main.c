@@ -4348,6 +4348,70 @@ wlan_hdd_set_tx_rx_nss_cb(struct wlan_objmgr_psoc *psoc, uint8_t vdev_id,
 	return hdd_update_nss(link_info, tx_nss, rx_nss);
 }
 
+// BEGIN IKSWA17-4036
+static QDF_STATUS
+hdd_p2p_go_freq_allowed_cb(struct wlan_objmgr_psoc *psoc, uint8_t vdev_id,
+				uint32_t freq, bool *allowed)
+{
+	struct hdd_context *hdd_ctx = cds_get_context(QDF_MODULE_ID_HDD);
+	struct wlan_hdd_link_info *link_info;
+	struct hdd_adapter *adapter;
+
+	(void)(psoc);
+
+	if (!allowed)
+		return QDF_STATUS_E_INVAL;
+
+	*allowed = true;
+
+	if (!hdd_ctx)
+		return QDF_STATUS_E_FAILURE;
+
+	link_info = hdd_get_link_info_by_vdev(hdd_ctx, vdev_id);
+	if(!link_info || !link_info->adapter) {
+		hdd_err("Invalid vdev %d", vdev_id);
+		return QDF_STATUS_E_FAILURE;
+	}
+
+	adapter = link_info->adapter;
+	if(adapter->device_mode != QDF_P2P_GO_MODE)
+		return QDF_STATUS_SUCCESS;
+
+	*allowed = hdd_p2p_go_common_freq_validate(adapter, freq);
+
+	return QDF_STATUS_SUCCESS;
+}
+
+static QDF_STATUS
+hdd_p2p_go_common_list_ready_cb(struct wlan_objmgr_psoc *psoc, uint8_t vdev_id,
+								bool *ready)
+{
+	struct hdd_context *hdd_ctx = cds_get_context(QDF_MODULE_ID_HDD);
+	struct wlan_hdd_link_info *link_info;
+	struct hdd_adapter *adapter;
+
+	(void)(psoc);
+
+	if (!ready)
+		return QDF_STATUS_E_INVAL;
+
+	*ready = false;
+
+	if (!hdd_ctx)
+		return QDF_STATUS_SUCCESS;
+
+	link_info = hdd_get_link_info_by_vdev(hdd_ctx, vdev_id);
+	if (!link_info || !link_info->adapter)
+		return QDF_STATUS_SUCCESS;
+
+	adapter = link_info->adapter;
+	if (adapter->device_mode == QDF_P2P_GO_MODE)
+		*ready = true;
+
+	return QDF_STATUS_SUCCESS;
+}
+// END IKSWA17-4036
+
 static void hdd_register_policy_manager_callback(
 			struct wlan_objmgr_psoc *psoc)
 {
@@ -4376,6 +4440,10 @@ static void hdd_register_policy_manager_callback(
 			wlan_get_sap_acs_band;
 	hdd_cbacks.wlan_check_cc_intf_cb = wlan_hdd_check_cc_intf_cb;
 	hdd_cbacks.wlan_set_tx_rx_nss_cb = wlan_hdd_set_tx_rx_nss_cb;
+	// BEGIN IKSWA17-4036
+	hdd_cbacks.wlan_p2p_go_freq_allowed = hdd_p2p_go_freq_allowed_cb;
+	hdd_cbacks.wlan_p2p_go_common_list_ready = hdd_p2p_go_common_list_ready_cb;
+	// END IKSWA17-4036
 
 	if (QDF_STATUS_SUCCESS !=
 	    policy_mgr_register_hdd_cb(psoc, &hdd_cbacks)) {

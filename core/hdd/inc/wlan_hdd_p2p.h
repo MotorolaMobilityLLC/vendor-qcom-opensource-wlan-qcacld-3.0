@@ -294,4 +294,16 @@ p2p_noa_attr_policy[QCA_WLAN_VENDOR_ATTR_P2P_SET_NOA_MAX + 1];
 	vendor_command_policy(p2p_noa_attr_policy,		\
 				QCA_WLAN_VENDOR_ATTR_P2P_SET_NOA_MAX)	\
 },
+
+// BEGIN IKSWA17-4036
+/**
+ * hdd_p2p_go_common_freq_validate() - validate target frequency for P2P GO
+ * @adapter: hdd adapter
+ * @freq: target frequency
+ *
+ * Return: true if all connected clients support the target freq, false otherwise.
+ */
+bool hdd_p2p_go_common_freq_validate(struct hdd_adapter *adapter,
+					    qdf_freq_t freq);
+// END IKSWA17-4036
 #endif /* __P2P_H */
