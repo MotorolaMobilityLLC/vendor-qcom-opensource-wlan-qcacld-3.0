@@ -2994,7 +2994,6 @@ QDF_STATUS wma_post_vdev_create_setup(struct wlan_objmgr_vdev *vdev)
 	tp_wma_handle wma_handle;
 	uint8_t enable_sifs_burst = 0;
 	uint32_t offload_bitmap;
-	uint32_t apf_mode;
 
 	if (!mac)
 		return QDF_STATUS_E_FAILURE;
@@ -3083,18 +3082,6 @@ QDF_STATUS wma_post_vdev_create_setup(struct wlan_objmgr_vdev *vdev)
 							offload_bitmap);
 		if (QDF_IS_STATUS_ERROR(ret))
 			wma_err("Failed to configure APF supported offload bitmap");
-	}
-
-	if (vdev_mlme->mgmt.generic.type == WMI_VDEV_TYPE_STA &&
-	    ucfg_pmo_is_apf_enabled(wma_handle->psoc) &&
-	    ucfg_pmo_is_apf_mode_enabled(wma_handle->psoc)) {
-		apf_mode = ucfg_pmo_get_apf_mode(wma_handle->psoc);
-		ret = wmi_unified_set_apf_mode_bitmap_cmd(
-							wma_handle->wmi_handle,
-							vdev_id,
-							apf_mode);
-		if (QDF_IS_STATUS_ERROR(ret))
-			wma_err("Failed to configure APF mode bitmap");
 	}
 
 	if (vdev_mlme->mgmt.generic.type == WMI_VDEV_TYPE_STA &&

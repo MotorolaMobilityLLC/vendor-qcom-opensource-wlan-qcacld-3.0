@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2017-2019 The Linux Foundation. All rights reserved.
  * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
- * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -473,28 +472,4 @@ QDF_STATUS pmo_set_vdev_bridge_addr(struct wlan_objmgr_vdev *vdev,
 QDF_STATUS pmo_core_get_listen_interval(struct wlan_objmgr_vdev *vdev,
 					uint32_t *listen_interval);
 
-#ifdef FEATURE_WLAN_APF
-/**
- * pmo_core_is_configure_apf_per_screen_state() - To get configure APF
- * per screen state
- * @psoc: objmgr psoc handle
- *
- * Return: true if enabled, else false
- */
-static inline bool
-pmo_core_is_configure_apf_per_screen_state(struct wlan_objmgr_psoc *psoc)
-{
-	struct pmo_psoc_priv_obj *pmo_psoc_ctx = pmo_psoc_get_priv(psoc);
-
-	return pmo_psoc_ctx->psoc_cfg.is_apf_configure_per_screen_state;
-}
-
-/**
- * pmo_is_apf_mode_enabled() - API to get config of APF mode
- * @psoc: PSOC object manager pointer.
- *
- * Return: True if apf mode can be configured
- */
-bool pmo_is_apf_mode_enabled(struct wlan_objmgr_psoc *psoc);
-#endif
 #endif /* end  of _WLAN_PMO_MAIN_H_ */
