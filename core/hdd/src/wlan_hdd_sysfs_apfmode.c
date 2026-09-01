@@ -18,11 +18,124 @@
 #include "osif_psoc_sync.h"
 #include <wlan_hdd_sysfs.h>
 #include <wlan_hdd_sysfs_apfmode.h>
-#include "hif.h"
+
+static ssize_t
+__wlan_hdd_sysfs_apfmode_show(struct hdd_context *hdd_ctx,
+			      struct kobj_attribute *attr,
+			      char *buf)
+{
+	int ret, value;
+
+	if (!wlan_hdd_validate_modules_state(hdd_ctx))
+		return -EINVAL;
+
+	value = ucfg_pmo_get_apf_mode(hdd_ctx->psoc);
+
+	hdd_debug("apfmode %d", value);
+
+	ret = scnprintf(buf, PAGE_SIZE, "%d", value);
+
+	return ret;
+}
+
+static ssize_t hdd_sysfs_apfmode_show(struct kobject *kobj,
+				      struct kobj_attribute *attr,
+				      char *buf)
+{
+	struct osif_psoc_sync *psoc_sync;
+	struct hdd_context *hdd_ctx = cds_get_context(QDF_MODULE_ID_HDD);
+	ssize_t err_size;
+	int ret;
+
+	ret = wlan_hdd_validate_context(hdd_ctx);
+	if (ret != 0)
+		return ret;
+
+	err_size = osif_psoc_sync_op_start(wiphy_dev(hdd_ctx->wiphy),
+					   &psoc_sync);
+	if (err_size)
+		return err_size;
+
+	err_size = __wlan_hdd_sysfs_apfmode_show(hdd_ctx, attr, buf);
+
+	osif_psoc_sync_op_stop(psoc_sync);
+
+	return err_size;
+}
+
+static ssize_t
+__hdd_sysfs_apfmode_store(struct hdd_context *hdd_ctx,
+			  struct kobj_attribute *attr,
+			  char const *buf, size_t count)
+{
+	char buf_local[MAX_SYSFS_USER_COMMAND_SIZE_LENGTH + 1];
+	char *sptr, *token;
+	int value, ret;
+	struct hdd_adapter *adapter = NULL, *next_adapter = NULL;
+	wlan_net_dev_ref_dbgid dbgid =
+		NET_DEV_HOLD_SYSFS_APFMODE_STORE;
+
+	if (!wlan_hdd_validate_modules_state(hdd_ctx))
+		return -EINVAL;
+
+	ret = hdd_sysfs_validate_and_copy_buf(buf_local, sizeof(buf_local),
+					      buf, count);
+	if (ret) {
+		hdd_err_rl("invalid input");
+		return ret;
+	}
+
+	sptr = buf_local;
+	token = strsep(&sptr, " ");
+	if (!token)
+		return -EINVAL;
+	if (kstrtou32(token, 0, &value))
+		return -EINVAL;
+
+	hdd_debug("apfmode %d", value);
+
+	hdd_for_each_adapter_dev_held_safe(hdd_ctx, adapter, next_adapter,
+					   dbgid) {
+		if (adapter->device_mode == QDF_STA_MODE &&
+		    ucfg_pmo_is_apf_mode_enabled(hdd_ctx->psoc)) {
+			ucfg_pmo_set_apf_mode(hdd_ctx->psoc,
+					      value,
+					      adapter->deflink->vdev_id);
+		}
+		hdd_adapter_dev_put_debug(adapter, dbgid);
+	}
+
+	return count;
+}
+
+static ssize_t hdd_sysfs_apfmode_store(struct kobject *kobj,
+				       struct kobj_attribute *attr,
+				       char const *buf, size_t count)
+{
+	struct osif_psoc_sync *psoc_sync;
+	struct hdd_context *hdd_ctx = cds_get_context(QDF_MODULE_ID_HDD);
+	ssize_t errno_size;
+	int ret;
+
+	ret = wlan_hdd_validate_context(hdd_ctx);
+	if (ret != 0)
+		return ret;
+
+	errno_size = osif_psoc_sync_op_start(wiphy_dev(hdd_ctx->wiphy),
+					     &psoc_sync);
+	if (errno_size)
+		return errno_size;
+
+	errno_size = __hdd_sysfs_apfmode_store(hdd_ctx, attr, buf, count);
+
+	osif_psoc_sync_op_stop(psoc_sync);
+
+	return errno_size;
+}
 
 static struct kobj_attribute apfmode_attribute =
-	__ATTR(apfmode, 0440, hdd_sysfs_apfmode_show,
-	       NULL);
+	__ATTR(apfmode, 0660, hdd_sysfs_apfmode_show,
+	       hdd_sysfs_apfmode_store);
 
 int hdd_sysfs_apfmode_create(struct kobject *driver_kobject)
 {
