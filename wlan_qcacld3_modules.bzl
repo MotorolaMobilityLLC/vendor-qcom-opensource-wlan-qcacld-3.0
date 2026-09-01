@@ -1164,6 +1164,7 @@ _conditional_srcs = {
         True: [
             "core/hdd/src/wlan_hdd_apf.c",
             "cmn/wmi/src/wmi_unified_apf_tlv.c",
+	    "core/hdd/src/wlan_hdd_sysfs_apfmode.c",
         ],
     },
     "CONFIG_QCACLD_FEATURE_BTC_CHAIN_MODE": {
